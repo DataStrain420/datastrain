@@ -1,3 +1,4 @@
+import uuid
 from collections.abc import AsyncGenerator
 
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
@@ -11,17 +12,25 @@ def _engine_kwargs() -> dict:
 
     - SQLite: relax the same-thread check so the async wrapper can pool.
     - asyncpg + Supabase transaction pooler (port 6543) is pgBouncer in
-      transaction mode, which discards named prepared statements between
-      queries. asyncpg caches them by default and breaks. Disable both
-      caches — harmless on direct Postgres, required behind pgBouncer.
+      transaction mode. It pins each client to a backend only for the
+      duration of a transaction, so named prepared statements created in
+      one transaction don't exist when the next transaction reuses the
+      same name on a different backend. Two changes are required:
+        1. Top-level prepared_statement_cache_size=0 disables SQLAlchemy's
+           dialect-level cache so it never tries to reuse a name.
+        2. prepared_statement_name_func gives every PREPARE a unique
+           uuid-suffixed name, so even if asyncpg sends one inside a
+           transaction it can't collide with anything pgBouncer has seen.
+       statement_cache_size=0 also disables asyncpg's own client cache.
     """
     if settings.is_sqlite:
         return {"connect_args": {"check_same_thread": False}}
     if "+asyncpg" in settings.DATABASE_URL:
         return {
+            "prepared_statement_cache_size": 0,
             "connect_args": {
                 "statement_cache_size": 0,
-                "prepared_statement_cache_size": 0,
+                "prepared_statement_name_func": lambda: f"__asyncpg_{uuid.uuid4().hex}__",
             },
         }
     return {}
