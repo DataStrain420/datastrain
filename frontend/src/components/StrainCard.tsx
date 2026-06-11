@@ -268,6 +268,9 @@ export default function StrainCard({ card, disablePeek = false }: { card: CardDa
           // Delay before starting peek
           setTimeout(() => {
             if (flipped) return; // don't peek if already flipped
+            // Re-bind the narrowed-non-null ref into a local so the nested
+            // animate() closure keeps the narrowed type.
+            const innerEl = inner;
             const duration = 1800;
             const start = performance.now();
             const maxAngle = -25;
@@ -289,9 +292,9 @@ export default function StrainCard({ card, disablePeek = false }: { card: CardDa
                 const eased = 1 - Math.pow(1 - p, 3);
                 angle = maxAngle * (1 - eased);
               }
-              inner.style.transform = `rotateY(${angle}deg)`;
+              innerEl.style.transform = `rotateY(${angle}deg)`;
               if (t < 1) requestAnimationFrame(animate);
-              else inner.style.transform = "";
+              else innerEl.style.transform = "";
             }
             requestAnimationFrame(animate);
           }, 700);

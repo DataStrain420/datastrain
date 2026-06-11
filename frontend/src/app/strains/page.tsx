@@ -88,7 +88,7 @@ function buildBanner(params: URLSearchParams): BannerConfig {
 
   // ── Icon + accent colour — most specific filter wins ─────────────────
   let icon = "\u{1F33F}";
-  let color = C.primary;
+  let color: string = C.primary;
   if (condition) {
     icon = CONDITION_ICONS[condition] || "\u{1FA7A}"; // 🩺 fallback
     color = C.success;

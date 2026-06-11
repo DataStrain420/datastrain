@@ -1,13 +1,24 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { brand } from "@/lib/brand";
 
 const C = brand;
 
+// Next 15 requires useSearchParams() to live under a Suspense boundary so
+// pages that use it can be statically prerendered. Wrap the inner form
+// component in <Suspense> at the page root.
 export default function PreviewLoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <PreviewLoginInner />
+    </Suspense>
+  );
+}
+
+function PreviewLoginInner() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState(false);
   const [loading, setLoading] = useState(false);

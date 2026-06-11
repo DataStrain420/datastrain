@@ -87,7 +87,7 @@ export default function SearchBar({
   const [loading, setLoading] = useState(false);
   const [activeIdx, setActiveIdx] = useState(-1);
   const wrapperRef = useRef<HTMLDivElement>(null);
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const router = useRouter();
 
   const isLarge = size === "lg";
@@ -122,7 +122,7 @@ export default function SearchBar({
 
     setShowChips(false);
     setLoading(true);
-    clearTimeout(debounceRef.current);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
       apiFetch<{ query: string; results: SearchResult[] }>(
         `/search/?q=${encodeURIComponent(query.trim())}&limit=10`
@@ -139,7 +139,9 @@ export default function SearchBar({
         .finally(() => setLoading(false));
     }, 300);
 
-    return () => clearTimeout(debounceRef.current);
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
   }, [query]);
 
   // Close on outside click

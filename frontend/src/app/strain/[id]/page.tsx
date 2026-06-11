@@ -52,6 +52,13 @@ interface BatchInfo {
   avg_rating: number;
 }
 
+interface SimilarStrain {
+  id: number;
+  name?: string;
+  strain_type?: string;
+  grower_name?: string | null;
+}
+
 interface ReviewData {
   id: number;
   username: string | null;

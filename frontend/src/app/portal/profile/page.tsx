@@ -90,7 +90,7 @@ export default function PortalProfilePage() {
   async function togglePrivacy(key: string) {
     if (!profile) return;
     setSavingPrivacy(true);
-    const current = (profile as Record<string, unknown>)[key] as boolean;
+    const current = (profile as unknown as Record<string, unknown>)[key] as boolean;
     try {
       const updated = await apiFetch<MeProfile>("/users/me", {
         method: "PATCH",
@@ -231,7 +231,7 @@ export default function PortalProfilePage() {
 
         <div className="space-y-3">
           {privacyOptions.map((opt) => {
-            const isOn = (profile as Record<string, unknown>)[opt.key] as boolean;
+            const isOn = (profile as unknown as Record<string, unknown>)[opt.key] as boolean;
             return (
               <div key={opt.key} className="flex items-center justify-between">
                 <div>

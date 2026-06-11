@@ -243,7 +243,8 @@ export default function PortalDashboard() {
 
   async function togglePrivacy(key: string) {
     if (!profile) return;
-    const current = (profile as Record<string, unknown>)[key] as boolean;
+    // Cast via unknown so TS allows narrowing MeProfile to an index signature.
+    const current = (profile as unknown as Record<string, unknown>)[key] as boolean;
     try {
       const updated = await apiFetch<MeProfile>("/users/me", {
         method: "PATCH",
@@ -567,7 +568,7 @@ export default function PortalDashboard() {
               { key: "show_followers", label: "Show follower count", description: "Your follower and following counts will be visible" },
               { key: "show_kudos", label: "Show kudos & rank", description: "Your kudos points and community rank will be visible" },
             ] as const).map((opt) => {
-              const isOn = (profile as Record<string, unknown>)[opt.key] as boolean;
+              const isOn = (profile as unknown as Record<string, unknown>)[opt.key] as boolean;
               return (
                 <div key={opt.key} className="flex items-center justify-between">
                   <div>
