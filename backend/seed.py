@@ -12,6 +12,8 @@ import json
 import random
 from datetime import date, datetime, timedelta
 
+from sqlalchemy import text
+
 from app.config import settings
 from app.database import Base, async_session, engine
 from app.models import (
@@ -115,7 +117,17 @@ SEED_USERS = [
 async def seed():
     print("Dropping and recreating all tables...")
     async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all)
+        if settings.is_sqlite:
+            # SQLite has no FK enforcement during drop_all by default,
+            # and our cycle (users.pinned_strain_id ↔ strains.submitted_by_id)
+            # doesn't trip its dependency sort.
+            await conn.run_sync(Base.metadata.drop_all)
+        else:
+            # Postgres: drop the whole public schema in one CASCADE so we
+            # don't have to topologically sort tables — sidesteps the cycle.
+            await conn.execute(text("DROP SCHEMA public CASCADE"))
+            await conn.execute(text("CREATE SCHEMA public"))
+            await conn.execute(text("GRANT ALL ON SCHEMA public TO public"))
         await conn.run_sync(Base.metadata.create_all)
 
     async with async_session() as db:
