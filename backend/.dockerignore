@@ -1,0 +1,31 @@
+venv/
+.venv/
+__pycache__/
+**/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Local SQLite DB — prod uses Postgres
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# Local env (never bake secrets into the image)
+.env
+.env.local
+
+# Editor / OS noise
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.swp
+
+# Git
+.git/
+.gitignore

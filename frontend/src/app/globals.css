@@ -1,0 +1,170 @@
+@import "tailwindcss";
+
+/* ── Holographic shimmer overlay ───────────────────────────────────── */
+@keyframes holo-sweep {
+  0% {
+    transform: translateX(-100%) translateY(-100%) rotate(25deg);
+  }
+  100% {
+    transform: translateX(100%) translateY(100%) rotate(25deg);
+  }
+}
+
+.card-holographic {
+  overflow: hidden;
+}
+
+.card-holographic::after {
+  content: "";
+  position: absolute;
+  inset: -50%;
+  pointer-events: none;
+  z-index: 1;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    transparent 30%,
+    rgba(200, 215, 230, 0.1) 36%,
+    rgba(220, 230, 240, 0.2) 42%,
+    rgba(255, 255, 255, 0.35) 47%,
+    rgba(255, 255, 255, 0.45) 50%,
+    rgba(255, 255, 255, 0.35) 53%,
+    rgba(220, 230, 240, 0.2) 58%,
+    rgba(200, 215, 230, 0.1) 64%,
+    transparent 70%,
+    transparent 100%
+  );
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  transform: translateX(-100%) translateY(-100%) rotate(25deg);
+}
+
+/* Play shimmer on hover / touch */
+.card-holographic:hover::after {
+  opacity: 1;
+  animation: holo-sweep 1.8s ease-out forwards;
+}
+
+/* ── Gold holographic variant for #1 card ──────────────────────────── */
+.card-holographic-gold {
+  overflow: hidden;
+}
+
+.card-holographic-gold::after {
+  content: "";
+  position: absolute;
+  inset: -50%;
+  pointer-events: none;
+  z-index: 1;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    transparent 30%,
+    rgba(255, 215, 0, 0.1) 36%,
+    rgba(255, 235, 150, 0.2) 42%,
+    rgba(255, 255, 220, 0.35) 47%,
+    rgba(255, 255, 240, 0.45) 50%,
+    rgba(255, 255, 220, 0.35) 53%,
+    rgba(255, 235, 150, 0.2) 58%,
+    rgba(255, 215, 0, 0.1) 64%,
+    transparent 70%,
+    transparent 100%
+  );
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  transform: translateX(-100%) translateY(-100%) rotate(25deg);
+}
+
+.card-holographic-gold:hover::after {
+  opacity: 1;
+  animation: holo-sweep 1.8s ease-out forwards;
+}
+
+/* ── Pulsating glow for #1 ranked card ─────────────────────────────── */
+@keyframes glow-pulse {
+  0%, 100% {
+    box-shadow:
+      0 8px 32px rgba(0, 0, 0, 0.5),
+      0 2px 8px rgba(0, 0, 0, 0.3),
+      0 0 18px rgba(201, 168, 76, 0.3),
+      0 0 40px rgba(255, 215, 0, 0.1),
+      inset 0 1px 0 rgba(255, 215, 0, 0.08);
+  }
+  50% {
+    box-shadow:
+      0 8px 32px rgba(0, 0, 0, 0.5),
+      0 2px 8px rgba(0, 0, 0, 0.3),
+      0 0 28px rgba(201, 168, 76, 0.5),
+      0 0 60px rgba(255, 215, 0, 0.2),
+      0 0 80px rgba(201, 168, 76, 0.1),
+      inset 0 1px 0 rgba(255, 215, 0, 0.12);
+  }
+}
+
+.card-glow-pulse {
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.5),
+    0 2px 8px rgba(0, 0, 0, 0.3),
+    0 0 24px rgba(201, 168, 76, 0.4),
+    0 0 50px rgba(255, 215, 0, 0.15),
+    inset 0 1px 0 rgba(255, 215, 0, 0.1) !important;
+}
+
+/* ── Sleeved card entrance ─────────────────────────────────────────────
+   Used on the dashboard for the user's favourite strain. Two animations,
+   each on a different layer so the card visibly *slides into* a stationary
+   sleeve:
+     • `.drop-into-sleeve` — applied to the inner card wrapper. Drops in
+       from above the sleeve with a small overshoot and settles.
+     • `.sleeve-peek` — applied to the outer sleeve. Stays neutral while
+       the card drops, then tilts the whole sealed assembly to the side
+       to hint that the card can flip, and settles back. */
+
+@keyframes drop-into-sleeve {
+  0% {
+    transform: translateY(-220px) rotate(-2.5deg);
+    opacity: 0;
+  }
+  25% { opacity: 1; }
+  60% {
+    transform: translateY(10px) rotate(0.6deg);
+  }
+  80% {
+    transform: translateY(-4px) rotate(-0.2deg);
+  }
+  100% {
+    transform: translateY(0) rotate(0);
+    opacity: 1;
+  }
+}
+
+.drop-into-sleeve {
+  /* 1s delay so the page settles before the card slides in. `both`
+     fill-mode keeps the card hidden (opacity 0, translated up) during the
+     delay so there's no flash at its final position first. */
+  animation: drop-into-sleeve 1500ms cubic-bezier(0.34, 1.2, 0.4, 1) 1000ms both;
+  transform-origin: top center;
+  will-change: transform, opacity;
+}
+
+@keyframes sleeve-peek {
+  0% { transform: rotateY(0deg); }
+  30% { transform: rotateY(-25deg); }
+  55% { transform: rotateY(-25deg); }
+  100% { transform: rotateY(0deg); }
+}
+
+.sleeve-peek {
+  /* Starts after the drop has settled: drop delay (1000ms) + drop duration
+     (1500ms) + a short breath (500ms) = 3000ms. */
+  animation: sleeve-peek 1500ms ease-in-out 3000ms both;
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .drop-into-sleeve,
+  .sleeve-peek {
+    animation: none;
+  }
+}

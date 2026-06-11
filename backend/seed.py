@@ -1,0 +1,295 @@
+"""
+Seed script — populates the local SQLite database with dummy growers,
+strains, batches, users, and reviews so the frontend has data to render.
+
+Usage:
+    cd backend
+    python seed.py
+"""
+
+import asyncio
+import json
+import random
+from datetime import date, datetime, timedelta
+
+from app.config import settings
+from app.database import Base, async_session, engine
+from app.models import (
+    Batch,
+    BatchTerpene,
+    ConditionRating,
+    Grower,
+    Review,
+    ReviewStatus,
+    Strain,
+    StrainType,
+    Terpene,
+    User,
+)
+
+# ── Grower data (real UK medical cannabis producers / importers) ──────────────
+
+GROWERS = [
+    {"name": "GW Pharmaceuticals", "country_of_origin": "United Kingdom", "verified": True},
+    {"name": "Northern Leaf", "country_of_origin": "United Kingdom", "verified": True},
+    {"name": "Dalgety", "country_of_origin": "United Kingdom", "verified": True},
+    {"name": "Glass Pharms", "country_of_origin": "United Kingdom", "verified": True},
+    {"name": "PLF Pharma", "country_of_origin": "Germany", "verified": True},
+    {"name": "Tilray", "country_of_origin": "Canada", "verified": True},
+    {"name": "Aurora", "country_of_origin": "Canada", "verified": True},
+    {"name": "Bedrocan", "country_of_origin": "Netherlands", "verified": True},
+    {"name": "Noidecs", "country_of_origin": "Portugal", "verified": True},
+    {"name": "Khiron", "country_of_origin": "Colombia", "verified": True},
+    {"name": "Grow Pharma", "country_of_origin": "United Kingdom", "verified": True},
+    {"name": "BOL Pharma", "country_of_origin": "Israel", "verified": True},
+    {"name": "Cellen", "country_of_origin": "United Kingdom", "verified": True},
+    {"name": "Cantourage", "country_of_origin": "Germany", "verified": True},
+    {"name": "Lyphe Group", "country_of_origin": "United Kingdom", "verified": True},
+    {"name": "Althea", "country_of_origin": "Australia", "verified": True},
+    {"name": "MedCan", "country_of_origin": "Australia", "verified": True},
+    {"name": "Fotmer", "country_of_origin": "Uruguay", "verified": True},
+]
+
+# ── Strain data ───────────────────────────────────────────────────────────────
+
+# (name, type, grower_idx, aliases, genetics)
+STRAINS = [
+    ("Adven EMT-1 Flos", StrainType.INDICA, 0, "EMT-1, Egyptian", None),
+    ("Adven EMT-2 Flos", StrainType.SATIVA, 0, "EMT-2", None),
+    ("Gorilla Glue", StrainType.HYBRID, 1, "GG4, Original Glue", "Chem's Sister x Sour Dubb x Chocolate Diesel"),
+    ("Gelato", StrainType.HYBRID, 1, "Larry Bird, Zelato", "Sunset Sherbet x Thin Mints GSC"),
+    ("Isando", StrainType.INDICA, 2, "Royal Moby", "Haze x White Widow"),
+    ("Mahdjong", StrainType.SATIVA, 2, None, None),
+    ("Strawberry Glue", StrainType.HYBRID, 3, "Strawberry Gorilla", "Strawberry Diesel x Gorilla Glue"),
+    ("Hindu Kush", StrainType.INDICA, 3, "HK, Pure Kush", "Landrace (Hindu Kush Mountains)"),
+    ("Ghost Train Haze", StrainType.SATIVA, 4, "GTH, Ghost OG", "Ghost OG x Neville's Wreck"),
+    ("Gelato Runtz", StrainType.HYBRID, 4, "Larry Bird, Zelato", "Gelato x Zkittlez x Runtz"),
+    ("Master Kush", StrainType.INDICA, 5, "High Rise, Grandmaster", "Hindu Kush x Skunk #1"),
+    ("Purple Kush", StrainType.INDICA, 5, "Purple Hindu, PK", "Hindu Kush x Purple Afghani"),
+    ("Pedanios 22/1", StrainType.SATIVA, 6, None, None),
+    ("Pedanios 20/1", StrainType.HYBRID, 6, None, None),
+    ("Bedica", StrainType.INDICA, 7, "Talea", None),
+    ("Bedrobinol", StrainType.SATIVA, 7, "Jack Herer", "Haze x Northern Lights #5 x Shiva Skunk"),
+    ("Shishkaberry", StrainType.INDICA, 8, "Kish, DJ Short", "DJ Short Blueberry x Afghani"),
+    ("Amnesia Haze", StrainType.SATIVA, 8, "Amnesia, Ammo", "South Asian x Jamaican x Afghani Hawaiian"),
+    ("Afghan Kush", StrainType.INDICA, 9, "Afghan, Afghani", "Landrace (Afghanistan)"),
+    ("Herijuana", StrainType.INDICA, 10, "Heri, Woodhorse", "Petrolia Headstash x Killer New Haven"),
+    ("Blue Cheese", StrainType.INDICA, 11, "Blueberry Cheese, BC", "Blueberry x UK Cheese"),
+    ("Lemon Skunk", StrainType.SATIVA, 12, "Lemon S, DNA Lemon", "Skunk #1 pheno x Skunk #1 pheno"),
+    ("Warlock", StrainType.HYBRID, 13, "Magus Genetics", "Skunk #1 x Afghani"),
+    ("Super Lemon Haze", StrainType.SATIVA, 14, "SLH, Lemon Haze", "Lemon Skunk x Super Silver Haze"),
+    ("Henik", StrainType.HYBRID, 15, None, None),
+    ("Pink Kush", StrainType.INDICA, 16, "Pink OG, PK", "OG Kush phenotype"),
+    ("Uruguayan Kush", StrainType.INDICA, 17, "UKush", None),
+]
+
+# ── Terpenes ──────────────────────────────────────────────────────────────────
+
+TERPENES = [
+    ("Myrcene", "Earthy, musky, herbal", "herbal, clove"),
+    ("Limonene", "Citrus, fresh, uplifting", "lemon, orange"),
+    ("Caryophyllene", "Spicy, peppery, woody", "pepper, clove"),
+    ("Linalool", "Floral, lavender, calming", "lavender"),
+    ("Pinene", "Pine, sharp, fresh", "pine, rosemary"),
+    ("Humulene", "Earthy, woody, hoppy", "hops"),
+    ("Terpinolene", "Herbal, floral, piney", "nutmeg, lilac"),
+    ("Ocimene", "Sweet, herbal, woody", "mint, parsley"),
+    ("Bisabolol", "Floral, sweet, gentle", "chamomile"),
+    ("Valencene", "Citrus, sweet, fresh", "orange, grapefruit"),
+]
+
+# ── Seed users (for reviews) ─────────────────────────────────────────────────
+
+SEED_USERS = [
+    "patient_alex",
+    "patient_beth",
+    "patient_charlie",
+    "patient_dana",
+    "patient_evan",
+    "patient_fiona",
+    "patient_george",
+    "patient_hannah",
+]
+
+
+async def seed():
+    print("Dropping and recreating all tables...")
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.drop_all)
+        await conn.run_sync(Base.metadata.create_all)
+
+    async with async_session() as db:
+
+        # ── Growers ───────────────────────────────────────────────────────
+        print("Seeding growers...")
+        grower_objs = []
+        for g in GROWERS:
+            grower = Grower(**g)
+            db.add(grower)
+            grower_objs.append(grower)
+        await db.flush()
+
+        # ── Terpenes ──────────────────────────────────────────────────────
+        print("Seeding terpenes...")
+        terpene_objs = []
+        for name, desc, aroma in TERPENES:
+            t = Terpene(name=name, description=desc, aroma_notes=aroma)
+            db.add(t)
+            terpene_objs.append(t)
+        await db.flush()
+
+        # ── Strains ───────────────────────────────────────────────────────
+        print("Seeding strains...")
+        strain_objs = []
+        for name, stype, grower_idx, aliases, genetics in STRAINS:
+            s = Strain(
+                name=name,
+                strain_type=stype.value,
+                aliases=aliases,
+                genetics=genetics,
+                description=f"Premium medical cannabis strain by {grower_objs[grower_idx].name}.",
+                grower_id=grower_objs[grower_idx].id,
+                approved=True,
+            )
+            db.add(s)
+            strain_objs.append(s)
+        await db.flush()
+
+        # ── Batches ───────────────────────────────────────────────────────
+        print("Seeding batches...")
+        batch_objs = []
+        for i, strain in enumerate(strain_objs):
+            thc = round(random.uniform(14.0, 28.0), 1)
+            cbd = round(random.uniform(0.0, 2.0), 1)
+            batch = Batch(
+                strain_id=strain.id,
+                grower_id=strain.grower_id,
+                batch_number=f"BN-2026-{i+1:03d}",
+                thc_percentage=thc,
+                cbd_percentage=cbd,
+                tested_date=date(2026, random.randint(1, 3), random.randint(1, 28)),
+                approved=True,
+            )
+            db.add(batch)
+            batch_objs.append(batch)
+        await db.flush()
+
+        # ── Batch terpene profiles ────────────────────────────────────────
+        print("Seeding terpene profiles...")
+        for batch in batch_objs:
+            chosen = random.sample(terpene_objs, k=random.randint(2, 5))
+            for t in chosen:
+                bt = BatchTerpene(
+                    batch_id=batch.id,
+                    terpene_id=t.id,
+                    percentage=round(random.uniform(0.1, 1.8), 2),
+                )
+                db.add(bt)
+        await db.flush()
+
+        # ── Users ─────────────────────────────────────────────────────────
+        print("Seeding users...")
+        user_objs = []
+        for uname in SEED_USERS:
+            u = User(
+                username=uname,
+                email=f"{uname}@example.com",
+                password_hash="$2b$12$seedhashnotforlogin000000000000000000000000000",
+                is_verified=True,
+            )
+            db.add(u)
+            user_objs.append(u)
+        await db.flush()
+
+        # ── Reviews ───────────────────────────────────────────────────────
+        print("Seeding reviews...")
+
+        NARRATIVES = [
+            "Absolutely stunning buds with deep purple hues and orange pistils. The aroma is incredibly complex with notes of berry, earth, and a hint of spice. The smoke is smooth and the effects are perfectly balanced — euphoric yet relaxing. Top-notch quality. The cure is perfect and the trichome coverage is exceptional.",
+            "Really impressed with this batch. Dense, well-trimmed nugs with a strong citrus aroma. The effects come on quickly and last a good 3 hours. Great for evening use when you need to wind down after a long day.",
+            "Decent quality but not the best I've had from this grower. The moisture level was slightly off — a bit too dry. Flavour was earthy with pine notes. Effects were mild but consistent. Would still recommend for daytime use.",
+            "This is my go-to strain for managing chronic pain. The effects are deeply relaxing without being sedating. Beautiful frosty buds with a sweet, almost candy-like aroma. Excellent batch consistency.",
+            "Very potent batch. Started with a cerebral uplift that gradually transitioned into full body relaxation. The flavour profile is complex — herbal, woody, with a peppery finish. One of the better batches I've reviewed this year.",
+            "Good all-rounder. Nice bag appeal with tight, compact buds. The aroma is subtle but pleasant — earthy with floral undertones. Effects are balanced and manageable. Perfect for patients new to medical cannabis.",
+            "Outstanding quality. The terpene profile on this batch is remarkable — strong limonene presence giving it a bright citrus flavour. Effects are uplifting and creative. Highly recommend for anxiety management.",
+            "Consistent quality from this grower as always. The buds are perfectly cured with excellent moisture retention. Smooth smoke, no harshness. The effects are calming and great for sleep.",
+        ]
+
+        # Placeholder photo URLs
+        PLACEHOLDER_PHOTO = "/images/strain-placeholder.png"
+
+        EFFECTS_POOL = [
+            "Relaxed", "Euphoric", "Creative", "Sleepy", "Uplifted",
+            "Focused", "Happy", "Hungry", "Energised", "Calm",
+            "Amused", "Giggly", "Tingly", "Aroused", "Talkative",
+        ]
+
+        FLAVOURS_POOL = [
+            "Citrus", "Honey", "Sweet", "Earthy", "Pine",
+            "Berry", "Spicy", "Woody", "Herbal", "Floral",
+            "Peppery", "Diesel", "Tropical", "Mint", "Vanilla",
+            "Gassy", "Skunky", "Cheese", "Lemon", "Grape",
+        ]
+
+        CONDITIONS_POOL = [
+            "Anxiety", "Insomnia", "Chronic Pain", "Depression",
+            "PTSD", "Migraines", "Nausea", "ADHD",
+            "Muscle Spasms", "Appetite Loss", "Arthritis",
+            "Fibromyalgia", "Epilepsy", "Stress",
+        ]
+
+        review_count = 0
+        for batch in batch_objs:
+            # Each batch gets 2-6 reviews from random users
+            reviewers = random.sample(user_objs, k=random.randint(2, min(6, len(user_objs))))
+            for user in reviewers:
+                chosen_effects = random.sample(EFFECTS_POOL, k=3)
+                chosen_flavours = random.sample(FLAVOURS_POOL, k=3)
+                chosen_condition = random.choice(CONDITIONS_POOL)
+
+                r = Review(
+                    user_id=user.id,
+                    batch_id=batch.id,
+                    appearance_rating=random.randint(2, 5),
+                    aroma_rating=random.randint(2, 5),
+                    moisture_rating=random.randint(2, 5),
+                    flavour_rating=random.randint(2, 5),
+                    effect_rating=random.randint(2, 5),
+                    written_narrative=random.choice(NARRATIVES),
+                    photo_product_url=PLACEHOLDER_PHOTO,
+                    photo_closeup_url=PLACEHOLDER_PHOTO,
+                    photo_packaging_url=PLACEHOLDER_PHOTO,
+                    effects=json.dumps(chosen_effects),
+                    flavours=json.dumps(chosen_flavours),
+                    confirmed_own_experience=True,
+                    confirmed_medical_only=True,
+                    status=ReviewStatus.APPROVED.value,
+                    helpful_votes=random.randint(0, 45),
+                )
+                db.add(r)
+                await db.flush()
+
+                # Add condition rating
+                cr = ConditionRating(
+                    review_id=r.id,
+                    condition_name=chosen_condition,
+                    efficacy_rating=random.randint(2, 5),
+                )
+                db.add(cr)
+                review_count += 1
+        await db.flush()
+
+        await db.commit()
+        print(
+            f"\nSeed complete:\n"
+            f"  {len(grower_objs)} growers\n"
+            f"  {len(terpene_objs)} terpenes\n"
+            f"  {len(strain_objs)} strains\n"
+            f"  {len(batch_objs)} batches\n"
+            f"  {len(user_objs)} users\n"
+            f"  {review_count} reviews"
+        )
+
+
+if __name__ == "__main__":
+    asyncio.run(seed())
