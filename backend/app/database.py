@@ -5,10 +5,32 @@ from sqlalchemy.orm import DeclarativeBase
 
 from app.config import settings
 
+
+def _engine_kwargs() -> dict:
+    """Dialect-specific kwargs for create_async_engine.
+
+    - SQLite: relax the same-thread check so the async wrapper can pool.
+    - asyncpg + Supabase transaction pooler (port 6543) is pgBouncer in
+      transaction mode, which discards named prepared statements between
+      queries. asyncpg caches them by default and breaks. Disable both
+      caches — harmless on direct Postgres, required behind pgBouncer.
+    """
+    if settings.is_sqlite:
+        return {"connect_args": {"check_same_thread": False}}
+    if "+asyncpg" in settings.DATABASE_URL:
+        return {
+            "connect_args": {
+                "statement_cache_size": 0,
+                "prepared_statement_cache_size": 0,
+            },
+        }
+    return {}
+
+
 engine = create_async_engine(
     settings.DATABASE_URL,
     echo=False,
-    **({"connect_args": {"check_same_thread": False}} if settings.is_sqlite else {}),
+    **_engine_kwargs(),
 )
 
 async_session = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
