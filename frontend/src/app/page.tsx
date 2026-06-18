@@ -5,6 +5,7 @@ import Link from "next/link";
 import Navbar, { PublicNavActions } from "@/components/Navbar";
 import StrainCard, { CardData } from "@/components/StrainCard";
 import StrainCardSkeleton from "@/components/StrainCardSkeleton";
+import CardCarousel from "@/components/CardCarousel";
 import GrowerCard from "@/components/GrowerCard";
 import ReviewCard from "@/components/ReviewCard";
 import SearchBar from "@/components/SearchBar";
@@ -198,23 +199,12 @@ export default function Home() {
       {/* ── 2. Top Rated Strains ────────────────────────────────────────── */}
       <section className="mx-auto max-w-7xl px-4 pb-16">
         <SectionHeading>Top Rated Strains</SectionHeading>
-        {/* Mobile: horizontal swipe carousel (snap). sm+: centered wrap grid. */}
-        <div
-          className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-pl-4 px-4 pb-2 sm:mx-0 sm:flex-wrap sm:justify-center sm:gap-6 sm:overflow-x-visible sm:px-0 sm:pb-0"
-          style={{ scrollbarWidth: "none" }}
-        >
+        {/* Mobile: horizontal swipe carousel with dots + arrows. sm+: wrap grid. */}
+        <CardCarousel>
           {topLoading
-            ? Array.from({ length: 8 }).map((_, i) => (
-                <div key={i} className="shrink-0 snap-start">
-                  <StrainCardSkeleton />
-                </div>
-              ))
-            : topStrains.map((card) => (
-                <div key={card.id} className="shrink-0 snap-start">
-                  <StrainCard card={card} />
-                </div>
-              ))}
-        </div>
+            ? Array.from({ length: 8 }).map((_, i) => <StrainCardSkeleton key={i} />)
+            : topStrains.map((card) => <StrainCard key={card.id} card={card} />)}
+        </CardCarousel>
         {topStrains.length > 0 && (
           <div className="mt-8 text-center">
             <Link
