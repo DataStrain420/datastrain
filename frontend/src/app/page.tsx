@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import Navbar, { PublicNavActions } from "@/components/Navbar";
 import StrainCard, { CardData } from "@/components/StrainCard";
+import StrainCardSkeleton from "@/components/StrainCardSkeleton";
 import GrowerCard from "@/components/GrowerCard";
 import ReviewCard from "@/components/ReviewCard";
 import SearchBar from "@/components/SearchBar";
@@ -111,6 +112,7 @@ function SectionHeading({ children }: { children: React.ReactNode }) {
 export default function Home() {
   const [growers, setGrowers] = useState<RankedGrower[]>([]);
   const [topStrains, setTopStrains] = useState<CardData[]>([]);
+  const [topLoading, setTopLoading] = useState(true);
   const [recentReviews, setRecentReviews] = useState<ReviewData[]>([]);
   const [latestReviews, setLatestReviews] = useState<ReviewData[]>([]);
   useEffect(() => {
@@ -122,7 +124,8 @@ export default function Home() {
     // Top rated strains (card data)
     apiFetch<CardData[]>("/batches/top-rated?limit=8")
       .then(setTopStrains)
-      .catch((err) => console.error("Top strains:", err));
+      .catch((err) => console.error("Top strains:", err))
+      .finally(() => setTopLoading(false));
 
     // Recent reviews (first 3)
     apiFetch<ReviewData[]>("/reviews/?limit=3")
@@ -196,9 +199,9 @@ export default function Home() {
       <section className="mx-auto max-w-7xl px-4 pb-16">
         <SectionHeading>Top Rated Strains</SectionHeading>
         <div className="flex flex-wrap justify-center gap-6">
-          {topStrains.map((card) => (
-            <StrainCard key={card.id} card={card} />
-          ))}
+          {topLoading
+            ? Array.from({ length: 8 }).map((_, i) => <StrainCardSkeleton key={i} />)
+            : topStrains.map((card) => <StrainCard key={card.id} card={card} />)}
         </div>
         {topStrains.length > 0 && (
           <div className="mt-8 text-center">

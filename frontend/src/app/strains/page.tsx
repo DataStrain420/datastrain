@@ -4,6 +4,7 @@ import { Suspense, useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Navbar, { PublicNavActions } from "@/components/Navbar";
 import StrainCard, { CardData } from "@/components/StrainCard";
+import StrainCardSkeleton from "@/components/StrainCardSkeleton";
 import Footer from "@/components/Footer";
 import { brand } from "@/lib/brand";
 import { apiFetch } from "@/lib/api";
@@ -388,8 +389,10 @@ function StrainsContent() {
       <div className="flex-1">
 
         {loading ? (
-          <div className="py-16 text-center">
-            <p style={{ color: C.textMuted }}>Loading strains...</p>
+          <div className="flex flex-wrap justify-center gap-6">
+            {Array.from({ length: 9 }).map((_, i) => (
+              <StrainCardSkeleton key={i} />
+            ))}
           </div>
         ) : cards.length === 0 ? (
           <div className="py-16 text-center">
