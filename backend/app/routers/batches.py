@@ -207,12 +207,7 @@ async def list_batch_cards(
     stmt = stmt.offset(skip).limit(limit)
     result = await db.execute(stmt)
     batch_ids = [row[0] for row in result.all()]
-
-    # Share one ranking cache across every card so the global rankings are
-    # computed once per request, not once per card.
-    ctx = _RankContext(db)
-    cards = [await _build_batch_card(bid, db, ctx) for bid in batch_ids]
-    return cards
+    return await _build_cards(batch_ids, db)
 
 
 def _avg_rating_expr():
@@ -336,11 +331,7 @@ async def top_rated_batches(
         )
         batch_ids = [row[0] for row in fallback.all()]
 
-    # Share one ranking cache across every card so the global rankings are
-    # computed once per request, not once per card.
-    ctx = _RankContext(db)
-    cards = [await _build_batch_card(bid, db, ctx) for bid in batch_ids]
-    return cards
+    return await _build_cards(batch_ids, db)
 
 
 @router.get("/{batch_id}", response_model=BatchResponse)
@@ -415,129 +406,155 @@ async def approve_batch(
 @router.get("/{batch_id}/card", response_model=BatchCardResponse)
 async def get_batch_card(batch_id: int, db: AsyncSession = Depends(get_db)):
     """Top Trumps card data — all stats formatted for card UI."""
-    return await _build_batch_card(batch_id, db, _RankContext(db))
+    cards = await _build_cards([batch_id], db)
+    if not cards:
+        raise HTTPException(status_code=404, detail="Batch not found")
+    return cards[0]
 
 
-async def _build_batch_card(batch_id: int, db: AsyncSession, ctx: "_RankContext"):
-    """Build a single Top Trumps card. `ctx` caches catalogue-wide rankings so
-    callers building many cards don't recompute the global orderings per card."""
-    result = await db.execute(
+# Effect/flavour labels derived from the rounded 1–5 average rating.
+_EFFECT_LABELS = {5: "Euphoric", 4: "Relaxed", 3: "Mellow", 2: "Mild", 1: "Subtle"}
+_FLAVOUR_LABELS = {5: "Gassy", 4: "Sweet", 3: "Earthy", 2: "Citrus", 1: "Herbal"}
+
+
+async def _build_cards(batch_ids: list[int], db: AsyncSession) -> list[BatchCardResponse]:
+    """Build Top Trumps cards for many batches with a small, fixed number of
+    queries. All per-card data (relations, review stats, top condition, photo)
+    is loaded in bulk rather than once per card, and catalogue-wide rankings
+    are computed once via a shared cache. Cards keep the order of `batch_ids`.
+    """
+    if not batch_ids:
+        return []
+
+    # Batches + relations (one bulk load, not one per card)
+    batch_result = await db.execute(
         select(Batch)
         .options(
             selectinload(Batch.strain),
             selectinload(Batch.grower),
             selectinload(Batch.terpene_profiles).selectinload(BatchTerpene.terpene),
         )
-        .where(Batch.id == batch_id)
+        .where(Batch.id.in_(batch_ids))
     )
-    batch = result.scalar_one_or_none()
-    if not batch:
-        raise HTTPException(status_code=404, detail="Batch not found")
+    batches = {b.id: b for b in batch_result.scalars().unique().all()}
 
-    # Aggregate review stats
-    stats = await db.execute(
+    # Review stats per batch (one grouped query)
+    stats_result = await db.execute(
         select(
+            Review.batch_id,
             func.avg(Review.appearance_rating),
             func.avg(Review.aroma_rating),
             func.avg(Review.moisture_rating),
             func.avg(Review.flavour_rating),
             func.avg(Review.effect_rating),
             func.count(Review.id),
-        ).where(
-            Review.batch_id == batch_id,
+        )
+        .where(
+            Review.batch_id.in_(batch_ids),
             Review.status == ReviewStatus.APPROVED.value,
         )
+        .group_by(Review.batch_id)
     )
-    row = stats.one()
-    avg_appearance, avg_aroma, avg_moisture, avg_flavour, avg_effect, review_count = row
+    stats = {row[0]: tuple(row[1:]) for row in stats_result.all()}
 
-    # Top 3 terpenes by percentage
-    top_terpenes = sorted(
-        batch.terpene_profiles, key=lambda t: t.percentage, reverse=True
-    )[:3]
-
-    # Top condition (most frequently reported)
-    top_condition_result = await db.execute(
-        select(ConditionRating.condition_name, func.count(ConditionRating.id).label("cnt"))
-        .join(Review, Review.id == ConditionRating.review_id)
-        .where(Review.batch_id == batch_id, Review.status == ReviewStatus.APPROVED.value)
-        .group_by(ConditionRating.condition_name)
-        .order_by(func.count(ConditionRating.id).desc())
-        .limit(1)
-    )
-    top_condition_row = top_condition_result.first()
-    top_condition = top_condition_row[0] if top_condition_row else None
-
-    # First review photo as strain image
-    photo_result = await db.execute(
-        select(Review.photo_product_url)
+    # Most-reported condition per batch (one grouped query): tally per
+    # (batch, condition) and keep the highest-count condition for each batch.
+    cond_result = await db.execute(
+        select(
+            Review.batch_id,
+            ConditionRating.condition_name,
+            func.count(ConditionRating.id),
+        )
+        .join(ConditionRating, ConditionRating.review_id == Review.id)
         .where(
-            Review.batch_id == batch_id,
+            Review.batch_id.in_(batch_ids),
+            Review.status == ReviewStatus.APPROVED.value,
+        )
+        .group_by(Review.batch_id, ConditionRating.condition_name)
+    )
+    top_condition: dict[int, str] = {}
+    best_cond_count: dict[int, int] = {}
+    for bid, name, cnt in cond_result.all():
+        if cnt > best_cond_count.get(bid, -1):
+            best_cond_count[bid] = cnt
+            top_condition[bid] = name
+
+    # First approved review photo per batch (one query, earliest review wins)
+    photo_result = await db.execute(
+        select(Review.batch_id, Review.photo_product_url)
+        .where(
+            Review.batch_id.in_(batch_ids),
             Review.status == ReviewStatus.APPROVED.value,
             Review.photo_product_url.isnot(None),
         )
-        .limit(1)
+        .order_by(Review.id)
     )
-    photo_row = photo_result.first()
-    strain_image_url = photo_row[0] if photo_row else None
+    photos: dict[int, str] = {}
+    for bid, url in photo_result.all():
+        photos.setdefault(bid, url)
 
-    # Derive effect/flavour labels from ratings (1-5 scale)
-    effect_labels = {5: "Euphoric", 4: "Relaxed", 3: "Mellow", 2: "Mild", 1: "Subtle"}
-    flavour_labels = {5: "Gassy", 4: "Sweet", 3: "Earthy", 2: "Citrus", 1: "Herbal"}
-    top_effect = effect_labels.get(round(avg_effect) if avg_effect else 0) if avg_effect else None
-    top_flavour_label = flavour_labels.get(round(avg_flavour) if avg_flavour else 0) if avg_flavour else None
+    ctx = _RankContext(db)
+    cards: list[BatchCardResponse] = []
+    for bid in batch_ids:
+        batch = batches.get(bid)
+        if not batch:
+            continue
 
-    card_response = BatchCardResponse(
-        id=batch.id,
-        strain_id=batch.strain.id if batch.strain else None,
-        strain_name=batch.strain.name if batch.strain else "",
-        strain_aliases=batch.strain.aliases if batch.strain else None,
-        strain_type=batch.strain.strain_type if batch.strain else "",
-        grower_id=batch.grower.id if batch.grower else None,
-        grower_name=batch.grower.name if batch.grower else "",
-        batch_number=batch.batch_number,
-        thc_percentage=batch.thc_percentage,
-        cbd_percentage=batch.cbd_percentage,
-        top_terpenes=[
-            BatchTerpeneResponse(
-                terpene_id=t.terpene_id,
-                terpene_name=t.terpene.name if t.terpene else "",
-                percentage=t.percentage,
-            )
-            for t in top_terpenes
-        ],
-        avg_appearance_rating=round(avg_appearance, 1) if avg_appearance else None,
-        avg_aroma_rating=round(avg_aroma, 1) if avg_aroma else None,
-        avg_moisture_rating=round(avg_moisture, 1) if avg_moisture else None,
-        avg_flavour_rating=round(avg_flavour, 1) if avg_flavour else None,
-        avg_effect_rating=round(avg_effect, 1) if avg_effect else None,
-        review_count=review_count,
-        top_condition=top_condition,
-        top_effect=top_effect,
-        top_flavour_label=top_flavour_label,
-        strain_image_url=strain_image_url,
-        strain_description=batch.strain.description if batch.strain else None,
-    )
+        avg_appearance, avg_aroma, avg_moisture, avg_flavour, avg_effect, review_count = (
+            stats.get(bid, (None, None, None, None, None, 0))
+        )
+        cond = top_condition.get(bid)
+        top_effect = _EFFECT_LABELS.get(round(avg_effect)) if avg_effect else None
+        top_flavour_label = _FLAVOUR_LABELS.get(round(avg_flavour)) if avg_flavour else None
 
-    # Catalogue-wide ranks — computed once per request via the shared cache.
-    rank = await ctx.overall_rank(batch_id)
-    recent_rank = await ctx.recent_rank(batch_id)
+        top_terpenes = sorted(
+            batch.terpene_profiles, key=lambda t: t.percentage, reverse=True
+        )[:3]
 
-    # Per-category ranks (only when the card has that label)
-    top_condition_rank = (
-        await ctx.condition_rank(batch_id, top_condition) if top_condition else None
-    )
-    top_effect_rank = (
-        await ctx.effect_rank(batch_id, round(avg_effect)) if top_effect else None
-    )
-    top_flavour_rank = (
-        await ctx.flavour_rank(batch_id, round(avg_flavour)) if top_flavour_label else None
-    )
+        card = BatchCardResponse(
+            id=batch.id,
+            strain_id=batch.strain.id if batch.strain else None,
+            strain_name=batch.strain.name if batch.strain else "",
+            strain_aliases=batch.strain.aliases if batch.strain else None,
+            strain_type=batch.strain.strain_type if batch.strain else "",
+            grower_id=batch.grower.id if batch.grower else None,
+            grower_name=batch.grower.name if batch.grower else "",
+            batch_number=batch.batch_number,
+            thc_percentage=batch.thc_percentage,
+            cbd_percentage=batch.cbd_percentage,
+            top_terpenes=[
+                BatchTerpeneResponse(
+                    terpene_id=t.terpene_id,
+                    terpene_name=t.terpene.name if t.terpene else "",
+                    percentage=t.percentage,
+                )
+                for t in top_terpenes
+            ],
+            avg_appearance_rating=round(avg_appearance, 1) if avg_appearance else None,
+            avg_aroma_rating=round(avg_aroma, 1) if avg_aroma else None,
+            avg_moisture_rating=round(avg_moisture, 1) if avg_moisture else None,
+            avg_flavour_rating=round(avg_flavour, 1) if avg_flavour else None,
+            avg_effect_rating=round(avg_effect, 1) if avg_effect else None,
+            review_count=review_count,
+            top_condition=cond,
+            top_effect=top_effect,
+            top_flavour_label=top_flavour_label,
+            strain_image_url=photos.get(bid),
+            strain_description=batch.strain.description if batch.strain else None,
+        )
 
-    card_dict = card_response.model_dump()
-    card_dict["rank"] = rank
-    card_dict["recent_rank"] = recent_rank
-    card_dict["top_condition_rank"] = top_condition_rank
-    card_dict["top_effect_rank"] = top_effect_rank
-    card_dict["top_flavour_rank"] = top_flavour_rank
-    return BatchCardResponse(**card_dict)
+        card_dict = card.model_dump()
+        card_dict["rank"] = await ctx.overall_rank(bid)
+        card_dict["recent_rank"] = await ctx.recent_rank(bid)
+        card_dict["top_condition_rank"] = (
+            await ctx.condition_rank(bid, cond) if cond else None
+        )
+        card_dict["top_effect_rank"] = (
+            await ctx.effect_rank(bid, round(avg_effect)) if top_effect else None
+        )
+        card_dict["top_flavour_rank"] = (
+            await ctx.flavour_rank(bid, round(avg_flavour)) if top_flavour_label else None
+        )
+        cards.append(BatchCardResponse(**card_dict))
+
+    return cards
