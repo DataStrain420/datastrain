@@ -143,7 +143,7 @@ export default function Home() {
       <section className="relative overflow-hidden px-4 pb-12 pt-16 text-center">
         <HeroBackground />
         <div className="relative z-10">
-          <h1 className="mx-auto max-w-[60vw] text-4xl font-extrabold leading-tight text-white md:text-5xl">
+          <h1 className="mx-auto max-w-none text-4xl font-extrabold leading-tight text-white md:max-w-[60vw] md:text-5xl">
             The trusted voice of quality in the UK medical cannabis market.
           </h1>
 
