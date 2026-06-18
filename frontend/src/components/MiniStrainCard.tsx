@@ -37,7 +37,7 @@ export default function MiniStrainCard({ batchId, strainName, batchNumber }: Min
   // ── Loading / error placeholder ─────────────────────────────────────
   return (
     <div
-      className="flex h-[460px] w-full flex-col items-center justify-center rounded-2xl px-4 text-center"
+      className="flex aspect-[330/462] w-[330px] max-w-[calc(100vw-2rem)] flex-col items-center justify-center rounded-2xl px-4 text-center"
       style={{
         backgroundColor: C.bgCard,
         border: `1px solid ${C.textMuted}22`,

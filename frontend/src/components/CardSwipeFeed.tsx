@@ -67,7 +67,7 @@ export default function CardSwipeFeed() {
 
   return (
     <div>
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="flex flex-wrap justify-center gap-6">
         {cards.map((card) => (
           <StrainCard key={card.id} card={card} />
         ))}

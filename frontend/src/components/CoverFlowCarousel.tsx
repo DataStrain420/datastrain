@@ -31,11 +31,11 @@ export default function CoverFlowCarousel({ children }: CoverFlowCarouselProps) 
 
   if (count === 0) return null;
 
-  // Card width + spacing constants. Sized so the centre card (which gets
-  // scaled to 1.15 for emphasis) lands close to the ~300–320px width of
-  // strain cards in the homepage/listing grids elsewhere on the site.
-  const CARD_W = 285;
-  const SPACING = 230;
+  // Card width + spacing constants. CARD_W matches the standard 330px strain
+  // card used across the site so the centre card is the same size everywhere;
+  // SPACING is scaled to keep the same relative overlap as before.
+  const CARD_W = 330;
+  const SPACING = 265;
   const MAX_VISIBLE = 3; // cards visible on each side
 
   return (

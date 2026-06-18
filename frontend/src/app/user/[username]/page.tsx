@@ -180,7 +180,7 @@ export default function PublicProfilePage() {
         {/* ── Pinned Strain ────────────────────────────────────────────── */}
         {pinnedCard && (
           <SectionBox title="My Favourite Strain" icon={"\u{2B50}"}>
-            <div className="mx-auto max-w-[300px]">
+            <div className="mx-auto w-fit">
               <StrainCard card={pinnedCard} />
             </div>
           </SectionBox>

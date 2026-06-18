@@ -195,7 +195,7 @@ export default function Home() {
       {/* ── 2. Top Rated Strains ────────────────────────────────────────── */}
       <section className="mx-auto max-w-7xl px-4 pb-16">
         <SectionHeading>Top Rated Strains</SectionHeading>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="flex flex-wrap justify-center gap-6">
           {topStrains.map((card) => (
             <StrainCard key={card.id} card={card} />
           ))}

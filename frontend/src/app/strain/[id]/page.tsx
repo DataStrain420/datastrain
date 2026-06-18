@@ -244,7 +244,7 @@ export default function StrainDetailPage() {
         {/* ── Hero: Card left, Info right ────────────────────────────── */}
         <div className="mb-8 grid gap-8 lg:grid-cols-2">
           {/* Left — Strain card */}
-          <div className="mx-auto w-full max-w-[325px]">
+          <div className="mx-auto w-fit">
             {card ? (
               // Override the batch-level rank with the strain-level rank so
               // the card matches the "Rank" badge displayed at the top-right
@@ -531,7 +531,7 @@ export default function StrainDetailPage() {
                 style={{ scrollbarWidth: "none" }}
               >
                 {similarCards.map((c) => (
-                  <div key={c.id} className="w-[280px] flex-shrink-0">
+                  <div key={c.id} className="flex-shrink-0">
                     <StrainCard card={c} />
                   </div>
                 ))}

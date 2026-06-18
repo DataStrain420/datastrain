@@ -320,7 +320,7 @@ export default function PortalDashboard() {
               // into it. Once the drop completes, the WHOLE sleeve (this div)
               // peeks to the side to reveal that the card can be flipped.
               <div
-                className="sleeve-peek relative w-full max-w-[360px] rounded-[20px] p-2.5"
+                className="sleeve-peek relative mx-auto w-fit max-w-full rounded-[20px] p-2.5"
                 style={{
                   background: `linear-gradient(135deg, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0.01) 30%, rgba(255,255,255,0.03) 70%, rgba(255,255,255,0.08) 100%)`,
                   border: `1px solid rgba(255,255,255,0.18)`,
