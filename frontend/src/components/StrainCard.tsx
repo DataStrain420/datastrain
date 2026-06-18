@@ -275,6 +275,25 @@ export default function StrainCard({ card }: { card: CardData }) {
             ...cardBorderStyles,
           }}
         >
+          {/* Folded corner (dog-ear) — static affordance signalling the card
+              flips to a back face. Pointer-events-none so taps still flip. */}
+          <div className="pointer-events-none absolute bottom-0 right-0 z-10 h-[26px] w-[26px]" aria-hidden>
+            <div
+              className="absolute bottom-0 right-0"
+              style={{
+                width: 0,
+                height: 0,
+                borderStyle: "solid",
+                borderWidth: "0 0 26px 26px",
+                borderColor: `transparent transparent ${isHolo ? "rgba(0,0,0,0.32)" : "#323d46"} transparent`,
+              }}
+            />
+            <div
+              className="absolute right-0 top-0 h-px w-full"
+              style={{ backgroundColor: isHolo ? "rgba(0,0,0,0.28)" : `${C.textMuted}55` }}
+            />
+          </div>
+
           {/* ── Header: strain info left, rank right ─────────────────── */}
           <div className="flex items-start justify-between px-5 pt-4 pb-2">
             <div className="min-w-0 flex-1 pr-2">
@@ -341,18 +360,6 @@ export default function StrainCard({ card }: { card: CardData }) {
               className="h-full w-full rounded-xl object-cover"
               onError={handleImgError}
             />
-
-            {/* Static "flippable" affordance — replaces the per-card peek
-                animation. Pointer-events-none so a tap still flips the card. */}
-            <span
-              className="pointer-events-none absolute right-2 top-2 flex items-center gap-1 rounded-full px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-white"
-              style={{ backgroundColor: "rgba(0,0,0,0.55)" }}
-            >
-              <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h5M20 20v-5h-5M5.6 9A7 7 0 0118.4 7.5M18.4 15A7 7 0 015.6 16.5" />
-              </svg>
-              Flip
-            </span>
           </div>
 
           {/* ── Type pill (left) + THC/CBD joint (right) ──────────────── */}
