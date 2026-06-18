@@ -276,21 +276,31 @@ export default function StrainCard({ card }: { card: CardData }) {
           }}
         >
           {/* Folded corner (dog-ear) — static affordance signalling the card
-              flips to a back face. Pointer-events-none so taps still flip. */}
-          <div className="pointer-events-none absolute bottom-0 right-0 z-10 h-[26px] w-[26px]" aria-hidden>
+              flips to a back face. A lighter "flap" triangle over a larger
+              dark triangle gives the lifted-corner shadow. Pointer-events-none
+              so a tap still flips the card. */}
+          <div className="pointer-events-none absolute bottom-0 right-0 z-10" aria-hidden>
+            {/* Shadow cast by the lifted corner */}
             <div
               className="absolute bottom-0 right-0"
               style={{
                 width: 0,
                 height: 0,
                 borderStyle: "solid",
-                borderWidth: "0 0 26px 26px",
-                borderColor: `transparent transparent ${isHolo ? "rgba(0,0,0,0.32)" : "#323d46"} transparent`,
+                borderWidth: "0 0 42px 42px",
+                borderColor: "transparent transparent rgba(0,0,0,0.55) transparent",
               }}
             />
+            {/* Folded-back flap (underside of the corner) */}
             <div
-              className="absolute right-0 top-0 h-px w-full"
-              style={{ backgroundColor: isHolo ? "rgba(0,0,0,0.28)" : `${C.textMuted}55` }}
+              className="absolute bottom-0 right-0"
+              style={{
+                width: 0,
+                height: 0,
+                borderStyle: "solid",
+                borderWidth: "0 0 34px 34px",
+                borderColor: `transparent transparent ${isHolo ? "rgba(255,255,255,0.65)" : "#56646f"} transparent`,
+              }}
             />
           </div>
 
