@@ -14,6 +14,7 @@ const C = brand;
 export default function CardCarousel({ children }: { children: ReactNode }) {
   const items = Array.isArray(children) ? children.filter(Boolean) : [children];
   const scrollerRef = useRef<HTMLDivElement>(null);
+  const animRef = useRef<number | null>(null);
   const [active, setActive] = useState(0);
   const [atStart, setAtStart] = useState(true);
   const [atEnd, setAtEnd] = useState(false);
@@ -45,7 +46,10 @@ export default function CardCarousel({ children }: { children: ReactNode }) {
   useEffect(() => {
     update();
     window.addEventListener("resize", update);
-    return () => window.removeEventListener("resize", update);
+    return () => {
+      window.removeEventListener("resize", update);
+      if (animRef.current) cancelAnimationFrame(animRef.current);
+    };
   }, [update, items.length]);
 
   const scrollToIndex = useCallback((i: number) => {
@@ -58,10 +62,25 @@ export default function CardCarousel({ children }: { children: ReactNode }) {
     const sRect = el.getBoundingClientRect();
     const kRect = k.getBoundingClientRect();
     const target = Math.max(0, el.scrollLeft + (kRect.left - sRect.left) - SCROLL_PAD);
-    // Smooth scroll on tap (falls back to an instant jump where smooth scroll
-    // isn't supported). Update indicators optimistically so the active dot
-    // responds immediately; the scroll handler keeps them in sync on swipe.
-    el.scrollTo({ left: target, behavior: "smooth" });
+
+    // Animate the scroll ourselves with requestAnimationFrame rather than
+    // scrollTo({behavior:'smooth'}) — the latter is suppressed by the OS
+    // "reduce motion" setting and some webviews, leaving no animation.
+    if (animRef.current) cancelAnimationFrame(animRef.current);
+    const start = el.scrollLeft;
+    const dist = target - start;
+    const duration = 350;
+    let t0: number | null = null;
+    const step = (ts: number) => {
+      if (t0 === null) t0 = ts;
+      const p = Math.min((ts - t0) / duration, 1);
+      const eased = 1 - Math.pow(1 - p, 3); // ease-out cubic
+      el.scrollLeft = start + dist * eased;
+      if (p < 1) animRef.current = requestAnimationFrame(step);
+    };
+    animRef.current = requestAnimationFrame(step);
+
+    // Update indicators optimistically so the active dot responds instantly.
     setActive(idx);
     setAtStart(idx === 0);
     setAtEnd(idx === kids.length - 1);
