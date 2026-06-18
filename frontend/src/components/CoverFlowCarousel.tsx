@@ -34,8 +34,8 @@ export default function CoverFlowCarousel({ children }: CoverFlowCarouselProps) 
   // Card width + spacing constants. CARD_W matches the standard 330px strain
   // card used across the site so the centre card is the same size everywhere;
   // SPACING is scaled to keep the same relative overlap as before.
-  const CARD_W = 330;
-  const SPACING = 265;
+  const CARD_W = 300;
+  const SPACING = 240;
   const MAX_VISIBLE = 3; // cards visible on each side
 
   return (
