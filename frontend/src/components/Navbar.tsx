@@ -99,6 +99,56 @@ function MegaColumn({ title, items, onNavigate }: { title: string; items: { labe
   );
 }
 
+/* ── Mobile accordion section ──────────────────────────────────────────────── */
+
+function MobileNavSection({
+  title,
+  expanded,
+  onToggle,
+  items,
+  onNavigate,
+}: {
+  title: string;
+  expanded: boolean;
+  onToggle: () => void;
+  items: { label: string; href: string; icon: string }[];
+  onNavigate: (href: string) => void;
+}) {
+  return (
+    <div className="border-b" style={{ borderColor: `${C.textMuted}12` }}>
+      <button
+        onClick={onToggle}
+        className="flex w-full items-center justify-between py-3 text-base font-semibold transition hover:text-white"
+        style={{ color: expanded ? "white" : C.textMuted }}
+      >
+        {title}
+        <svg
+          className="h-4 w-4 transition-transform"
+          style={{ transform: expanded ? "rotate(180deg)" : "rotate(0deg)" }}
+          fill="none" stroke="currentColor" viewBox="0 0 24 24"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+      {expanded && (
+        <div className="grid grid-cols-2 gap-0.5 pb-3">
+          {items.map((item) => (
+            <button
+              key={item.href + item.label}
+              onClick={() => onNavigate(item.href)}
+              className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left text-sm transition hover:bg-white/5 hover:text-white"
+              style={{ color: C.textMuted }}
+            >
+              <span className="w-5 shrink-0 text-center">{item.icon}</span>
+              <span className="truncate">{item.label}</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ── Navbar ─────────────────────────────────────────────────────────────────── */
 
 interface NavbarProps {
@@ -112,10 +162,12 @@ export default function Navbar({ rightSlot, leftSlot, showSearch = false }: Navb
   const pathname = usePathname();
   const router = useRouter();
   const [openMenu, setOpenMenu] = useState<string | null>(null);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const navRef = useRef<HTMLDivElement>(null);
 
   function navigateTo(href: string) {
     setOpenMenu(null);
+    setMobileOpen(false);
     router.push(href);
   }
 
@@ -124,6 +176,7 @@ export default function Navbar({ rightSlot, leftSlot, showSearch = false }: Navb
     function handleClick(e: MouseEvent) {
       if (navRef.current && !navRef.current.contains(e.target as Node)) {
         setOpenMenu(null);
+        setMobileOpen(false);
       }
     }
     document.addEventListener("mousedown", handleClick);
@@ -133,6 +186,7 @@ export default function Navbar({ rightSlot, leftSlot, showSearch = false }: Navb
   // Close on route change
   useEffect(() => {
     setOpenMenu(null);
+    setMobileOpen(false);
   }, [pathname]);
 
   function toggleMenu(menu: string) {
@@ -227,17 +281,73 @@ export default function Navbar({ rightSlot, leftSlot, showSearch = false }: Navb
         </nav>
 
         {/* Right */}
-        <div className="flex shrink-0 items-center gap-3">
+        <div className="ml-auto flex shrink-0 items-center gap-3 lg:ml-0">
           {rightSlot}
+
+          {/* Burger — mobile/tablet only (nav links hidden below lg) */}
+          <button
+            onClick={() => { setMobileOpen(!mobileOpen); setOpenMenu(null); }}
+            className="flex h-9 w-9 items-center justify-center rounded-lg border transition hover:brightness-125 lg:hidden"
+            style={{ borderColor: `${C.secondary}33`, backgroundColor: `${C.secondary}10` }}
+            aria-label="Menu"
+            aria-expanded={mobileOpen}
+          >
+            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: C.textMuted }}>
+              {mobileOpen ? (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              ) : (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              )}
+            </svg>
+          </button>
         </div>
       </div>
+
+      {/* ── Mobile drawer (search + nav) ──────────────────────────────── */}
+      {mobileOpen && (
+        <div
+          className="border-t lg:hidden"
+          style={{ backgroundColor: C.bgCard, borderColor: `${C.textMuted}15` }}
+        >
+          <div className="space-y-1 px-4 py-4">
+            {/* Search — available here when the page uses it (top-bar search is hidden below md) */}
+            {showSearch && (
+              <div className="mb-3">
+                <SearchBar size="sm" />
+              </div>
+            )}
+
+            <MobileNavSection
+              title="Strains"
+              expanded={openMenu === "strains"}
+              onToggle={() => toggleMenu("strains")}
+              items={[...strainsMega.featured, ...strainsMega.byType, ...strainsMega.byEffect, ...strainsMega.byCondition]}
+              onNavigate={navigateTo}
+            />
+            <MobileNavSection
+              title="Growers"
+              expanded={openMenu === "growers"}
+              onToggle={() => toggleMenu("growers")}
+              items={[...growersMega.featured, ...growersMega.byRegion]}
+              onNavigate={navigateTo}
+            />
+            <MobileNavSection
+              title="Conditions"
+              expanded={openMenu === "conditions"}
+              onToggle={() => toggleMenu("conditions")}
+              items={conditionsMega}
+              onNavigate={navigateTo}
+            />
+          </div>
+        </div>
+      )}
 
       {/* ── Mega menu panels ─────────────────────────────────────────── */}
 
       {/* Strains mega menu */}
       {openMenu === "strains" && (
         <div
-          className="absolute left-0 right-0 z-40 border-b shadow-2xl"
+          className="absolute left-0 right-0 z-40 hidden border-b shadow-2xl lg:block"
           style={{ backgroundColor: C.bgCard, borderColor: `${C.textMuted}15` }}
         >
           <div className="mx-auto grid max-w-7xl grid-cols-4 gap-8 px-8 py-6">
@@ -252,7 +362,7 @@ export default function Navbar({ rightSlot, leftSlot, showSearch = false }: Navb
       {/* Growers mega menu */}
       {openMenu === "growers" && (
         <div
-          className="absolute left-0 right-0 z-40 border-b shadow-2xl"
+          className="absolute left-0 right-0 z-40 hidden border-b shadow-2xl lg:block"
           style={{ backgroundColor: C.bgCard, borderColor: `${C.textMuted}15` }}
         >
           <div className="mx-auto grid max-w-7xl grid-cols-2 gap-8 px-8 py-6">
@@ -265,7 +375,7 @@ export default function Navbar({ rightSlot, leftSlot, showSearch = false }: Navb
       {/* Conditions mega menu */}
       {openMenu === "conditions" && (
         <div
-          className="absolute left-0 right-0 z-40 border-b shadow-2xl"
+          className="absolute left-0 right-0 z-40 hidden border-b shadow-2xl lg:block"
           style={{ backgroundColor: C.bgCard, borderColor: `${C.textMuted}15` }}
         >
           <div className="mx-auto max-w-7xl px-8 py-6">
@@ -415,13 +525,14 @@ export function PublicNavActions() {
   return (
     <Link
       href="/login"
-      className="flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90"
+      aria-label="Login or register"
+      className="flex h-9 w-9 items-center justify-center gap-2 rounded-full border text-sm font-semibold text-white transition hover:opacity-90 sm:h-auto sm:w-auto sm:px-4 sm:py-2"
       style={{ borderColor: C.primary, backgroundColor: `${C.primary}15` }}
     >
-      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg className="h-5 w-5 sm:h-4 sm:w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
       </svg>
-      Login/Register
+      <span className="hidden sm:inline">Login/Register</span>
     </Link>
   );
 }
