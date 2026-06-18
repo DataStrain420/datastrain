@@ -2,7 +2,7 @@
 
 import clsx from "clsx";
 import Link from "next/link";
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { brand } from "@/lib/brand";
 import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
@@ -175,7 +175,7 @@ function ThcCbdPill({ thc, cbd }: { thc: number; cbd: number }) {
   );
 }
 
-export default function StrainCard({ card, disablePeek = false }: { card: CardData; disablePeek?: boolean }) {
+export default function StrainCard({ card }: { card: CardData }) {
   const [flipped, setFlipped] = useState(false);
   const [imgError, setImgError] = useState(false);
   const typeLbl = typeLabel(card.strain_type);
@@ -248,73 +248,14 @@ export default function StrainCard({ card, disablePeek = false }: { card: CardDa
     }
   }
 
-  // Peek animation — triggers once when card enters viewport
-  const cardRef = useRef<HTMLDivElement>(null);
-  const innerRef = useRef<HTMLDivElement>(null);
-  const peekedRef = useRef(false);
-
-  useEffect(() => {
-    if (disablePeek) return; // sleeve handles peek for the whole assembly
-    const outer = cardRef.current;
-    const inner = innerRef.current;
-    if (!outer || !inner || peekedRef.current) return;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting && !peekedRef.current) {
-          peekedRef.current = true;
-          observer.disconnect();
-
-          // Delay before starting peek
-          setTimeout(() => {
-            if (flipped) return; // don't peek if already flipped
-            // Re-bind the narrowed-non-null ref into a local so the nested
-            // animate() closure keeps the narrowed type.
-            const innerEl = inner;
-            const duration = 1800;
-            const start = performance.now();
-            const maxAngle = -25;
-
-            function animate(now: number) {
-              const t = Math.min((now - start) / duration, 1);
-              // Easing: ease out the peek, hold, then return
-              let angle: number;
-              if (t < 0.25) {
-                // Ease in to max rotation
-                const p = t / 0.25;
-                angle = maxAngle * (1 - Math.pow(1 - p, 3));
-              } else if (t < 0.5) {
-                // Hold at max
-                angle = maxAngle;
-              } else {
-                // Ease back to 0 with slight overshoot
-                const p = (t - 0.5) / 0.5;
-                const eased = 1 - Math.pow(1 - p, 3);
-                angle = maxAngle * (1 - eased);
-              }
-              innerEl.style.transform = `rotateY(${angle}deg)`;
-              if (t < 1) requestAnimationFrame(animate);
-              else innerEl.style.transform = "";
-            }
-            requestAnimationFrame(animate);
-          }, 700);
-        }
-      },
-      { threshold: 0.5 }
-    );
-    observer.observe(outer);
-    return () => observer.disconnect();
-  }, [flipped, disablePeek]);
 
   return (
     <div
-      ref={cardRef}
       className="aspect-[300/468] w-[300px] max-w-[calc(100vw-2rem)] cursor-pointer"
       style={{ perspective: "1000px" }}
       onClick={() => setFlipped(!flipped)}
     >
       <div
-        ref={innerRef}
         className={clsx(
           "relative h-full w-full transition-transform duration-500",
           "[transform-style:preserve-3d]",
@@ -400,6 +341,18 @@ export default function StrainCard({ card, disablePeek = false }: { card: CardDa
               className="h-full w-full rounded-xl object-cover"
               onError={handleImgError}
             />
+
+            {/* Static "flippable" affordance — replaces the per-card peek
+                animation. Pointer-events-none so a tap still flips the card. */}
+            <span
+              className="pointer-events-none absolute right-2 top-2 flex items-center gap-1 rounded-full px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-white"
+              style={{ backgroundColor: "rgba(0,0,0,0.55)" }}
+            >
+              <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h5M20 20v-5h-5M5.6 9A7 7 0 0118.4 7.5M18.4 15A7 7 0 015.6 16.5" />
+              </svg>
+              Flip
+            </span>
           </div>
 
           {/* ── Type pill (left) + THC/CBD joint (right) ──────────────── */}

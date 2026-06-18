@@ -333,7 +333,7 @@ export default function PortalDashboard() {
                 }}
               >
                 <div className="drop-into-sleeve">
-                  <StrainCard card={pinnedCard} disablePeek />
+                  <StrainCard card={pinnedCard} />
                 </div>
 
                 {/* Diagonal glare — faint specular highlight across the top-left
