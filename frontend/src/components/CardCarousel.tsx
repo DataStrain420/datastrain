@@ -52,17 +52,20 @@ export default function CardCarousel({ children }: { children: ReactNode }) {
     const el = scrollerRef.current;
     if (!el) return;
     const kids = Array.from(el.children) as HTMLElement[];
-    const k = kids[Math.max(0, Math.min(i, kids.length - 1))];
+    const idx = Math.max(0, Math.min(i, kids.length - 1));
+    const k = kids[idx];
     if (!k) return;
     const sRect = el.getBoundingClientRect();
     const kRect = k.getBoundingClientRect();
-    // Instant jump — reliable across all webviews. (Smooth scroll APIs are
-    // honoured inconsistently and don't run at all in non-painting webviews.)
-    el.scrollLeft = Math.max(0, el.scrollLeft + (kRect.left - sRect.left) - SCROLL_PAD);
-    // Update indicators immediately — don't wait for the scroll event, which
-    // may be deferred (and lets taps work even where scroll events lag).
-    update();
-  }, [update]);
+    const target = Math.max(0, el.scrollLeft + (kRect.left - sRect.left) - SCROLL_PAD);
+    // Smooth scroll on tap (falls back to an instant jump where smooth scroll
+    // isn't supported). Update indicators optimistically so the active dot
+    // responds immediately; the scroll handler keeps them in sync on swipe.
+    el.scrollTo({ left: target, behavior: "smooth" });
+    setActive(idx);
+    setAtStart(idx === 0);
+    setAtEnd(idx === kids.length - 1);
+  }, []);
 
   const showControls = items.length > 1;
 
