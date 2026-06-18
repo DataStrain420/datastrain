@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import func, select
@@ -208,20 +208,16 @@ async def list_batch_cards(
     result = await db.execute(stmt)
     batch_ids = [row[0] for row in result.all()]
 
-    cards = []
-    for bid in batch_ids:
-        card = await get_batch_card(bid, db)
-        cards.append(card)
+    # Share one ranking cache across every card so the global rankings are
+    # computed once per request, not once per card.
+    ctx = _RankContext(db)
+    cards = [await _build_batch_card(bid, db, ctx) for bid in batch_ids]
     return cards
 
 
-@router.get("/top-rated", response_model=list[BatchCardResponse])
-async def top_rated_batches(
-    limit: int = Query(6, ge=1, le=20),
-    db: AsyncSession = Depends(get_db),
-):
-    """Return batches ranked by average review rating, with full card data."""
-    avg_rating = func.avg(
+def _avg_rating_expr():
+    """Average of the five 1–5 review sub-ratings, normalised to a single score."""
+    return func.avg(
         (
             Review.appearance_rating
             + Review.aroma_rating
@@ -230,14 +226,105 @@ async def top_rated_batches(
             + Review.effect_rating
         )
         / 5.0
-    ).label("avg_rating")
+    )
 
+
+class _RankContext:
+    """Caches catalogue-wide ranking lists for the lifetime of a single request.
+
+    Building N cards at once (e.g. the top-rated endpoint) would otherwise
+    recompute the same global rankings once per card — the dominant cost of
+    those endpoints. Each ranking is computed once here and shared; a card's
+    rank is just its position in the cached, ordered list.
+    """
+
+    def __init__(self, db: AsyncSession):
+        self.db = db
+        self._cache: dict = {}
+
+    async def _position(self, key, stmt, batch_id):
+        ids = self._cache.get(key)
+        if ids is None:
+            result = await self.db.execute(stmt)
+            ids = [row[0] for row in result.all()]
+            self._cache[key] = ids
+        return (ids.index(batch_id) + 1) if batch_id in ids else None
+
+    async def overall_rank(self, batch_id):
+        stmt = (
+            select(Batch.id)
+            .join(Review, Review.batch_id == Batch.id)
+            .where(Batch.approved.is_(True), Review.status == ReviewStatus.APPROVED.value)
+            .group_by(Batch.id)
+            .order_by(_avg_rating_expr().desc())
+        )
+        return await self._position("overall", stmt, batch_id)
+
+    async def recent_rank(self, batch_id):
+        thirty_days_ago = datetime.utcnow() - timedelta(days=30)
+        stmt = (
+            select(Batch.id)
+            .join(Review, Review.batch_id == Batch.id)
+            .where(
+                Batch.approved.is_(True),
+                Review.status == ReviewStatus.APPROVED.value,
+                Review.created_at >= thirty_days_ago,
+            )
+            .group_by(Batch.id)
+            .order_by(_avg_rating_expr().desc())
+        )
+        return await self._position("recent", stmt, batch_id)
+
+    async def condition_rank(self, batch_id, condition):
+        stmt = (
+            select(Review.batch_id)
+            .join(ConditionRating, ConditionRating.review_id == Review.id)
+            .join(Batch, Batch.id == Review.batch_id)
+            .where(
+                Review.status == ReviewStatus.APPROVED.value,
+                Batch.approved.is_(True),
+                ConditionRating.condition_name == condition,
+            )
+            .group_by(Review.batch_id)
+            .order_by(func.avg(ConditionRating.efficacy_rating).desc())
+        )
+        return await self._position(("condition", condition), stmt, batch_id)
+
+    async def effect_rank(self, batch_id, rounded_effect):
+        stmt = (
+            select(Batch.id)
+            .join(Review, Review.batch_id == Batch.id)
+            .where(Review.status == ReviewStatus.APPROVED.value, Batch.approved.is_(True))
+            .group_by(Batch.id)
+            .having(func.round(func.avg(Review.effect_rating)) == rounded_effect)
+            .order_by(func.avg(Review.effect_rating).desc())
+        )
+        return await self._position(("effect", rounded_effect), stmt, batch_id)
+
+    async def flavour_rank(self, batch_id, rounded_flavour):
+        stmt = (
+            select(Batch.id)
+            .join(Review, Review.batch_id == Batch.id)
+            .where(Review.status == ReviewStatus.APPROVED.value, Batch.approved.is_(True))
+            .group_by(Batch.id)
+            .having(func.round(func.avg(Review.flavour_rating)) == rounded_flavour)
+            .order_by(func.avg(Review.flavour_rating).desc())
+        )
+        return await self._position(("flavour", rounded_flavour), stmt, batch_id)
+
+
+@router.get("/top-rated", response_model=list[BatchCardResponse])
+async def top_rated_batches(
+    limit: int = Query(6, ge=1, le=20),
+    db: AsyncSession = Depends(get_db),
+):
+    """Return batches ranked by average review rating, with full card data."""
     stmt = (
         select(Batch.id)
         .join(Review, Review.batch_id == Batch.id)
         .where(Batch.approved.is_(True), Review.status == ReviewStatus.APPROVED.value)
         .group_by(Batch.id)
-        .order_by(avg_rating.desc())
+        .order_by(_avg_rating_expr().desc())
         .limit(limit)
     )
     result = await db.execute(stmt)
@@ -249,10 +336,10 @@ async def top_rated_batches(
         )
         batch_ids = [row[0] for row in fallback.all()]
 
-    cards = []
-    for bid in batch_ids:
-        card = await get_batch_card(bid, db)
-        cards.append(card)
+    # Share one ranking cache across every card so the global rankings are
+    # computed once per request, not once per card.
+    ctx = _RankContext(db)
+    cards = [await _build_batch_card(bid, db, ctx) for bid in batch_ids]
     return cards
 
 
@@ -328,6 +415,12 @@ async def approve_batch(
 @router.get("/{batch_id}/card", response_model=BatchCardResponse)
 async def get_batch_card(batch_id: int, db: AsyncSession = Depends(get_db)):
     """Top Trumps card data — all stats formatted for card UI."""
+    return await _build_batch_card(batch_id, db, _RankContext(db))
+
+
+async def _build_batch_card(batch_id: int, db: AsyncSession, ctx: "_RankContext"):
+    """Build a single Top Trumps card. `ctx` caches catalogue-wide rankings so
+    callers building many cards don't recompute the global orderings per card."""
     result = await db.execute(
         select(Batch)
         .options(
@@ -426,116 +519,20 @@ async def get_batch_card(batch_id: int, db: AsyncSession = Depends(get_db)):
         strain_description=batch.strain.description if batch.strain else None,
     )
 
-    # Compute rank for this batch among all approved batches
-    avg_all = func.avg(
-        (
-            Review.appearance_rating
-            + Review.aroma_rating
-            + Review.moisture_rating
-            + Review.flavour_rating
-            + Review.effect_rating
-        )
-        / 5.0
-    ).label("avg_rating")
+    # Catalogue-wide ranks — computed once per request via the shared cache.
+    rank = await ctx.overall_rank(batch_id)
+    recent_rank = await ctx.recent_rank(batch_id)
 
-    ranked_stmt = (
-        select(Batch.id)
-        .join(Review, Review.batch_id == Batch.id)
-        .where(Batch.approved.is_(True), Review.status == ReviewStatus.APPROVED.value)
-        .group_by(Batch.id)
-        .order_by(avg_all.desc())
+    # Per-category ranks (only when the card has that label)
+    top_condition_rank = (
+        await ctx.condition_rank(batch_id, top_condition) if top_condition else None
     )
-    ranked_result = await db.execute(ranked_stmt)
-    ranked_ids = [row[0] for row in ranked_result.all()]
-    rank = (ranked_ids.index(batch_id) + 1) if batch_id in ranked_ids else None
-
-    # Compute 30-day rolling rank
-    from datetime import datetime, timedelta
-    thirty_days_ago = datetime.utcnow() - timedelta(days=30)
-
-    recent_avg = func.avg(
-        (
-            Review.appearance_rating
-            + Review.aroma_rating
-            + Review.moisture_rating
-            + Review.flavour_rating
-            + Review.effect_rating
-        )
-        / 5.0
-    ).label("recent_avg")
-
-    recent_ranked_stmt = (
-        select(Batch.id)
-        .join(Review, Review.batch_id == Batch.id)
-        .where(
-            Batch.approved.is_(True),
-            Review.status == ReviewStatus.APPROVED.value,
-            Review.created_at >= thirty_days_ago,
-        )
-        .group_by(Batch.id)
-        .order_by(recent_avg.desc())
+    top_effect_rank = (
+        await ctx.effect_rank(batch_id, round(avg_effect)) if top_effect else None
     )
-    recent_result = await db.execute(recent_ranked_stmt)
-    recent_ids = [row[0] for row in recent_result.all()]
-    recent_rank = (recent_ids.index(batch_id) + 1) if batch_id in recent_ids else None
-
-    # Compute per-category ranks
-    top_condition_rank = None
-    top_effect_rank = None
-    top_flavour_rank = None
-
-    # Condition rank: among all batches with reviews for this condition,
-    # rank by average efficacy rating for that condition
-    if top_condition:
-        cond_rank_stmt = (
-            select(Review.batch_id)
-            .join(ConditionRating, ConditionRating.review_id == Review.id)
-            .join(Batch, Batch.id == Review.batch_id)
-            .where(
-                Review.status == ReviewStatus.APPROVED.value,
-                Batch.approved.is_(True),
-                ConditionRating.condition_name == top_condition,
-            )
-            .group_by(Review.batch_id)
-            .order_by(func.avg(ConditionRating.efficacy_rating).desc())
-        )
-        cond_result = await db.execute(cond_rank_stmt)
-        cond_ids = [row[0] for row in cond_result.all()]
-        top_condition_rank = (cond_ids.index(batch_id) + 1) if batch_id in cond_ids else None
-
-    # Effect rank: among all batches with this effect label, rank by avg effect rating
-    if top_effect:
-        effect_rank_stmt = (
-            select(Batch.id)
-            .join(Review, Review.batch_id == Batch.id)
-            .where(
-                Review.status == ReviewStatus.APPROVED.value,
-                Batch.approved.is_(True),
-            )
-            .group_by(Batch.id)
-            .having(func.round(func.avg(Review.effect_rating)) == round(avg_effect))
-            .order_by(func.avg(Review.effect_rating).desc())
-        )
-        effect_result = await db.execute(effect_rank_stmt)
-        effect_ids = [row[0] for row in effect_result.all()]
-        top_effect_rank = (effect_ids.index(batch_id) + 1) if batch_id in effect_ids else None
-
-    # Flavour rank: among all batches with this flavour label, rank by avg flavour rating
-    if top_flavour_label:
-        flav_rank_stmt = (
-            select(Batch.id)
-            .join(Review, Review.batch_id == Batch.id)
-            .where(
-                Review.status == ReviewStatus.APPROVED.value,
-                Batch.approved.is_(True),
-            )
-            .group_by(Batch.id)
-            .having(func.round(func.avg(Review.flavour_rating)) == round(avg_flavour))
-            .order_by(func.avg(Review.flavour_rating).desc())
-        )
-        flav_result = await db.execute(flav_rank_stmt)
-        flav_ids = [row[0] for row in flav_result.all()]
-        top_flavour_rank = (flav_ids.index(batch_id) + 1) if batch_id in flav_ids else None
+    top_flavour_rank = (
+        await ctx.flavour_rank(batch_id, round(avg_flavour)) if top_flavour_label else None
+    )
 
     card_dict = card_response.model_dump()
     card_dict["rank"] = rank
