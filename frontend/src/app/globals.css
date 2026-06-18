@@ -168,3 +168,16 @@
     animation: none;
   }
 }
+
+/* ── Prevent iOS zoom-on-focus ──────────────────────────────────────────
+   Mobile Safari zooms the whole page in when a focused input has a
+   font-size below 16px (e.g. Tailwind's text-sm = 14px), which pushes the
+   layout wider than the viewport. Force ≥16px on phones; the smaller
+   design sizes still apply from `md` (768px) up. */
+@media (max-width: 767px) {
+  input,
+  textarea,
+  select {
+    font-size: 16px;
+  }
+}
