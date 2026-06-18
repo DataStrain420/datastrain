@@ -275,35 +275,6 @@ export default function StrainCard({ card }: { card: CardData }) {
             ...cardBorderStyles,
           }}
         >
-          {/* Folded corner (dog-ear) — static affordance signalling the card
-              flips to a back face. A lighter "flap" triangle over a larger
-              dark triangle gives the lifted-corner shadow. Pointer-events-none
-              so a tap still flips the card. */}
-          <div className="pointer-events-none absolute bottom-0 right-0 z-10" aria-hidden>
-            {/* Shadow cast by the lifted corner */}
-            <div
-              className="absolute bottom-0 right-0"
-              style={{
-                width: 0,
-                height: 0,
-                borderStyle: "solid",
-                borderWidth: "0 0 42px 42px",
-                borderColor: "transparent transparent rgba(0,0,0,0.55) transparent",
-              }}
-            />
-            {/* Folded-back flap (underside of the corner) */}
-            <div
-              className="absolute bottom-0 right-0"
-              style={{
-                width: 0,
-                height: 0,
-                borderStyle: "solid",
-                borderWidth: "0 0 34px 34px",
-                borderColor: `transparent transparent ${isHolo ? "rgba(255,255,255,0.65)" : "#56646f"} transparent`,
-              }}
-            />
-          </div>
-
           {/* ── Header: strain info left, rank right ─────────────────── */}
           <div className="flex items-start justify-between px-5 pt-4 pb-2">
             <div className="min-w-0 flex-1 pr-2">
@@ -370,6 +341,21 @@ export default function StrainCard({ card }: { card: CardData }) {
               className="h-full w-full rounded-xl object-cover"
               onError={handleImgError}
             />
+
+            {/* Flip affordance — tapping anywhere flips the card; this icon
+                signals that the card is two-sided. */}
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); setFlipped(!flipped); }}
+              className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full transition hover:brightness-125"
+              style={{ backgroundColor: "rgba(20,24,27,0.62)", border: `1px solid ${C.secondary}66`, color: C.secondary }}
+              aria-label="Flip card"
+            >
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19.933 13.04a8 8 0 1 1-9.925-8.788c3.899-1 7.935 1.007 9.425 4.747" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M20 4v5h-5" />
+              </svg>
+            </button>
           </div>
 
           {/* ── Type pill (left) + THC/CBD joint (right) ──────────────── */}
