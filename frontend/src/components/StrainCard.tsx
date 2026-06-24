@@ -356,15 +356,16 @@ export default function StrainCard({ card }: { card: CardData }) {
               </span>
               {card.irradiated !== undefined && card.irradiated !== null && (
                 <span
-                  className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider"
+                  className="inline-flex h-6 w-6 items-center justify-center rounded-full text-sm leading-none"
                   style={
                     card.irradiated
                       ? { backgroundColor: "#f59e0b22", color: "#f59e0b", border: "1px solid #f59e0b55" }
                       : { backgroundColor: `${C.primary}22`, color: C.primary, border: `1px solid ${C.primary}55` }
                   }
                   title={card.irradiated ? "Gamma-irradiated for microbial sterilisation" : "Not gamma-irradiated"}
+                  aria-label={card.irradiated ? "Irradiated" : "Non-irradiated"}
                 >
-                  {card.irradiated ? "Irradiated" : "Non-irradiated"}
+                  {card.irradiated ? "☢" : "\u{1F33F}"}
                 </span>
               )}
             </div>
