@@ -358,9 +358,16 @@ export default function StrainCard({ card }: { card: CardData }) {
                 <span
                   className="inline-flex h-6 w-6 items-center justify-center rounded-full text-sm leading-none"
                   style={
-                    card.irradiated
-                      ? { backgroundColor: "#f59e0b22", color: "#f59e0b", border: "1px solid #f59e0b55" }
-                      : { backgroundColor: `${C.primary}22`, color: C.primary, border: `1px solid ${C.primary}55` }
+                    // Holo (gold/silver) cards have a bright metallic background
+                    // that washes the amber/green tint out. Drop a solid black
+                    // disc behind the icon there so it stays legible.
+                    isHolo
+                      ? card.irradiated
+                        ? { backgroundColor: "#000", color: "#f59e0b", border: "1px solid #000" }
+                        : { backgroundColor: "#000", color: C.primary, border: "1px solid #000" }
+                      : card.irradiated
+                        ? { backgroundColor: "#f59e0b22", color: "#f59e0b", border: "1px solid #f59e0b55" }
+                        : { backgroundColor: `${C.primary}22`, color: C.primary, border: `1px solid ${C.primary}55` }
                   }
                   title={card.irradiated ? "Gamma-irradiated for microbial sterilisation" : "Not gamma-irradiated"}
                   aria-label={card.irradiated ? "Irradiated" : "Non-irradiated"}
