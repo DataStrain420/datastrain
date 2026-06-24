@@ -345,20 +345,22 @@ export default function StrainCard({ card }: { card: CardData }) {
           </div>
 
           {/* ── Segmented attribute pill: type · irradiation · THC · CBD ── */}
-          {/* Single dark pill so all four sections share the same height and
-              read as one strip of facts. Thin dividers between segments. */}
-          <div className="flex justify-center px-5 pb-2 pt-2">
+          {/* Single dark pill stretching the full image-width so all four
+              sections share the same height. Each segment flex-1 (icon
+              segment auto-width) and tight padding so the labels fit at
+              the smallest card width without truncating. */}
+          <div className="px-5 pb-2 pt-2">
             <div
-              className="flex h-7 items-stretch overflow-hidden rounded-full border text-xs font-semibold text-white"
+              className="flex h-7 w-full items-stretch overflow-hidden rounded-full border text-[11px] font-semibold text-white"
               style={{ backgroundColor: C.bgDeep, borderColor: `${C.textMuted}33` }}
             >
-              <span className="flex items-center gap-1.5 px-3">
-                <StrainTypeIcon type={card.strain_type} size={14} />
-                {typeLbl}
+              <span className="flex flex-1 items-center justify-center gap-1 px-1.5">
+                <StrainTypeIcon type={card.strain_type} size={12} />
+                <span>{typeLbl}</span>
               </span>
               {card.irradiated !== undefined && card.irradiated !== null && (
                 <span
-                  className="flex items-center justify-center px-2 text-sm leading-none"
+                  className="flex items-center justify-center px-1.5 text-sm leading-none"
                   style={{
                     borderLeft: `1px solid ${C.textMuted}33`,
                     color: card.irradiated ? "#f59e0b" : C.primary,
@@ -370,16 +372,16 @@ export default function StrainCard({ card }: { card: CardData }) {
                 </span>
               )}
               <span
-                className="flex items-center px-3"
+                className="flex flex-1 items-center justify-center gap-1 px-1.5"
                 style={{ borderLeft: `1px solid ${C.textMuted}33` }}
               >
-                THC <span className="ml-1" style={{ color: C.secondary }}>{card.thc_percentage}%</span>
+                THC <span style={{ color: C.secondary }}>{card.thc_percentage}%</span>
               </span>
               <span
-                className="flex items-center px-3"
+                className="flex flex-1 items-center justify-center gap-1 px-1.5"
                 style={{ borderLeft: `1px solid ${C.textMuted}33` }}
               >
-                CBD <span className="ml-1" style={{ color: C.secondary }}>{card.cbd_percentage}%</span>
+                CBD <span style={{ color: C.secondary }}>{card.cbd_percentage}%</span>
               </span>
             </div>
           </div>
