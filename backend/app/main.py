@@ -51,7 +51,7 @@ async def health_check():
 
 # ─── Routers ──────────────────────────────────────────────────────────────────
 
-from app.routers import admin, batches, growers, library, pharmacies, reviews, search, strains, users  # noqa: E402
+from app.routers import admin, batches, clinics, growers, library, pharmacies, reviews, search, strains, users  # noqa: E402
 
 app.include_router(users.router, prefix="/api/v1")
 app.include_router(strains.router, prefix="/api/v1")
@@ -59,6 +59,7 @@ app.include_router(batches.router, prefix="/api/v1")
 app.include_router(growers.router, prefix="/api/v1")
 app.include_router(reviews.router, prefix="/api/v1")
 app.include_router(pharmacies.router, prefix="/api/v1")
+app.include_router(clinics.router, prefix="/api/v1")
 app.include_router(library.router, prefix="/api/v1")
 app.include_router(admin.router, prefix="/api/v1")
 app.include_router(search.router, prefix="/api/v1")

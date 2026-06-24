@@ -19,8 +19,10 @@ from app.database import Base, async_session, engine
 from app.models import (
     Batch,
     BatchTerpene,
+    Clinic,
     ConditionRating,
     Grower,
+    Pharmacy,
     Review,
     ReviewStatus,
     Strain,
@@ -85,6 +87,40 @@ STRAINS = [
     ("Uruguayan Kush", StrainType.INDICA, 17, "UKush", None),
 ]
 
+# ── Pharmacies (real UK dispensing pharmacies for medical cannabis) ──────────
+
+PHARMACIES = [
+    {"name": "IPS Pharma", "location": "Wickford, Essex", "website": "https://ipspecialspharma.com", "description": "Specials manufacturer and dispensing pharmacy supplying unlicensed medical cannabis to UK clinics.", "verified": True},
+    {"name": "Dispensary Green", "location": "Crawley, West Sussex", "website": "https://dispensarygreen.com", "description": "UK specialist pharmacy focused on medical cannabis dispensing with mail-order across England, Scotland and Wales.", "verified": True},
+    {"name": "Lyphe Pharmacy", "location": "London", "website": "https://lyphegroup.com", "description": "Dispensing arm of the Lyphe Group, fulfilling prescriptions written through Lyphe Clinic and partner clinics.", "verified": True},
+    {"name": "Curaleaf Pharmacy", "location": "Stoke-on-Trent", "website": "https://curaleafclinic.com", "description": "Vertically-integrated pharmacy paired with Curaleaf Clinic; UK distribution of Curaleaf-imported product.", "verified": True},
+    {"name": "Mamedica Pharmacy", "location": "London", "website": "https://mamedica.co.uk", "description": "Mamedica's dispensing pharmacy — exclusive fulfilment for Mamedica subscription patients.", "verified": True},
+    {"name": "Astral Health", "location": "Knaresborough, North Yorkshire", "website": "https://astralhealth.co.uk", "description": "Independent specials pharmacy offering same-day dispensing for Northern England clinics.", "verified": True},
+    {"name": "Releaf Pharmacy", "location": "Cambridge", "website": "https://releaf.co.uk", "description": "In-house dispensing for Releaf clinic patients on the all-in monthly subscription model.", "verified": True},
+    {"name": "Cellen Vivary", "location": "London", "website": "https://cellen.life", "description": "Cellen Therapeutics' dispensing pharmacy — partnered with Lyphe Clinic and other major prescribers.", "verified": True},
+    {"name": "Marvera Specials", "location": "Bedford", "website": "https://marvera.co.uk", "description": "Independent specials pharmacy dispensing imported medical cannabis flower and oils to UK clinics.", "verified": True},
+    {"name": "Roseway Labs", "location": "London", "website": "https://rosewaylabs.com", "description": "Specials pharmacy and product developer working with multiple UK prescribing clinics.", "verified": True},
+    {"name": "Pharmadica", "location": "London", "website": "https://pharmadica.uk", "description": "Specials pharmacy with same-day delivery into central London and next-day nationwide.", "verified": False},
+    {"name": "Lloydspharmacy Specials", "location": "Coventry", "website": "https://lloydspharmacy.com", "description": "High-street pharmacy chain offering specials dispensing including medical cannabis via select clinics.", "verified": False},
+]
+
+# ── Clinics (real UK prescribing clinics for medical cannabis) ───────────────
+
+CLINICS = [
+    {"name": "Sapphire Medical Clinics", "location": "London (Harley Street)", "website": "https://sapphireclinics.com", "description": "MHRA-registered specialist clinic with the UK Medical Cannabis Registry; consultants across pain, mental health and neurology.", "specialties": '["Chronic pain", "Anxiety", "PTSD", "Sleep disorders", "Neurological"]', "consultation_fee_gbp": 150, "verified": True},
+    {"name": "Lyphe Clinic", "location": "London", "website": "https://lyphe.com", "description": "Formerly The Medical Cannabis Clinics. One of the longest-running prescribers in the UK with a large multi-disciplinary consultant team.", "specialties": '["Chronic pain", "Anxiety", "ADHD", "Cancer-related symptoms", "Palliative care"]', "consultation_fee_gbp": 100, "verified": True},
+    {"name": "Mamedica", "location": "London", "website": "https://mamedica.co.uk", "description": "Fixed monthly subscription model — initial assessment plus all follow-ups and reissues bundled into one fee.", "specialties": '["Chronic pain", "Anxiety", "PTSD", "Insomnia"]', "consultation_fee_gbp": 50, "verified": True},
+    {"name": "Releaf", "location": "Cambridge", "website": "https://releaf.co.uk", "description": "All-in-one subscription bundling consultations, prescription delivery and medication into a single monthly fee.", "specialties": '["Chronic pain", "Anxiety", "Sleep disorders", "ADHD"]', "consultation_fee_gbp": 50, "verified": True},
+    {"name": "Curaleaf Clinic", "location": "Stoke-on-Trent / online UK-wide", "website": "https://curaleafclinic.com", "description": "Specialist team across pain, neurology and mental health; vertically integrated with Curaleaf Pharmacy.", "specialties": '["Chronic pain", "Anxiety", "PTSD", "Neurological", "Oncology"]', "consultation_fee_gbp": 100, "verified": True},
+    {"name": "Alternaleaf", "location": "London (online UK-wide)", "website": "https://alternaleaf.co.uk", "description": "Australian-origin clinic that launched UK operations in 2024 — fast online triage and prescriber assignment.", "specialties": '["Chronic pain", "Anxiety", "ADHD", "Endometriosis"]', "consultation_fee_gbp": 75, "verified": True},
+    {"name": "Cantourage Clinic UK", "location": "London", "website": "https://cantourageclinic.co.uk", "description": "UK arm of German licensed producer Cantourage; consultants across pain, mental-health and neurology.", "specialties": '["Chronic pain", "Anxiety", "Migraine", "Fibromyalgia"]', "consultation_fee_gbp": 95, "verified": True},
+    {"name": "Integro Medical Cannabis Clinics", "location": "Reading, Berkshire", "website": "https://integroclinics.com", "description": "Specialist clinic with a long-standing focus on chronic pain and complex multi-morbidity cases.", "specialties": '["Chronic pain", "Fibromyalgia", "Cancer pain", "Neuropathic pain"]', "consultation_fee_gbp": 120, "verified": True},
+    {"name": "Birmingham Cannabis Clinic", "location": "Birmingham", "website": "https://birminghamcannabisclinic.com", "description": "Independent Midlands-based clinic offering in-person and remote appointments for medical cannabis assessment.", "specialties": '["Chronic pain", "Anxiety", "Insomnia"]', "consultation_fee_gbp": 110, "verified": False},
+    {"name": "Onyx Medical Cannabis Clinic", "location": "London", "website": "https://onyxmedical.co.uk", "description": "Boutique private clinic with same-week appointments and follow-up via secure messaging.", "specialties": '["Chronic pain", "Anxiety", "PTSD"]', "consultation_fee_gbp": 200, "verified": False},
+    {"name": "LVL Health", "location": "London", "website": "https://lvlhealth.uk", "description": "Patient-membership model with bundled consultations and an in-app symptom tracker.", "specialties": '["Chronic pain", "Sleep disorders", "Anxiety"]', "consultation_fee_gbp": 80, "verified": False},
+    {"name": "Cancard Wellford Clinic", "location": "Online UK-wide", "website": "https://wellfordmedical.co.uk", "description": "Online-first clinic associated with the Cancard patient advocacy programme; focus on accessibility.", "specialties": '["Chronic pain", "Anxiety", "Inflammatory bowel disease"]', "consultation_fee_gbp": 60, "verified": False},
+]
+
 # ── Terpenes ──────────────────────────────────────────────────────────────────
 
 TERPENES = [
@@ -139,6 +175,18 @@ async def seed():
             grower = Grower(**g)
             db.add(grower)
             grower_objs.append(grower)
+        await db.flush()
+
+        # ── Pharmacies ────────────────────────────────────────────────────
+        print(f"Seeding {len(PHARMACIES)} pharmacies...")
+        for p in PHARMACIES:
+            db.add(Pharmacy(**p))
+        await db.flush()
+
+        # ── Clinics ───────────────────────────────────────────────────────
+        print(f"Seeding {len(CLINICS)} clinics...")
+        for c in CLINICS:
+            db.add(Clinic(**c))
         await db.flush()
 
         # ── Terpenes ──────────────────────────────────────────────────────

@@ -163,12 +163,39 @@ class Pharmacy(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     name: Mapped[str] = mapped_column(String(200), nullable=False)
     location: Mapped[str] = mapped_column(String(300), nullable=False)
+    # Public-listing fields
+    website: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    logo_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    verified: Mapped[bool] = mapped_column(Boolean, default=False)
+    # Internal dispensing integration
     api_endpoint: Mapped[str | None] = mapped_column(String(500), nullable=True)
     api_key_secret: Mapped[str | None] = mapped_column(String(200), nullable=True)
     stock_last_updated: Mapped[datetime | None] = mapped_column(
         DateTime, nullable=True
     )
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, server_default=func.now()
+    )
+
+
+# ─── Clinics ─────────────────────────────────────────────────────────────────
+
+
+class Clinic(Base):
+    __tablename__ = "clinics"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    name: Mapped[str] = mapped_column(String(200), nullable=False)
+    location: Mapped[str] = mapped_column(String(300), nullable=False)
+    website: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    logo_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    # JSON-serialised list of specialty strings (e.g. ["Chronic pain", "Anxiety"])
+    specialties: Mapped[str | None] = mapped_column(Text, nullable=True)
+    consultation_fee_gbp: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    verified: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime, server_default=func.now()
     )

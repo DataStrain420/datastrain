@@ -59,6 +59,35 @@ const growersMega = {
   ],
 };
 
+const pharmaciesMega = {
+  featured: [
+    { label: "Verified Pharmacies", href: "/pharmacies?verified=true", icon: "\u{2705}" },
+    { label: "All Pharmacies", href: "/pharmacies", icon: "\u{1F3E5}" },
+  ],
+  byLocation: [
+    { label: "London", href: "/pharmacies?location=London", icon: "\u{1F4CD}" },
+    { label: "Essex", href: "/pharmacies?location=Essex", icon: "\u{1F4CD}" },
+    { label: "Cambridge", href: "/pharmacies?location=Cambridge", icon: "\u{1F4CD}" },
+    { label: "West Sussex", href: "/pharmacies?location=Sussex", icon: "\u{1F4CD}" },
+    { label: "Yorkshire", href: "/pharmacies?location=Yorkshire", icon: "\u{1F4CD}" },
+  ],
+};
+
+const clinicsMega = {
+  featured: [
+    { label: "Verified Clinics", href: "/clinics?verified=true", icon: "\u{2705}" },
+    { label: "Most Affordable", href: "/clinics?sort=cheapest", icon: "\u{1F4B7}" },
+    { label: "All Clinics", href: "/clinics", icon: "\u{1F469}\u{200D}\u{2695}\u{FE0F}" },
+  ],
+  byLocation: [
+    { label: "London", href: "/clinics?location=London", icon: "\u{1F4CD}" },
+    { label: "Online UK-wide", href: "/clinics?location=Online", icon: "\u{1F4BB}" },
+    { label: "Birmingham", href: "/clinics?location=Birmingham", icon: "\u{1F4CD}" },
+    { label: "Cambridge", href: "/clinics?location=Cambridge", icon: "\u{1F4CD}" },
+    { label: "Reading", href: "/clinics?location=Reading", icon: "\u{1F4CD}" },
+  ],
+};
+
 const conditionsMega = [
   { label: "Insomnia", href: "/strains?condition=Insomnia", icon: "\u{1F634}" },
   { label: "Anxiety", href: "/strains?condition=Anxiety", icon: "\u{1F630}" },
@@ -263,6 +292,38 @@ export default function Navbar({ rightSlot, leftSlot, showSearch = false }: Navb
             </svg>
           </button>
 
+          {/* Pharmacies */}
+          <button
+            onClick={() => toggleMenu("pharmacies")}
+            className="flex items-center gap-1 rounded-lg px-3 py-1.5 text-sm font-medium transition hover:text-white"
+            style={{ color: openMenu === "pharmacies" ? "white" : C.textMuted }}
+          >
+            Pharmacies
+            <svg
+              className="h-3.5 w-3.5 transition-transform"
+              style={{ transform: openMenu === "pharmacies" ? "rotate(180deg)" : "rotate(0deg)" }}
+              fill="none" stroke="currentColor" viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+
+          {/* Clinics */}
+          <button
+            onClick={() => toggleMenu("clinics")}
+            className="flex items-center gap-1 rounded-lg px-3 py-1.5 text-sm font-medium transition hover:text-white"
+            style={{ color: openMenu === "clinics" ? "white" : C.textMuted }}
+          >
+            Clinics
+            <svg
+              className="h-3.5 w-3.5 transition-transform"
+              style={{ transform: openMenu === "clinics" ? "rotate(180deg)" : "rotate(0deg)" }}
+              fill="none" stroke="currentColor" viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+
           {/* Conditions */}
           <button
             onClick={() => toggleMenu("conditions")}
@@ -332,6 +393,20 @@ export default function Navbar({ rightSlot, leftSlot, showSearch = false }: Navb
               onNavigate={navigateTo}
             />
             <MobileNavSection
+              title="Pharmacies"
+              expanded={openMenu === "pharmacies"}
+              onToggle={() => toggleMenu("pharmacies")}
+              items={[...pharmaciesMega.featured, ...pharmaciesMega.byLocation]}
+              onNavigate={navigateTo}
+            />
+            <MobileNavSection
+              title="Clinics"
+              expanded={openMenu === "clinics"}
+              onToggle={() => toggleMenu("clinics")}
+              items={[...clinicsMega.featured, ...clinicsMega.byLocation]}
+              onNavigate={navigateTo}
+            />
+            <MobileNavSection
               title="Conditions"
               expanded={openMenu === "conditions"}
               onToggle={() => toggleMenu("conditions")}
@@ -368,6 +443,32 @@ export default function Navbar({ rightSlot, leftSlot, showSearch = false }: Navb
           <div className="mx-auto grid max-w-7xl grid-cols-2 gap-8 px-8 py-6">
             <MegaColumn title="Featured" items={growersMega.featured} onNavigate={navigateTo} />
             <MegaColumn title="By Region" items={growersMega.byRegion} onNavigate={navigateTo} />
+          </div>
+        </div>
+      )}
+
+      {/* Pharmacies mega menu */}
+      {openMenu === "pharmacies" && (
+        <div
+          className="absolute left-0 right-0 z-40 hidden border-b shadow-2xl lg:block"
+          style={{ backgroundColor: C.bgCard, borderColor: `${C.textMuted}15` }}
+        >
+          <div className="mx-auto grid max-w-7xl grid-cols-2 gap-8 px-8 py-6">
+            <MegaColumn title="Featured" items={pharmaciesMega.featured} onNavigate={navigateTo} />
+            <MegaColumn title="By Location" items={pharmaciesMega.byLocation} onNavigate={navigateTo} />
+          </div>
+        </div>
+      )}
+
+      {/* Clinics mega menu */}
+      {openMenu === "clinics" && (
+        <div
+          className="absolute left-0 right-0 z-40 hidden border-b shadow-2xl lg:block"
+          style={{ backgroundColor: C.bgCard, borderColor: `${C.textMuted}15` }}
+        >
+          <div className="mx-auto grid max-w-7xl grid-cols-2 gap-8 px-8 py-6">
+            <MegaColumn title="Featured" items={clinicsMega.featured} onNavigate={navigateTo} />
+            <MegaColumn title="By Location" items={clinicsMega.byLocation} onNavigate={navigateTo} />
           </div>
         </div>
       )}
