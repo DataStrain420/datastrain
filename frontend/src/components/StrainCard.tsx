@@ -344,39 +344,44 @@ export default function StrainCard({ card }: { card: CardData }) {
             />
           </div>
 
-          {/* ── Type pill + irradiation badge (left) + THC/CBD joint (right) ── */}
-          <div className="flex items-center justify-between gap-2 px-5 pb-2 pt-2">
-            <div className="flex items-center gap-1.5">
-              <span
-                className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold"
-                style={{ backgroundColor: C.bgDeep, border: `1px solid ${C.textMuted}33`, color: "#fff" }}
-              >
+          {/* ── Segmented attribute pill: type · irradiation · THC · CBD ── */}
+          {/* Single dark pill so all four sections share the same height and
+              read as one strip of facts. Thin dividers between segments. */}
+          <div className="flex justify-center px-5 pb-2 pt-2">
+            <div
+              className="flex h-7 items-stretch overflow-hidden rounded-full border text-xs font-semibold text-white"
+              style={{ backgroundColor: C.bgDeep, borderColor: `${C.textMuted}33` }}
+            >
+              <span className="flex items-center gap-1.5 px-3">
                 <StrainTypeIcon type={card.strain_type} size={14} />
                 {typeLbl}
               </span>
               {card.irradiated !== undefined && card.irradiated !== null && (
                 <span
-                  className="inline-flex h-6 w-6 items-center justify-center rounded-full text-sm leading-none"
-                  style={
-                    // Holo (gold/silver) cards have a bright metallic background
-                    // that washes the amber/green tint out. Drop a solid black
-                    // disc behind the icon there so it stays legible.
-                    isHolo
-                      ? card.irradiated
-                        ? { backgroundColor: "#000", color: "#f59e0b", border: "1px solid #000" }
-                        : { backgroundColor: "#000", color: C.primary, border: "1px solid #000" }
-                      : card.irradiated
-                        ? { backgroundColor: "#f59e0b22", color: "#f59e0b", border: "1px solid #f59e0b55" }
-                        : { backgroundColor: `${C.primary}22`, color: C.primary, border: `1px solid ${C.primary}55` }
-                  }
+                  className="flex items-center justify-center px-2 text-sm leading-none"
+                  style={{
+                    borderLeft: `1px solid ${C.textMuted}33`,
+                    color: card.irradiated ? "#f59e0b" : C.primary,
+                  }}
                   title={card.irradiated ? "Gamma-irradiated for microbial sterilisation" : "Not gamma-irradiated"}
                   aria-label={card.irradiated ? "Irradiated" : "Non-irradiated"}
                 >
                   {card.irradiated ? "☢" : "\u{1F33F}"}
                 </span>
               )}
+              <span
+                className="flex items-center px-3"
+                style={{ borderLeft: `1px solid ${C.textMuted}33` }}
+              >
+                THC <span className="ml-1" style={{ color: C.secondary }}>{card.thc_percentage}%</span>
+              </span>
+              <span
+                className="flex items-center px-3"
+                style={{ borderLeft: `1px solid ${C.textMuted}33` }}
+              >
+                CBD <span className="ml-1" style={{ color: C.secondary }}>{card.cbd_percentage}%</span>
+              </span>
             </div>
-            <ThcCbdPill thc={card.thc_percentage} cbd={card.cbd_percentage} />
           </div>
 
           {/* ── Bottom info section ───────────────────────────────────── */}
