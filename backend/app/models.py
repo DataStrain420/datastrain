@@ -219,6 +219,9 @@ class Batch(Base):
     cbd_percentage: Mapped[float] = mapped_column(Float, nullable=False)
     tested_date: Mapped[date] = mapped_column(Date, nullable=False)
     lab_report_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    # Gamma-irradiated for microbial sterilisation? Nullable when unknown so
+    # the frontend can render "unknown" rather than a misleading default.
+    irradiated: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
     dispensing_pharmacy_id: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("pharmacies.id"), nullable=True
     )

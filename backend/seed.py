@@ -215,12 +215,33 @@ async def seed():
             strain_objs.append(s)
         await db.flush()
 
+        # Map grower name → irradiation default. Reflects real UK 2026
+        # practice: Bedrocan flower is steam-sterilised, not gamma-irradiated;
+        # most large North-American producers gamma-irradiate by default.
+        # Anything not listed gets a randomised value below.
+        IRRADIATION_BY_GROWER = {
+            "Bedrocan": False,
+            "Glass Pharms": False,
+            "Tilray": True,
+            "Aurora": True,
+            "BOL Pharma": True,
+            "Khiron": True,
+            "Fotmer": True,
+            "Curaleaf": True,
+        }
+        grower_by_id = {g.id: g.name for g in grower_objs}
+
         # ── Batches ───────────────────────────────────────────────────────
         print("Seeding batches...")
         batch_objs = []
         for i, strain in enumerate(strain_objs):
             thc = round(random.uniform(14.0, 28.0), 1)
             cbd = round(random.uniform(0.0, 2.0), 1)
+            grower_name = grower_by_id.get(strain.grower_id, "")
+            irradiated = IRRADIATION_BY_GROWER.get(grower_name)
+            if irradiated is None:
+                # ~70/30 split for growers without a fixed default.
+                irradiated = random.random() < 0.7
             batch = Batch(
                 strain_id=strain.id,
                 grower_id=strain.grower_id,
@@ -228,6 +249,7 @@ async def seed():
                 thc_percentage=thc,
                 cbd_percentage=cbd,
                 tested_date=date(2026, random.randint(1, 3), random.randint(1, 28)),
+                irradiated=irradiated,
                 approved=True,
             )
             db.add(batch)

@@ -24,6 +24,7 @@ export interface CardData {
   rank?: number | null;
   thc_percentage: number;
   cbd_percentage: number;
+  irradiated?: boolean | null;
   top_terpenes: TerpeneData[];
   avg_appearance_rating: number | null;
   avg_aroma_rating: number | null;
@@ -343,15 +344,30 @@ export default function StrainCard({ card }: { card: CardData }) {
             />
           </div>
 
-          {/* ── Type pill (left) + THC/CBD joint (right) ──────────────── */}
-          <div className="flex items-center justify-between px-5 pb-2 pt-2">
-            <span
-              className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold"
-              style={{ backgroundColor: C.bgDeep, border: `1px solid ${C.textMuted}33`, color: "#fff" }}
-            >
-              <StrainTypeIcon type={card.strain_type} size={14} />
-              {typeLbl}
-            </span>
+          {/* ── Type pill + irradiation badge (left) + THC/CBD joint (right) ── */}
+          <div className="flex items-center justify-between gap-2 px-5 pb-2 pt-2">
+            <div className="flex items-center gap-1.5">
+              <span
+                className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold"
+                style={{ backgroundColor: C.bgDeep, border: `1px solid ${C.textMuted}33`, color: "#fff" }}
+              >
+                <StrainTypeIcon type={card.strain_type} size={14} />
+                {typeLbl}
+              </span>
+              {card.irradiated !== undefined && card.irradiated !== null && (
+                <span
+                  className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider"
+                  style={
+                    card.irradiated
+                      ? { backgroundColor: "#f59e0b22", color: "#f59e0b", border: "1px solid #f59e0b55" }
+                      : { backgroundColor: `${C.primary}22`, color: C.primary, border: `1px solid ${C.primary}55` }
+                  }
+                  title={card.irradiated ? "Gamma-irradiated for microbial sterilisation" : "Not gamma-irradiated"}
+                >
+                  {card.irradiated ? "Irradiated" : "Non-irradiated"}
+                </span>
+              )}
+            </div>
             <ThcCbdPill thc={card.thc_percentage} cbd={card.cbd_percentage} />
           </div>
 

@@ -13,6 +13,7 @@ class BatchCreate(BaseModel):
     cbd_percentage: float = Field(ge=0, le=100)
     tested_date: date
     lab_report_url: str | None = None
+    irradiated: bool | None = None
     dispensing_pharmacy_id: int | None = None
     terpene_profiles: list[BatchTerpeneCreate] = []
 
@@ -21,6 +22,7 @@ class BatchUpdate(BaseModel):
     thc_percentage: float | None = None
     cbd_percentage: float | None = None
     lab_report_url: str | None = None
+    irradiated: bool | None = None
     dispensing_pharmacy_id: int | None = None
 
 
@@ -35,6 +37,7 @@ class BatchResponse(BaseModel):
     cbd_percentage: float
     tested_date: date
     lab_report_url: str | None
+    irradiated: bool | None
     dispensing_pharmacy_id: int | None
     approved: bool
     created_at: datetime
@@ -57,6 +60,7 @@ class BatchCardResponse(BaseModel):
     rank: int | None = None
     thc_percentage: float
     cbd_percentage: float
+    irradiated: bool | None = None
     top_terpenes: list[BatchTerpeneResponse]
     avg_appearance_rating: float | None
     avg_aroma_rating: float | None
