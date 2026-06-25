@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
 import { apiFetch } from "@/lib/api";
@@ -13,6 +13,7 @@ import StrainTypeIcon from "@/components/StrainTypeIcon";
 import MiniStrainCard from "@/components/MiniStrainCard";
 import CoverFlowCarousel from "@/components/CoverFlowCarousel";
 import RankProgress from "@/components/RankProgress";
+import AvatarPicker from "@/components/AvatarPicker";
 
 const C = brand;
 
@@ -137,8 +138,6 @@ export default function PortalDashboard() {
   const [slogan, setSlogan] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
   const [saving, setSaving] = useState(false);
-  const [uploadingAvatar, setUploadingAvatar] = useState(false);
-  const avatarFileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     async function load() {
@@ -182,28 +181,6 @@ export default function PortalDashboard() {
         .then(setAllStrains)
         .catch(() => {});
     }
-  }
-
-  async function handleAvatarUpload(file: File) {
-    setUploadingAvatar(true);
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001/api/v1";
-      const token = localStorage.getItem("ds_token");
-      const res = await fetch(`${apiUrl}/users/me/avatar`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-        body: formData,
-      });
-      if (!res.ok) throw new Error("Upload failed");
-      const updated = await res.json() as MeProfile;
-      setProfile(updated);
-      setAvatarUrl(updated.avatar_url || "");
-    } catch (err) {
-      console.error("Avatar upload:", err);
-    }
-    setUploadingAvatar(false);
   }
 
   async function handleSave() {
@@ -439,51 +416,7 @@ export default function PortalDashboard() {
                   placeholder="Your personal motto..."
                 />
               </div>
-              <div>
-                <label className="mb-1 block text-xs font-medium" style={{ color: C.textMuted }}>Profile Photo</label>
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => avatarFileRef.current?.click()}
-                    disabled={uploadingAvatar}
-                    className="shrink-0 rounded-lg px-4 py-2 text-sm font-semibold transition hover:opacity-90 disabled:opacity-50"
-                    style={{ backgroundColor: C.bgDeep, border: `1px solid ${C.textMuted}44`, color: "white" }}
-                  >
-                    {uploadingAvatar ? "Uploading..." : "Upload"}
-                  </button>
-                  <input
-                    ref={avatarFileRef}
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) handleAvatarUpload(file);
-                      e.target.value = "";
-                    }}
-                  />
-                  <span className="flex items-center text-xs" style={{ color: C.textMuted }}>or</span>
-                  <input
-                    type="url"
-                    value={avatarUrl}
-                    onChange={(e) => setAvatarUrl(e.target.value)}
-                    className="min-w-0 flex-1 rounded-lg px-3 py-2 text-sm text-white focus:outline-none"
-                    style={{ backgroundColor: C.bgDeep, border: `1px solid ${C.textMuted}33` }}
-                    placeholder="Paste image URL..."
-                  />
-                </div>
-                {avatarUrl && (
-                  <div className="mt-2 flex items-center gap-2">
-                    <img
-                      src={avatarUrl.startsWith("/") ? `http://localhost:8001${avatarUrl}` : avatarUrl}
-                      alt="Preview"
-                      className="h-10 w-10 rounded-lg object-cover"
-                      style={{ border: `1px solid ${C.textMuted}33` }}
-                    />
-                    <span className="truncate text-xs" style={{ color: C.textMuted }}>{avatarUrl}</span>
-                  </div>
-                )}
-              </div>
+              <AvatarPicker value={avatarUrl} onChange={setAvatarUrl} />
 
               {/* Favourite strain picker */}
               <div>

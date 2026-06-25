@@ -275,13 +275,26 @@ async def seed():
         await db.flush()
 
         # ── Users ─────────────────────────────────────────────────────────
+        # Preset avatars from frontend/src/lib/avatars.ts — same DiceBear
+        # avataaars seeds the picker offers, so every seed user starts with
+        # a valid "picked" icon.
         print("Seeding users...")
+        AVATAR_PRESET_SEEDS = [
+            "Astra", "Bramble", "Citrus", "Dune", "Ember", "Fox",
+            "Glacier", "Halo", "Iris", "Jet", "Koa", "Lumen",
+            "Marigold", "Nimbus", "Onyx", "Pip", "Quill", "Rune",
+            "Sage", "Tide", "Umber", "Vega", "Willow", "Zen",
+        ]
+        def _preset_avatar(seed: str) -> str:
+            return f"https://api.dicebear.com/9.x/avataaars/svg?seed={seed}&radius=50"
+
         user_objs = []
         for uname in SEED_USERS:
             u = User(
                 username=uname,
                 email=f"{uname}@example.com",
                 password_hash="$2b$12$seedhashnotforlogin000000000000000000000000000",
+                avatar_url=_preset_avatar(random.choice(AVATAR_PRESET_SEEDS)),
                 is_verified=True,
             )
             db.add(u)
