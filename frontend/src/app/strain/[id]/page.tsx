@@ -242,15 +242,85 @@ export default function StrainDetailPage() {
       <Navbar rightSlot={<PublicNavActions />} showSearch />
 
       <main className="mx-auto max-w-7xl px-4 py-8">
-        {/* ── Hero: Card left, Info right ────────────────────────────── */}
+        {/* ── Strain header — name + rank + aliases + grower + pills ──── */}
+        <header className="mb-6">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div className="min-w-0 flex-1">
+              <h1 className="text-3xl font-extrabold text-white">{strain.name}</h1>
+              {strain.aliases && (
+                <p className="mt-1 text-sm" style={{ color: C.textMuted }}>
+                  Also known as: {strain.aliases}
+                </p>
+              )}
+              {strain.grower_name && strain.grower_id && (
+                <Link
+                  href={`/grower/${strain.grower_id}`}
+                  className="mt-1 inline-block text-sm font-medium transition hover:underline"
+                  style={{ color: C.primary }}
+                >
+                  By {strain.grower_name}
+                </Link>
+              )}
+            </div>
+            {stats && (
+              <div className="flex flex-col items-center">
+                <span className="text-xs font-semibold" style={{ color: C.textMuted }}>Rank</span>
+                <div className="relative h-12 w-12">
+                  <svg viewBox="0 0 256 256" className="absolute inset-0 h-full w-full">
+                    <path
+                      d="M219.9,66.7l-84,-47.4c-4.888,-2.799-10.912,-2.799-15.8,0l-84,47.4c-4.997,2.885-8.089,8.23-8.1,14l0,94.6c0.011,5.77,3.103,11.115,8.1,14l84,47.4c4.888,2.799,10.912,2.799,15.8,0l84,-47.4c4.997,-2.885,8.089,-8.23,8.1,-14l0,-94.6c-0.011,-5.77-3.103,-11.115-8.1,-14Z"
+                      fill={C.secondary}
+                    />
+                  </svg>
+                  <span className="absolute inset-0 flex items-center justify-center text-base font-black" style={{ color: C.bgDeep }}>
+                    {stats.overall_rank}
+                  </span>
+                </div>
+                <span className="text-xs" style={{ color: C.textMuted }}>
+                  of {stats.total_strains}
+                </span>
+              </div>
+            )}
+          </div>
+
+          {/* Type + THC + CBD + favourite */}
+          <div className="mt-4 flex flex-wrap items-center gap-2">
+            <span
+              className="rounded-full border px-4 py-1 text-sm font-semibold"
+              style={{ borderColor: `${C.textMuted}33`, color: "white" }}
+            >
+              <StrainTypeIcon type={strain.strain_type} size={14} className="inline-block" /> {tLabel}
+            </span>
+            {stats && (
+              <>
+                <span
+                  className="rounded-full border px-4 py-1 text-sm font-semibold"
+                  style={{ borderColor: `${C.textMuted}33`, color: "white" }}
+                >
+                  THC <span style={{ color: C.primary }}>{stats.avg_thc}%</span>
+                </span>
+                <span
+                  className="rounded-full border px-4 py-1 text-sm font-semibold"
+                  style={{ borderColor: `${C.textMuted}33`, color: "white" }}
+                >
+                  CBD <span style={{ color: C.primary }}>{stats.avg_cbd}%</span>
+                </span>
+              </>
+            )}
+            <button
+              className="ml-auto flex items-center gap-2 text-sm transition hover:text-white"
+              style={{ color: C.textMuted }}
+            >
+              <span className="text-lg">{"♡"}</span> Favourite
+            </button>
+          </div>
+        </header>
+
+        {/* ── Hero: Card left, latest reviews right ───────────────────── */}
         <div className="mb-8 grid gap-8 lg:grid-cols-2">
-          {/* Left — Strain card */}
+          {/* Left — Strain card. Rank kept consistent with the header hex. */}
           <div className="mx-auto w-fit">
             {card ? (
-              // Override the batch-level rank with the strain-level rank so
-              // the card matches the "Rank" badge displayed at the top-right
-              // of this page. Without this they often differ (a strain's #5
-              // can have a #21 batch of it, etc.) which is confusing.
               <StrainCard card={stats ? { ...card, rank: stats.overall_rank } : card} />
             ) : (
               <div
@@ -262,108 +332,101 @@ export default function StrainDetailPage() {
             )}
           </div>
 
-          {/* Right — Strain info panel */}
-          <div>
-            <div className="flex items-center justify-between">
-              <h1 className="text-3xl font-extrabold text-white">{strain.name}</h1>
-              {stats && (
-                <div className="flex flex-col items-center">
-                  <span className="text-xs font-semibold" style={{ color: C.textMuted }}>Rank</span>
-                  <div className="relative h-12 w-12">
-                    <svg viewBox="0 0 256 256" className="absolute inset-0 h-full w-full">
-                      <path
-                        d="M219.9,66.7l-84,-47.4c-4.888,-2.799-10.912,-2.799-15.8,0l-84,47.4c-4.997,2.885-8.089,8.23-8.1,14l0,94.6c0.011,5.77,3.103,11.115,8.1,14l84,47.4c4.888,2.799,10.912,2.799,15.8,0l84,-47.4c4.997,-2.885,8.089,-8.23,8.1,-14l0,-94.6c-0.011,-5.77-3.103,-11.115-8.1,-14Z"
-                        fill={C.secondary}
-                      />
-                    </svg>
-                    <span className="absolute inset-0 flex items-center justify-center text-base font-black" style={{ color: C.bgDeep }}>
-                      {stats.overall_rank}
-                    </span>
-                  </div>
-                  <span className="text-xs" style={{ color: C.textMuted }}>
-                    of {stats.total_strains}
-                  </span>
-                </div>
-              )}
-            </div>
-            {strain.aliases && (
-              <p className="mt-1 text-sm" style={{ color: C.textMuted }}>
-                Also known as: {strain.aliases}
-              </p>
-            )}
-            {strain.grower_name && strain.grower_id && (
+          {/* Right — Latest reviews. Caps at the card height with internal
+              scroll so the hero stays neat when there's a lot of feedback. */}
+          <div className="flex flex-col">
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="text-lg font-bold text-white">
+                Latest Reviews{reviews.length > 0 && ` (${reviews.length})`}
+              </h2>
               <Link
-                href={`/grower/${strain.grower_id}`}
-                className="mt-1 inline-block text-sm font-medium transition hover:underline"
-                style={{ color: C.primary }}
+                href={user ? "/portal/review/new" : "/login"}
+                className="rounded-lg px-3 py-1.5 text-xs font-semibold transition hover:opacity-90"
+                style={{ backgroundColor: C.primary, color: C.bgDeep }}
               >
-                By {strain.grower_name}
+                {user ? "Write a Review" : "Sign in to Review"}
               </Link>
-            )}
-
-            {/* Type + THC + CBD pills */}
-            <div className="mt-4 flex flex-wrap items-center gap-2">
-              <span
-                className="rounded-full border px-4 py-1 text-sm font-semibold"
-                style={{ borderColor: `${C.textMuted}33`, color: "white" }}
-              >
-                <StrainTypeIcon type={strain.strain_type} size={14} className="inline-block" /> {tLabel}
-              </span>
-              {stats && (
-                <>
-                  <span
-                    className="rounded-full border px-4 py-1 text-sm font-semibold"
-                    style={{ borderColor: `${C.textMuted}33`, color: "white" }}
-                  >
-                    THC <span style={{ color: C.primary }}>{stats.avg_thc}%</span>
-                  </span>
-                  <span
-                    className="rounded-full border px-4 py-1 text-sm font-semibold"
-                    style={{ borderColor: `${C.textMuted}33`, color: "white" }}
-                  >
-                    CBD <span style={{ color: C.primary }}>{stats.avg_cbd}%</span>
-                  </span>
-                </>
-              )}
             </div>
-
-
-            {/* "What people are saying" stats box */}
-            {stats && stats.review_count > 0 && (
+            {reviews.length === 0 ? (
               <div
-                className="mt-5 rounded-xl p-4 space-y-3"
+                className="flex flex-1 items-center justify-center rounded-2xl p-8 text-center"
                 style={{ backgroundColor: C.bgCard, border: `1px solid ${C.textMuted}15` }}
               >
                 <p className="text-sm" style={{ color: C.textMuted }}>
-                  What people are saying...
+                  No reviews yet. Be the first!
                 </p>
-
-                <StatRow label="Helps With" color={C.success} entries={stats.top_conditions} />
-                <StatRow label="Effects" color={C.secondary} entries={stats.top_effects} />
-                <StatRow label="Flavours" color={C.tertiary} entries={stats.top_flavours} />
-
+              </div>
+            ) : (
+              <div
+                className="flex flex-col gap-4 overflow-y-auto pr-1"
+                style={{ maxHeight: 540 }}
+              >
+                {reviews.map((r) => (
+                  <ReviewCard
+                    key={r.id}
+                    id={r.id}
+                    username={r.username || "Anonymous"}
+                    avatarUrl={r.avatar_url}
+                    communityStatus={r.community_status}
+                    strainName={r.strain_name || strain.name}
+                    strainId={strain.id}
+                    batchNumber={r.batch_number || ""}
+                    batchId={r.batch_id}
+                    growerName={r.grower_name || strain.grower_name || ""}
+                    growerId={r.grower_id ?? strain.grower_id ?? undefined}
+                    ratings={{
+                      appearance: r.appearance_rating,
+                      aroma: r.aroma_rating,
+                      moisture: r.moisture_rating,
+                      flavour: r.flavour_rating,
+                      effect: r.effect_rating,
+                    }}
+                    narrative={r.written_narrative}
+                    photos={[r.photo_product_url, r.photo_closeup_url, r.photo_packaging_url].filter((u): u is string => !!u)}
+                    effects={r.effects || []}
+                    flavours={r.flavours || []}
+                    conditions={(r.condition_ratings || []).map((c) => c.condition_name)}
+                    helpfulVotes={r.helpful_votes}
+                    createdAt={r.created_at}
+                  />
+                ))}
               </div>
             )}
+          </div>
+        </div>
 
-            {/* Terpenes — separate box */}
+        {/* ── What people are saying (full width, below hero) ──────────── */}
+        {stats && stats.review_count > 0 && (
+          <div
+            className="mb-6 space-y-3 rounded-2xl p-5"
+            style={{ backgroundColor: C.bgCard, border: `1px solid ${C.textMuted}15` }}
+          >
+            <p className="text-sm" style={{ color: C.textMuted }}>
+              What people are saying...
+            </p>
+            <StatRow label="Helps With" color={C.success} entries={stats.top_conditions} />
+            <StatRow label="Effects" color={C.secondary} entries={stats.top_effects} />
+            <StatRow label="Flavours" color={C.tertiary} entries={stats.top_flavours} />
+          </div>
+        )}
+
+        {/* Terpenes + Genetics — full-width pill rows. */}
+        {((stats && stats.top_terpenes.length > 0) || strain.genetics) && (
+          <div className="mb-8 flex flex-col gap-3">
             {stats && stats.top_terpenes.length > 0 && (
               <div
-                className="mt-3 flex items-center gap-3 rounded-xl p-4"
+                className="flex items-center gap-3 rounded-xl p-4"
                 style={{ backgroundColor: C.bgCard, border: `1px solid ${C.textMuted}15` }}
               >
                 <span className="shrink-0 rounded-md px-3 py-1 text-xs font-semibold text-white" style={{ backgroundColor: "#3b82f6" }}>
                   Terpenes
                 </span>
-                <span className="text-sm text-white">
-                  {stats.top_terpenes.join("   ")}
-                </span>
+                <span className="text-sm text-white">{stats.top_terpenes.join("   ")}</span>
               </div>
             )}
-
-            {/* Genetics — separate box */}
             {strain.genetics && (
               <div
-                className="mt-3 flex items-center gap-3 rounded-xl p-4"
+                className="flex items-center gap-3 rounded-xl p-4"
                 style={{ backgroundColor: C.bgCard, border: `1px solid ${C.textMuted}15` }}
               >
                 <span className="shrink-0 rounded-md px-3 py-1 text-xs font-semibold text-white" style={{ backgroundColor: "#6b7280" }}>
@@ -372,16 +435,8 @@ export default function StrainDetailPage() {
                 <span className="text-sm text-white">{strain.genetics}</span>
               </div>
             )}
-
-            {/* Favourite button */}
-            <button
-              className="mt-4 flex items-center gap-2 text-sm transition hover:text-white"
-              style={{ color: C.textMuted }}
-            >
-              <span className="text-lg">{"\u2661"}</span> Favourite
-            </button>
           </div>
-        </div>
+        )}
 
         {/* ── Description ──────────────────────────────────────────────── */}
         {strain.description && (
@@ -396,7 +451,7 @@ export default function StrainDetailPage() {
               className="mt-3 flex items-center gap-1.5 text-xs transition hover:text-white"
               style={{ color: C.textMuted }}
             >
-              <span>{"\u270E"}</span> Suggest a page edit
+              <span>{"✎"}</span> Suggest a page edit
             </button>
           </div>
         )}
@@ -453,60 +508,6 @@ export default function StrainDetailPage() {
             </div>
           </section>
         )}
-
-        {/* ── Reviews ──────────────────────────────────────────────────── */}
-        <section className="mb-12">
-          <div className="mb-6 flex items-center justify-between">
-            <h2 className="text-xl font-bold text-white">
-              Reviews ({reviews.length})
-            </h2>
-            <Link
-              href={user ? "/portal/review/new" : "/login"}
-              className="rounded-lg px-4 py-2 text-sm font-semibold transition hover:opacity-90"
-              style={{ backgroundColor: C.primary, color: C.bgDeep }}
-            >
-              {user ? "Write a Review" : "Sign in to Review"}
-            </Link>
-          </div>
-
-          {reviews.length === 0 ? (
-            <p className="py-8 text-center" style={{ color: C.textMuted }}>
-              No reviews yet. Be the first!
-            </p>
-          ) : (
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {reviews.map((r) => (
-                <ReviewCard
-                  key={r.id}
-                  id={r.id}
-                  username={r.username || "Anonymous"}
-                  avatarUrl={r.avatar_url}
-                  communityStatus={r.community_status}
-                  strainName={r.strain_name || strain.name}
-                  strainId={strain.id}
-                  batchNumber={r.batch_number || ""}
-                  batchId={r.batch_id}
-                  growerName={r.grower_name || strain.grower_name || ""}
-                  growerId={r.grower_id ?? strain.grower_id ?? undefined}
-                  ratings={{
-                    appearance: r.appearance_rating,
-                    aroma: r.aroma_rating,
-                    moisture: r.moisture_rating,
-                    flavour: r.flavour_rating,
-                    effect: r.effect_rating,
-                  }}
-                  narrative={r.written_narrative}
-                  photos={[r.photo_product_url, r.photo_closeup_url, r.photo_packaging_url].filter((u): u is string => !!u)}
-                  effects={r.effects || []}
-                  flavours={r.flavours || []}
-                  conditions={(r.condition_ratings || []).map((c) => c.condition_name)}
-                  helpfulVotes={r.helpful_votes}
-                  createdAt={r.created_at}
-                />
-              ))}
-            </div>
-          )}
-        </section>
 
         {/* ── Similar Strains ──────────────────────────────────────────── */}
         {similarCards.length > 0 && (
