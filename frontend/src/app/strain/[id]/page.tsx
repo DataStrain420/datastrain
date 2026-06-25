@@ -309,8 +309,11 @@ export default function StrainDetailPage() {
       <Navbar rightSlot={<PublicNavActions />} showSearch />
 
       <main className="mx-auto max-w-7xl px-4 py-8">
-        {/* ── Strain header — name + aliases + grower + rank hex ───────── */}
-        <header className="mb-6 flex flex-wrap items-start justify-between gap-4">
+        {/* ── Strain header — wrapped in a card, name + grower + rank hex */}
+        <header
+          className="mb-6 flex flex-wrap items-start justify-between gap-4 rounded-2xl px-6 py-5"
+          style={{ backgroundColor: C.bgCard, border: `1px solid ${C.textMuted}15` }}
+        >
           <div className="min-w-0 flex-1">
             <h1 className="text-3xl font-extrabold text-white">{strain.name}</h1>
             {strain.aliases && (
@@ -339,21 +342,21 @@ export default function StrainDetailPage() {
           {/* LEFT — card + stats + terpenes/genetics + bio + batches, all
               capped at the card's own width so the column reads as a tidy
               vertical "card sheet" rather than spreading across the page. */}
-          <div className="mx-auto w-full" style={{ maxWidth: LEFT_COLUMN_MAX }}>
-            <div className="space-y-6">
-              {/* Strain card (rank synced with header hex) */}
-              <div>
-                {card ? (
-                  <StrainCard card={stats ? { ...card, rank: stats.overall_rank } : card} />
-                ) : (
-                  <div
-                    className="flex h-[540px] items-center justify-center rounded-2xl"
-                    style={{ backgroundColor: C.bgCard }}
-                  >
-                    <p style={{ color: C.textMuted }}>No batch data yet</p>
-                  </div>
-                )}
-              </div>
+          <div className="space-y-6">
+            {/* Strain card — stays at its natural width, centred horizontally
+                so it doesn't stretch when the column is wider than the card. */}
+            <div className="mx-auto w-full" style={{ maxWidth: LEFT_COLUMN_MAX }}>
+              {card ? (
+                <StrainCard card={stats ? { ...card, rank: stats.overall_rank } : card} />
+              ) : (
+                <div
+                  className="flex h-[540px] items-center justify-center rounded-2xl"
+                  style={{ backgroundColor: C.bgCard }}
+                >
+                  <p style={{ color: C.textMuted }}>No batch data yet</p>
+                </div>
+              )}
+            </div>
 
               {/* What people are saying */}
               {stats && stats.review_count > 0 && (
@@ -456,7 +459,6 @@ export default function StrainDetailPage() {
                   </div>
                 </div>
               )}
-            </div>
           </div>
 
           {/* RIGHT — reviews list with simple pagination at the bottom. The
