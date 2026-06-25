@@ -209,7 +209,10 @@ async def list_batch_cards(
             .group_by(Review.batch_id)
             .subquery()
         )
-        stmt = stmt.outerjoin(avg_sub, Batch.id == avg_sub.c.batch_id).order_by(avg_sub.c.avg_r.desc().nullslast())
+        # Tiebreaker on Batch.id so ties resolve identically to the rank
+        # query in _RankContext; without this the listing and the card's
+        # displayed rank can drift apart when two batches share an average.
+        stmt = stmt.outerjoin(avg_sub, Batch.id == avg_sub.c.batch_id).order_by(avg_sub.c.avg_r.desc().nullslast(), Batch.id.asc())
     elif sort == "most-reviewed":
         count_sub = (
             select(Review.batch_id, func.count(Review.id).label("cnt"))
@@ -269,19 +272,38 @@ class _RankContext:
         return (ids.index(batch_id) + 1) if batch_id in ids else None
 
     async def overall_rank(self, batch_id):
+        # Rank over the *latest* approved batch per strain, matching the
+        # dedup the cards listing uses. Without this, the card's rank can
+        # disagree with its position in a top-rated list (e.g. card listed
+        # #1 displaying "rank 30" because earlier batches of the same
+        # strain dominate the all-batches ranking).
+        latest_batch = (
+            select(Batch.strain_id, func.max(Batch.id).label("batch_id"))
+            .where(Batch.approved.is_(True))
+            .group_by(Batch.strain_id)
+            .subquery()
+        )
         stmt = (
             select(Batch.id)
+            .join(latest_batch, Batch.id == latest_batch.c.batch_id)
             .join(Review, Review.batch_id == Batch.id)
             .where(Batch.approved.is_(True), Review.status == ReviewStatus.APPROVED.value)
             .group_by(Batch.id)
-            .order_by(_avg_rating_expr().desc())
+            .order_by(_avg_rating_expr().desc(), Batch.id.asc())
         )
         return await self._position("overall", stmt, batch_id)
 
     async def recent_rank(self, batch_id):
         thirty_days_ago = datetime.utcnow() - timedelta(days=30)
+        latest_batch = (
+            select(Batch.strain_id, func.max(Batch.id).label("batch_id"))
+            .where(Batch.approved.is_(True))
+            .group_by(Batch.strain_id)
+            .subquery()
+        )
         stmt = (
             select(Batch.id)
+            .join(latest_batch, Batch.id == latest_batch.c.batch_id)
             .join(Review, Review.batch_id == Batch.id)
             .where(
                 Batch.approved.is_(True),
@@ -289,7 +311,7 @@ class _RankContext:
                 Review.created_at >= thirty_days_ago,
             )
             .group_by(Batch.id)
-            .order_by(_avg_rating_expr().desc())
+            .order_by(_avg_rating_expr().desc(), Batch.id.asc())
         )
         return await self._position("recent", stmt, batch_id)
 
