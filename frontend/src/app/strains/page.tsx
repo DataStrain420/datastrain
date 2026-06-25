@@ -62,6 +62,8 @@ function buildBanner(params: URLSearchParams): BannerConfig {
   else if (sort === "top-rated-week") sortWord = "Trending This Week";
   else if (sort === "most-reviewed") sortWord = "Most Reviewed";
   else if (sort === "newest") sortWord = "Newest";
+  else if (sort === "thc-high") sortWord = "Strongest";
+  else if (sort === "thc-low") sortWord = "Mildest";
 
   const typeWord = type ? type.charAt(0).toUpperCase() + type.slice(1) : "";
   const baseParts = [sortWord, typeWord].filter(Boolean);
@@ -88,6 +90,10 @@ function buildBanner(params: URLSearchParams): BannerConfig {
     subtitle = "Strains with the most patient feedback.";
   } else if (sort === "newest") {
     subtitle = "Recently added to the DataStrain catalogue.";
+  } else if (sort === "thc-high") {
+    subtitle = "Strains ranked by highest THC percentage first.";
+  } else if (sort === "thc-low") {
+    subtitle = "Strains ranked from gentlest THC upwards — good for new patients.";
   } else if (type) {
     subtitle = `All ${type} cultivars listed on DataStrain.`;
   }
@@ -113,6 +119,12 @@ function buildBanner(params: URLSearchParams): BannerConfig {
   } else if (sort === "newest") {
     icon = "\u{2728}"; // ✨
     color = C.secondary;
+  } else if (sort === "thc-high") {
+    icon = "\u{1F4AA}"; // 💪
+    color = "#a855f7";
+  } else if (sort === "thc-low") {
+    icon = "\u{1F343}"; // 🍃
+    color = C.primary;
   } else if (type) {
     icon = type === "indica" ? "\u{25D0}" : type === "sativa" ? "\u{25D1}" : "\u{25CF}";
     color = TYPE_COLORS[type] || C.primary;
@@ -254,6 +266,8 @@ const sortOptions = [
   { label: "Top Rated (This Week)", value: "top-rated-week" },
   { label: "Most Reviewed", value: "most-reviewed" },
   { label: "Newest", value: "newest" },
+  { label: "THC: High to Low", value: "thc-high" },
+  { label: "THC: Low to High", value: "thc-low" },
 ];
 
 /* ── Filter button helper ──────────────────────────────────────────────────── */

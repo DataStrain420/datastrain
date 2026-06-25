@@ -220,6 +220,10 @@ async def list_batch_cards(
         stmt = stmt.outerjoin(count_sub, Batch.id == count_sub.c.batch_id).order_by(count_sub.c.cnt.desc().nullslast())
     elif sort == "newest":
         stmt = stmt.order_by(Batch.created_at.desc())
+    elif sort == "thc-high":
+        stmt = stmt.order_by(Batch.thc_percentage.desc().nullslast())
+    elif sort == "thc-low":
+        stmt = stmt.order_by(Batch.thc_percentage.asc().nullslast())
     else:
         stmt = stmt.order_by(Strain.name)
 
