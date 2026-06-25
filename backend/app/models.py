@@ -111,6 +111,12 @@ class Grower(Base):
     country_of_origin: Mapped[str] = mapped_column(String(100), nullable=False)
     website: Mapped[str | None] = mapped_column(String(500), nullable=True)
     logo_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    # Contact + structured address — surfaced on the grower detail page.
+    phone_number: Mapped[str | None] = mapped_column(String(40), nullable=True)
+    address_street: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    address_city: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    address_postcode: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    address_country: Mapped[str | None] = mapped_column(String(100), nullable=True)
     verified: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime, server_default=func.now()
@@ -195,6 +201,13 @@ class Clinic(Base):
     # JSON-serialised list of specialty strings (e.g. ["Chronic pain", "Anxiety"])
     specialties: Mapped[str | None] = mapped_column(Text, nullable=True)
     consultation_fee_gbp: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    # Free-text describing how consultations are run (e.g. "Video first appt,
+    # in-person follow-ups", "Video only", "In-person, London"). Surfaced on
+    # the clinic page alongside the fee.
+    consultation_style: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    # Link to the clinic's CQC inspection report on cqc.org.uk — rendered as
+    # an external "View CQC report" button on the clinic detail page.
+    cqc_report_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
     verified: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime, server_default=func.now()

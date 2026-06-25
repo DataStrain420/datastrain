@@ -16,6 +16,8 @@ interface Clinic {
   description: string | null;
   specialties: string | null;
   consultation_fee_gbp: number | null;
+  consultation_style: string | null;
+  cqc_report_url: string | null;
   verified: boolean;
 }
 
@@ -115,7 +117,8 @@ export default function ClinicProfilePage() {
           </div>
         </div>
 
-        {(clinic.consultation_fee_gbp !== null || specialties.length > 0) && (
+        {(clinic.consultation_fee_gbp !== null || clinic.consultation_style
+          || clinic.cqc_report_url || specialties.length > 0) && (
           <div
             className="mb-6 grid gap-4 rounded-2xl p-6 sm:grid-cols-2"
             style={{ backgroundColor: brand.bgCard }}
@@ -128,6 +131,14 @@ export default function ClinicProfilePage() {
                 <p className="text-lg font-bold" style={{ color: brand.secondary }}>
                   £{clinic.consultation_fee_gbp}
                 </p>
+              </div>
+            )}
+            {clinic.consultation_style && (
+              <div>
+                <h3 className="mb-1 text-xs font-bold uppercase tracking-wider" style={{ color: brand.textMuted }}>
+                  Consultation Style
+                </h3>
+                <p className="text-sm leading-snug text-white">{clinic.consultation_style}</p>
               </div>
             )}
             {specialties.length > 0 && (
@@ -146,6 +157,30 @@ export default function ClinicProfilePage() {
                     </span>
                   ))}
                 </div>
+              </div>
+            )}
+            {clinic.cqc_report_url && (
+              <div>
+                <h3 className="mb-2 text-xs font-bold uppercase tracking-wider" style={{ color: brand.textMuted }}>
+                  Regulator
+                </h3>
+                <a
+                  href={clinic.cqc_report_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition hover:opacity-90"
+                  style={{
+                    backgroundColor: `${brand.primary}18`,
+                    border: `1px solid ${brand.primary}55`,
+                    color: brand.primary,
+                  }}
+                >
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                    <polyline points="14 2 14 8 20 8" />
+                  </svg>
+                  View CQC report
+                </a>
               </div>
             )}
           </div>

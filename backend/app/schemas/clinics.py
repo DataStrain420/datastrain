@@ -11,6 +11,8 @@ class ClinicCreate(BaseModel):
     description: str | None = None
     specialties: str | None = None  # JSON-encoded list of strings
     consultation_fee_gbp: int | None = None
+    consultation_style: str | None = Field(default=None, max_length=200)
+    cqc_report_url: str | None = Field(default=None, max_length=500)
     verified: bool = False
 
 
@@ -23,6 +25,8 @@ class ClinicResponse(BaseModel):
     description: str | None
     specialties: str | None
     consultation_fee_gbp: int | None
+    consultation_style: str | None = None
+    cqc_report_url: str | None = None
     verified: bool
     created_at: datetime
 

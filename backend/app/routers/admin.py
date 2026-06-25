@@ -146,6 +146,12 @@ async def create_grower(
         name=data.name,
         country_of_origin=data.country_of_origin,
         website=data.website,
+        logo_url=data.logo_url,
+        phone_number=data.phone_number,
+        address_street=data.address_street,
+        address_city=data.address_city,
+        address_postcode=data.address_postcode,
+        address_country=data.address_country,
         verified=data.verified,
     )
     db.add(grower)
