@@ -126,6 +126,8 @@ async def list_batch_cards(
     condition: str | None = None,
     grower_id: int | None = None,
     pharmacy_id: int | None = None,
+    thc_min: float | None = Query(None, ge=0, le=50),
+    thc_max: float | None = Query(None, ge=0, le=50),
     sort: str | None = None,
     skip: int = Query(0, ge=0),
     limit: int = Query(20, ge=1, le=50),
@@ -137,12 +139,17 @@ async def list_batch_cards(
     # Get one batch per strain (the most recent approved one)
     from sqlalchemy import distinct
 
-    # Subquery: latest approved batch per strain. When filtering by pharmacy,
-    # restrict the dedup pool to batches at that pharmacy so we don't drop
-    # strains whose newest overall batch is elsewhere.
+    # Subquery: latest approved batch per strain. When filtering by pharmacy
+    # or THC range, restrict the dedup pool so we don't drop strains whose
+    # newest overall batch happens not to match the filter — we want the
+    # newest *qualifying* batch instead.
     latest_batch_filter = [Batch.approved.is_(True)]
     if pharmacy_id is not None:
         latest_batch_filter.append(Batch.dispensing_pharmacy_id == pharmacy_id)
+    if thc_min is not None:
+        latest_batch_filter.append(Batch.thc_percentage >= thc_min)
+    if thc_max is not None:
+        latest_batch_filter.append(Batch.thc_percentage <= thc_max)
     latest_batch = (
         select(
             Batch.strain_id,

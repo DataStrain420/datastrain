@@ -68,6 +68,8 @@ function buildBanner(params: URLSearchParams): BannerConfig {
   let title = baseParts.length ? `${baseParts.join(" ")} Strains` : "All Strains";
   if (condition) title += ` for ${condition}`;
   else if (effect) title += ` · ${effect}`;
+  const thcBucket = thcFilters.find((b) => b.id === thcBucketFromParams(params));
+  if (thcBucket) title += ` · ${thcBucket.label} THC`;
 
   // ── Subtitle — short descriptive line ────────────────────────────────
   let subtitle = "Browse the full DataStrain catalogue.";
@@ -178,12 +180,16 @@ function buildApiUrl(params: URLSearchParams): string {
   const effect = params.get("effect");
   const condition = params.get("condition");
   const grower = params.get("grower_id");
+  const thcMin = params.get("thc_min");
+  const thcMax = params.get("thc_max");
 
   if (sort) qp.set("sort", sort);
   if (type) qp.set("strain_type", type);
   if (effect) qp.set("effect", effect);
   if (condition) qp.set("condition", condition);
   if (grower) qp.set("grower_id", grower);
+  if (thcMin) qp.set("thc_min", thcMin);
+  if (thcMax) qp.set("thc_max", thcMax);
 
   return `/batches/cards?${qp.toString()}`;
 }
@@ -217,6 +223,25 @@ const effectFilters = [
   { label: "Happy", icon: "\u{1F60A}" },
   { label: "Energetic", icon: "\u{26A1}" },
 ];
+
+/** THC potency buckets. Single-select — each one maps to a (min, max) range
+ *  threaded through to the backend as thc_min / thc_max query params. */
+const thcFilters: { id: string; label: string; min: number | null; max: number | null; sub: string }[] = [
+  { id: "mild",      label: "Mild",      min: null, max: 15, sub: "Under 15%" },
+  { id: "standard",  label: "Standard",  min: 15,   max: 20, sub: "15–20%" },
+  { id: "high",      label: "High",      min: 20,   max: 25, sub: "20–25%" },
+  { id: "very-high", label: "Very High", min: 25,   max: null, sub: "25%+" },
+];
+
+function thcBucketFromParams(params: URLSearchParams): string {
+  const min = params.get("thc_min");
+  const max = params.get("thc_max");
+  const match = thcFilters.find(
+    (b) => (b.min === null ? min === null : String(b.min) === min)
+        && (b.max === null ? max === null : String(b.max) === max),
+  );
+  return match?.id ?? "";
+}
 
 const sortOptions = [
   { label: "Name (A-Z)", value: "" },
@@ -272,6 +297,7 @@ function StrainsContent() {
   const activeCondition = searchParams.get("condition") || "";
   const activeEffect = searchParams.get("effect") || "";
   const activeSort = searchParams.get("sort") || "";
+  const activeThc = thcBucketFromParams(searchParams);
 
   useEffect(() => {
     setLoading(true);
@@ -295,7 +321,21 @@ function StrainsContent() {
     router.push("/strains");
   }
 
-  const hasFilters = activeType || activeCondition || activeEffect || activeSort;
+  /** Toggles a THC bucket — selecting the active one clears the filter,
+   *  selecting a new one swaps thc_min/thc_max in one go. */
+  function setThcBucket(bucketId: string) {
+    const qp = new URLSearchParams(searchParams.toString());
+    qp.delete("thc_min");
+    qp.delete("thc_max");
+    if (bucketId !== activeThc) {
+      const bucket = thcFilters.find((b) => b.id === bucketId);
+      if (bucket?.min !== null && bucket?.min !== undefined) qp.set("thc_min", String(bucket.min));
+      if (bucket?.max !== null && bucket?.max !== undefined) qp.set("thc_max", String(bucket.max));
+    }
+    router.push(`/strains?${qp.toString()}`);
+  }
+
+  const hasFilters = activeType || activeCondition || activeEffect || activeSort || activeThc;
 
   return (
     <>
@@ -337,6 +377,34 @@ function StrainsContent() {
                 active={activeType === t.value}
                 onClick={() => setFilter("type", t.value)}
               />
+            ))}
+          </div>
+
+          {/* THC strength */}
+          <div>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wider" style={{ color: C.textMuted }}>
+              THC Strength
+            </p>
+            {thcFilters.map((b) => (
+              <button
+                key={b.id}
+                onClick={() => setThcBucket(b.id)}
+                className="flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-left text-sm transition"
+                style={{
+                  backgroundColor: activeThc === b.id ? `${C.primary}18` : "transparent",
+                  color: activeThc === b.id ? "white" : C.textMuted,
+                }}
+              >
+                <span>{b.label}</span>
+                <span className="text-[10px]" style={{ color: activeThc === b.id ? C.primary : `${C.textMuted}99` }}>
+                  {b.sub}
+                </span>
+                {activeThc === b.id && (
+                  <span className="ml-auto text-xs" style={{ color: C.primary }}>
+                    ✓
+                  </span>
+                )}
+              </button>
             ))}
           </div>
 
