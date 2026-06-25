@@ -131,63 +131,64 @@ export default function StrainDetailPage() {
   useEffect(() => {
     async function load() {
       try {
-        const [s, st] = await Promise.all([
+        // Phase 1 — block the loading screen on the minimum needed to render
+        // the hero card. Strain + stats + the batch list go in parallel; the
+        // per-batch cards then fetch in parallel too instead of sequentially.
+        const [s, st, batches] = await Promise.all([
           apiFetch<Strain>(`/strains/${id}`),
           apiFetch<StrainStats>(`/strains/${id}/stats`),
+          apiFetch<{ id: number }[]>(`/batches/?strain_id=${id}&approved=true`),
         ]);
         setStrain(s);
         setStats(st);
 
-        // Load batches
-        const batches = await apiFetch<{ id: number }[]>(
-          `/batches/?strain_id=${id}&approved=true`
+        const cardResults = await Promise.all(
+          batches.map((b) =>
+            apiFetch<CardData>(`/batches/${b.id}/card`).catch(() => null),
+          ),
         );
+        const filteredCards = cardResults.filter((c): c is CardData => c !== null);
+        setBatchCards(filteredCards);
+        if (filteredCards.length > 0) setCard(filteredCards[0]);
 
-        // Get card data for the first batch (used as the hero card)
-        if (batches.length > 0) {
-          const firstCard = await apiFetch<CardData>(`/batches/${batches[0].id}/card`).catch(() => null);
-          if (firstCard) setCard(firstCard);
-        }
+        // Hero is ready — drop the loading screen.
+        setLoading(false);
 
-        // Get card data for all batches (for the batch row)
-        const allCards = await Promise.all(
-          batches.map((b) => apiFetch<CardData>(`/batches/${b.id}/card`).catch(() => null))
-        );
-        setBatchCards(allCards.filter((c): c is CardData => c !== null));
-
-        // Load similar strains + their card data
-        const similar = await apiFetch<SimilarStrain[]>(
-          `/strains/${id}/similar?limit=12`
-        ).catch(() => []);
+        // Phase 2 — similar strains + reviews load in the background so the
+        // page is interactive immediately. Both phases use Promise.all so
+        // the previous sequential awaits don't compound.
+        const [similar, batchReviews] = await Promise.all([
+          apiFetch<SimilarStrain[]>(`/strains/${id}/similar?limit=12`).catch(() => []),
+          batches.length > 0
+            ? Promise.all(
+                batches.slice(0, 5).map((b) =>
+                  apiFetch<ReviewData[]>(`/reviews/?batch_id=${b.id}&limit=10`).catch(() => []),
+                ),
+              )
+            : Promise.resolve([] as ReviewData[][]),
+        ]);
         setSimilarStrains(similar);
+        setReviews(batchReviews.flat());
 
-        const simCards: CardData[] = [];
-        for (const sim of similar) {
-          const simBatches = await apiFetch<{ id: number }[]>(
-            `/batches/?strain_id=${sim.id}&approved=true&limit=1`
-          ).catch(() => []);
-          if (simBatches.length > 0) {
-            const c = await apiFetch<CardData>(`/batches/${simBatches[0].id}/card`).catch(() => null);
-            if (c) simCards.push(c);
-          }
-        }
-        setSimilarCards(simCards);
-
-        // Load reviews
-        if (batches.length > 0) {
-          const allReviews: ReviewData[] = [];
-          for (const b of batches.slice(0, 5)) {
-            const batchReviews = await apiFetch<ReviewData[]>(
-              `/reviews/?batch_id=${b.id}&limit=10`
+        // Similar-strain card data — parallel per strain instead of an
+        // await-in-a-loop that compounded latency (12 strains × 2 sequential
+        // requests each was the page's worst offender).
+        const simCardResults = await Promise.all(
+          similar.map(async (sim) => {
+            const simBatches = await apiFetch<{ id: number }[]>(
+              `/batches/?strain_id=${sim.id}&approved=true&limit=1`,
             ).catch(() => []);
-            allReviews.push(...batchReviews);
-          }
-          setReviews(allReviews);
-        }
+            if (simBatches.length === 0) return null;
+            return apiFetch<CardData>(`/batches/${simBatches[0].id}/card`).catch(() => null);
+          }),
+        );
+        setSimilarCards(simCardResults.filter((c): c is CardData => c !== null));
       } catch {
         // error
+      } finally {
+        // Safety net — if Phase 1 threw before flipping loading off, do it now.
+        setLoading(false);
       }
-      setLoading(false);
     }
     load();
   }, [id]);
