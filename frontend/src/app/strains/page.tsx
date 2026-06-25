@@ -70,6 +70,9 @@ function buildBanner(params: URLSearchParams): BannerConfig {
   else if (effect) title += ` · ${effect}`;
   const thcBucket = thcFilters.find((b) => b.id === thcBucketFromParams(params));
   if (thcBucket) title += ` · ${thcBucket.label} THC`;
+  const irradiated = params.get("irradiated");
+  if (irradiated === "true") title += " · Irradiated";
+  else if (irradiated === "false") title += " · Non-irradiated";
 
   // ── Subtitle — short descriptive line ────────────────────────────────
   let subtitle = "Browse the full DataStrain catalogue.";
@@ -182,6 +185,7 @@ function buildApiUrl(params: URLSearchParams): string {
   const grower = params.get("grower_id");
   const thcMin = params.get("thc_min");
   const thcMax = params.get("thc_max");
+  const irradiated = params.get("irradiated");
 
   if (sort) qp.set("sort", sort);
   if (type) qp.set("strain_type", type);
@@ -190,6 +194,7 @@ function buildApiUrl(params: URLSearchParams): string {
   if (grower) qp.set("grower_id", grower);
   if (thcMin) qp.set("thc_min", thcMin);
   if (thcMax) qp.set("thc_max", thcMax);
+  if (irradiated === "true" || irradiated === "false") qp.set("irradiated", irradiated);
 
   return `/batches/cards?${qp.toString()}`;
 }
@@ -298,6 +303,7 @@ function StrainsContent() {
   const activeEffect = searchParams.get("effect") || "";
   const activeSort = searchParams.get("sort") || "";
   const activeThc = thcBucketFromParams(searchParams);
+  const activeIrradiation = searchParams.get("irradiated") || ""; // "true" | "false" | ""
 
   useEffect(() => {
     setLoading(true);
@@ -335,7 +341,7 @@ function StrainsContent() {
     router.push(`/strains?${qp.toString()}`);
   }
 
-  const hasFilters = activeType || activeCondition || activeEffect || activeSort || activeThc;
+  const hasFilters = activeType || activeCondition || activeEffect || activeSort || activeThc || activeIrradiation;
 
   return (
     <>
@@ -406,6 +412,25 @@ function StrainsContent() {
                 )}
               </button>
             ))}
+          </div>
+
+          {/* Irradiation */}
+          <div>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wider" style={{ color: C.textMuted }}>
+              Irradiation
+            </p>
+            <FilterBtn
+              label="Irradiated"
+              icon={"☢️"}
+              active={activeIrradiation === "true"}
+              onClick={() => setFilter("irradiated", "true")}
+            />
+            <FilterBtn
+              label="Non-irradiated"
+              icon={"\u{1F33F}"}
+              active={activeIrradiation === "false"}
+              onClick={() => setFilter("irradiated", "false")}
+            />
           </div>
 
           {/* Condition */}

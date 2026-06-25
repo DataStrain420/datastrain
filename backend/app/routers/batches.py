@@ -128,6 +128,7 @@ async def list_batch_cards(
     pharmacy_id: int | None = None,
     thc_min: float | None = Query(None, ge=0, le=50),
     thc_max: float | None = Query(None, ge=0, le=50),
+    irradiated: bool | None = None,
     sort: str | None = None,
     skip: int = Query(0, ge=0),
     limit: int = Query(20, ge=1, le=50),
@@ -150,6 +151,10 @@ async def list_batch_cards(
         latest_batch_filter.append(Batch.thc_percentage >= thc_min)
     if thc_max is not None:
         latest_batch_filter.append(Batch.thc_percentage <= thc_max)
+    if irradiated is not None:
+        # Strict match — batches with `irradiated IS NULL` (unknown) are
+        # excluded so the filter actually narrows the result.
+        latest_batch_filter.append(Batch.irradiated.is_(irradiated))
     latest_batch = (
         select(
             Batch.strain_id,
