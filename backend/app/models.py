@@ -496,6 +496,61 @@ class ActivityLog(Base):
     )
 
 
+# ─── Quick Reports (bug/feedback widget) ─────────────────────────────────────
+
+
+class ReportType(str, enum.Enum):
+    BUG = "bug"
+    FEATURE = "feature"
+    FEEDBACK = "feedback"
+    OTHER = "other"
+
+
+class ReportSeverity(str, enum.Enum):
+    LOW = "low"
+    MEDIUM = "medium"
+    HIGH = "high"
+    CRITICAL = "critical"
+
+
+class ReportStatus(str, enum.Enum):
+    OPEN = "open"
+    IN_PROGRESS = "in_progress"
+    CLOSED = "closed"
+
+
+class Report(Base):
+    """User-submitted bug / feature / feedback report from the Quick Report
+    widget. user_id is nullable so anonymous visitors can still submit."""
+
+    __tablename__ = "reports"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("users.id"), nullable=True
+    )
+    report_type: Mapped[str] = mapped_column(
+        String(20), default=ReportType.BUG.value, nullable=False
+    )
+    severity: Mapped[str] = mapped_column(
+        String(20), default=ReportSeverity.MEDIUM.value, nullable=False
+    )
+    title: Mapped[str] = mapped_column(String(200), nullable=False)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    page_path: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    # JSON-encoded list of uploaded image URLs (kept simple — no separate table).
+    screenshot_urls: Mapped[str | None] = mapped_column(Text, nullable=True)
+    user_agent: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    status: Mapped[str] = mapped_column(
+        String(20), default=ReportStatus.OPEN.value, nullable=False
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, server_default=func.now()
+    )
+
+    user: Mapped["User | None"] = relationship(foreign_keys=[user_id])
+
+
 # ─── Search Analytics ────────────────────────────────────────────────────────
 
 

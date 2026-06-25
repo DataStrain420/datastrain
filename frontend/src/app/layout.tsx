@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Roboto } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/lib/auth-context";
+import QuickReport from "@/components/QuickReport";
 
 const roboto = Roboto({
   subsets: ["latin"],
@@ -29,7 +30,10 @@ export default function RootLayout({
         className={`min-h-screen text-white antialiased ${roboto.className}`}
         style={{ backgroundColor: "#14181b" }}
       >
-        <AuthProvider>{children}</AuthProvider>
+        <AuthProvider>
+          {children}
+          <QuickReport />
+        </AuthProvider>
       </body>
     </html>
   );
