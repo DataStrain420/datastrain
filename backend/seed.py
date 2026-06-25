@@ -12,7 +12,7 @@ import json
 import random
 from datetime import date, datetime, timedelta
 
-from sqlalchemy import text
+from sqlalchemy import select, text
 
 from app.config import settings
 from app.database import Base, async_session, engine
@@ -233,6 +233,10 @@ async def seed():
 
         # ── Batches ───────────────────────────────────────────────────────
         print("Seeding batches...")
+        # Pre-pull pharmacy IDs so each batch can be assigned to a dispensing
+        # pharmacy — drives the "Available Stock" section on the pharmacy page.
+        pharm_ids_result = await db.execute(select(Pharmacy.id))
+        pharmacy_ids = [r[0] for r in pharm_ids_result.all()]
         batch_objs = []
         for i, strain in enumerate(strain_objs):
             thc = round(random.uniform(14.0, 28.0), 1)
@@ -250,6 +254,7 @@ async def seed():
                 cbd_percentage=cbd,
                 tested_date=date(2026, random.randint(1, 3), random.randint(1, 28)),
                 irradiated=irradiated,
+                dispensing_pharmacy_id=(random.choice(pharmacy_ids) if pharmacy_ids else None),
                 approved=True,
             )
             db.add(batch)

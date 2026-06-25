@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Navbar, { PublicNavActions } from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import StrainCard, { type CardData } from "@/components/StrainCard";
 import { brand } from "@/lib/brand";
 import { apiFetch } from "@/lib/api";
 
@@ -20,6 +21,8 @@ interface Pharmacy {
 export default function PharmacyProfilePage() {
   const { id } = useParams();
   const [pharmacy, setPharmacy] = useState<Pharmacy | null>(null);
+  const [stock, setStock] = useState<CardData[]>([]);
+  const [stockLoading, setStockLoading] = useState(true);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -32,7 +35,17 @@ export default function PharmacyProfilePage() {
       }
       setLoading(false);
     }
+    async function loadStock() {
+      try {
+        const s = await apiFetch<CardData[]>(`/batches/cards?pharmacy_id=${id}&limit=50`);
+        setStock(s);
+      } catch {
+        setStock([]);
+      }
+      setStockLoading(false);
+    }
     load();
+    loadStock();
   }, [id]);
 
   if (loading) {
@@ -112,6 +125,35 @@ export default function PharmacyProfilePage() {
             <p className="text-sm leading-relaxed text-white">{pharmacy.description}</p>
           </div>
         )}
+
+        {/* ── Available stock ──────────────────────────────────────────── */}
+        <section className="mt-8">
+          <div className="mb-4 flex items-baseline justify-between">
+            <h2 className="text-lg font-bold text-white">Available Stock</h2>
+            {!stockLoading && (
+              <span className="text-sm" style={{ color: brand.textMuted }}>
+                {stock.length} {stock.length === 1 ? "strain" : "strains"}
+              </span>
+            )}
+          </div>
+          {stockLoading ? (
+            <div className="rounded-xl p-8 text-center" style={{ backgroundColor: brand.bgCard }}>
+              <p className="text-sm" style={{ color: brand.textMuted }}>Loading stock...</p>
+            </div>
+          ) : stock.length === 0 ? (
+            <div className="rounded-xl p-8 text-center" style={{ backgroundColor: brand.bgCard }}>
+              <p className="text-sm" style={{ color: brand.textMuted }}>
+                No stock listed for this pharmacy yet.
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {stock.map((card) => (
+                <StrainCard key={card.id} card={card} />
+              ))}
+            </div>
+          )}
+        </section>
       </main>
 
       <Footer />
