@@ -149,10 +149,7 @@ export default function ReviewStepOne({ onSuccess, onCancel }: ReviewStepOneProp
 
       {/* Grower dropdown */}
       <div>
-        <label className="mb-1 block text-sm font-bold text-white">Grower</label>
-        <p className="mb-2 text-xs" style={{ color: C.textMuted }}>
-          This is usually found <span className="underline">here</span> on the packaging.
-        </p>
+        <label className="mb-2 block text-sm font-bold text-white">Grower</label>
         <select
           value={growerId}
           onChange={(e) => {
@@ -176,10 +173,7 @@ export default function ReviewStepOne({ onSuccess, onCancel }: ReviewStepOneProp
 
       {/* Batch number */}
       <div>
-        <label className="mb-1 block text-sm font-bold text-white">Batch Number</label>
-        <p className="mb-2 text-xs" style={{ color: C.textMuted }}>
-          This is usually found <span className="underline">here</span> on the packaging.
-        </p>
+        <label className="mb-2 block text-sm font-bold text-white">Batch Number</label>
         <input
           type="text"
           value={batchNumber}
