@@ -39,6 +39,8 @@ async def list_strains(
     sort: str | None = None,
     effect: str | None = None,
     condition: str | None = None,
+    flavour: str | None = None,
+    terpene: str | None = None,
     skip: int = Query(0, ge=0),
     limit: int = Query(50, ge=1, le=100),
     db: AsyncSession = Depends(get_db),
@@ -78,6 +80,37 @@ async def list_strains(
                     Review.status == ReviewStatus.APPROVED.value,
                     ConditionRating.condition_name == condition,
                 )
+                .distinct()
+            )
+        )
+
+    # Filter by flavour — strains whose reviews list this flavour tag.
+    # Same JSON-substring approach as `effect` since Review.flavours is
+    # stored as a JSON-encoded list.
+    if flavour:
+        query = query.where(
+            Strain.id.in_(
+                select(Batch.strain_id)
+                .join(Review, Review.batch_id == Batch.id)
+                .where(
+                    Review.status == ReviewStatus.APPROVED.value,
+                    Review.flavours.ilike(f"%{flavour}%"),
+                )
+                .distinct()
+            )
+        )
+
+    # Filter by terpene — strains whose batches were tested with this
+    # terpene above a floor (any % > 0 counts as "present").
+    if terpene:
+        from app.models import BatchTerpene, Terpene
+
+        query = query.where(
+            Strain.id.in_(
+                select(Batch.strain_id)
+                .join(BatchTerpene, BatchTerpene.batch_id == Batch.id)
+                .join(Terpene, Terpene.id == BatchTerpene.terpene_id)
+                .where(Terpene.name == terpene)
                 .distinct()
             )
         )

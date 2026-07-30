@@ -55,6 +55,8 @@ function buildBanner(params: URLSearchParams): BannerConfig {
   const type = params.get("type");      // indica / sativa / hybrid
   const effect = params.get("effect");
   const condition = params.get("condition");
+  const flavour = params.get("flavour");
+  const terpene = params.get("terpene");
 
   // ── Title — combine sort + type + effect/condition into one phrase ─────
   let sortWord = "";
@@ -70,6 +72,8 @@ function buildBanner(params: URLSearchParams): BannerConfig {
   let title = baseParts.length ? `${baseParts.join(" ")} Strains` : "All Strains";
   if (condition) title += ` for ${condition}`;
   else if (effect) title += ` · ${effect}`;
+  else if (flavour) title += ` · ${flavour}`;
+  else if (terpene) title += ` · ${terpene}`;
   const thcBucket = thcFilters.find((b) => b.id === thcBucketFromParams(params));
   if (thcBucket) title += ` · ${thcBucket.label} THC`;
   const irradiated = params.get("irradiated");
@@ -82,6 +86,10 @@ function buildBanner(params: URLSearchParams): BannerConfig {
     subtitle = `Strains UK patients use to manage ${condition.toLowerCase()}.`;
   } else if (effect) {
     subtitle = `Strains most associated with feeling ${effect.toLowerCase()}.`;
+  } else if (flavour) {
+    subtitle = `Strains whose reviews mention a ${flavour.toLowerCase()} note.`;
+  } else if (terpene) {
+    subtitle = `Strains whose lab reports list ${terpene} in the terpene profile.`;
   } else if (sort === "top-rated") {
     subtitle = "The highest-rated strains across our entire community.";
   } else if (sort === "top-rated-week") {
@@ -194,6 +202,8 @@ function buildApiUrl(params: URLSearchParams): string {
   const type = params.get("type");
   const effect = params.get("effect");
   const condition = params.get("condition");
+  const flavour = params.get("flavour");
+  const terpene = params.get("terpene");
   const grower = params.get("grower_id");
   const thcMin = params.get("thc_min");
   const thcMax = params.get("thc_max");
@@ -203,6 +213,8 @@ function buildApiUrl(params: URLSearchParams): string {
   if (type) qp.set("strain_type", type);
   if (effect) qp.set("effect", effect);
   if (condition) qp.set("condition", condition);
+  if (flavour) qp.set("flavour", flavour);
+  if (terpene) qp.set("terpene", terpene);
   if (grower) qp.set("grower_id", grower);
   if (thcMin) qp.set("thc_min", thcMin);
   if (thcMax) qp.set("thc_max", thcMax);

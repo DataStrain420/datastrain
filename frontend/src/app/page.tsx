@@ -7,6 +7,7 @@ import StrainCard, { CardData } from "@/components/StrainCard";
 import StrainCardSkeleton from "@/components/StrainCardSkeleton";
 import CardCarousel from "@/components/CardCarousel";
 import GrowerCard from "@/components/GrowerCard";
+import DiscoveryGrid from "@/components/DiscoveryGrid";
 import ReviewCard from "@/components/ReviewCard";
 import SearchBar from "@/components/SearchBar";
 import Footer from "@/components/Footer";
@@ -216,6 +217,90 @@ export default function Home() {
             </Link>
           </div>
         )}
+      </section>
+
+      {/* ── 2b. Browse By (Conditions / Effects / Flavours / Terpenes) ── */}
+      {/* Surface the four discovery taxonomies directly on the home so
+          patients don't have to open the mega-menu to see the breadth
+          of browse options. Mirrors the weedstrain.com IA pattern. */}
+      <section className="mx-auto max-w-7xl px-4 pb-16">
+        <SectionHeading>Browse by</SectionHeading>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <DiscoveryGrid
+            title="By Condition"
+            subtitle="Find strains that patients rate highly for a specific condition."
+            accent={brand.success}
+            viewAllHref="/strains"
+            items={[
+              { label: "Chronic Pain", href: "/strains?condition=Chronic+Pain", icon: "\u{1FA79}" },
+              { label: "Anxiety", href: "/strains?condition=Anxiety", icon: "\u{1F630}" },
+              { label: "Insomnia", href: "/strains?condition=Insomnia", icon: "\u{1F634}" },
+              { label: "Depression", href: "/strains?condition=Depression", icon: "\u{1F614}" },
+              { label: "PTSD", href: "/strains?condition=PTSD", icon: "\u{1F9E0}" },
+              { label: "Migraines", href: "/strains?condition=Migraines", icon: "\u{1F915}" },
+              { label: "Nausea", href: "/strains?condition=Nausea", icon: "\u{1F922}" },
+              { label: "Appetite Loss", href: "/strains?condition=Appetite+Loss", icon: "\u{1F37D}\u{FE0F}" },
+              { label: "Muscle Spasms", href: "/strains?condition=Muscle+Spasms", icon: "\u{1F4AA}" },
+              { label: "ADHD", href: "/strains?condition=ADHD", icon: "\u{26A1}" },
+              { label: "Arthritis", href: "/strains?condition=Arthritis", icon: "\u{1F9B4}" },
+              { label: "Fibromyalgia", href: "/strains?condition=Fibromyalgia", icon: "\u{1FA7A}" },
+            ]}
+          />
+          <DiscoveryGrid
+            title="By Effect"
+            subtitle="Filter by how patients say the strain made them feel."
+            accent={brand.secondary}
+            viewAllHref="/strains"
+            items={[
+              { label: "Relaxed", href: "/strains?effect=Relaxed", icon: "\u{1F60C}" },
+              { label: "Euphoric", href: "/strains?effect=Euphoric", icon: "\u{1F929}" },
+              { label: "Sleepy", href: "/strains?effect=Sleepy", icon: "\u{1F4A4}" },
+              { label: "Uplifted", href: "/strains?effect=Uplifted", icon: "\u{1F31E}" },
+              { label: "Creative", href: "/strains?effect=Creative", icon: "\u{1F3A8}" },
+              { label: "Focused", href: "/strains?effect=Focused", icon: "\u{1F3AF}" },
+              { label: "Calm", href: "/strains?effect=Calm", icon: "\u{1F9D8}" },
+              { label: "Energetic", href: "/strains?effect=Energetic", icon: "\u{26A1}" },
+              { label: "Happy", href: "/strains?effect=Happy", icon: "\u{1F604}" },
+              { label: "Hungry", href: "/strains?effect=Hungry", icon: "\u{1F37D}\u{FE0F}" },
+            ]}
+          />
+          <DiscoveryGrid
+            title="By Flavour"
+            subtitle="Notes patients pick up in aroma and taste."
+            accent={brand.tertiary}
+            viewAllHref="/strains"
+            items={[
+              { label: "Citrus", href: "/strains?flavour=Citrus", icon: "\u{1F34B}" },
+              { label: "Earthy", href: "/strains?flavour=Earthy", icon: "\u{1F331}" },
+              { label: "Pine", href: "/strains?flavour=Pine", icon: "\u{1F332}" },
+              { label: "Sweet", href: "/strains?flavour=Sweet", icon: "\u{1F36C}" },
+              { label: "Berry", href: "/strains?flavour=Berry", icon: "\u{1FAD0}" },
+              { label: "Diesel", href: "/strains?flavour=Diesel", icon: "\u{26FD}" },
+              { label: "Pepper", href: "/strains?flavour=Pepper", icon: "\u{1F336}\u{FE0F}" },
+              { label: "Skunky", href: "/strains?flavour=Skunky", icon: "\u{1F9A8}" },
+              { label: "Woody", href: "/strains?flavour=Woody", icon: "\u{1FAB5}" },
+              { label: "Floral", href: "/strains?flavour=Floral", icon: "\u{1F337}" },
+            ]}
+          />
+          <DiscoveryGrid
+            title="By Terpene"
+            subtitle="Aromatic compounds that shape both smell and effect."
+            accent="#3b82f6"
+            viewAllHref="/strains"
+            items={[
+              { label: "Myrcene", href: "/strains?terpene=Myrcene" },
+              { label: "Limonene", href: "/strains?terpene=Limonene" },
+              { label: "Caryophyllene", href: "/strains?terpene=Caryophyllene" },
+              { label: "Linalool", href: "/strains?terpene=Linalool" },
+              { label: "Pinene", href: "/strains?terpene=Pinene" },
+              { label: "Humulene", href: "/strains?terpene=Humulene" },
+              { label: "Terpinolene", href: "/strains?terpene=Terpinolene" },
+              { label: "Ocimene", href: "/strains?terpene=Ocimene" },
+              { label: "Bisabolol", href: "/strains?terpene=Bisabolol" },
+              { label: "Valencene", href: "/strains?terpene=Valencene" },
+            ]}
+          />
+        </div>
       </section>
 
       {/* ── 3. Most Recent Reviews ──────────────────────────────────────── */}

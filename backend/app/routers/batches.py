@@ -124,6 +124,8 @@ async def list_batch_cards(
     strain_type: str | None = None,
     effect: str | None = None,
     condition: str | None = None,
+    flavour: str | None = None,
+    terpene: str | None = None,
     grower_id: int | None = None,
     pharmacy_id: int | None = None,
     thc_min: float | None = Query(None, ge=0, le=50),
@@ -190,6 +192,27 @@ async def list_batch_cards(
                 select(Review.batch_id)
                 .join(ConditionRating, ConditionRating.review_id == Review.id)
                 .where(Review.status == ReviewStatus.APPROVED.value, ConditionRating.condition_name.ilike(condition))
+                .distinct()
+            )
+        )
+    if flavour:
+        # Flavours are stored as a JSON-serialised list on Review.flavours,
+        # so an ilike substring match is the cheapest cross-dialect approach.
+        stmt = stmt.where(
+            Batch.id.in_(
+                select(Review.batch_id)
+                .where(Review.status == ReviewStatus.APPROVED.value, Review.flavours.ilike(f"%{flavour}%"))
+                .distinct()
+            )
+        )
+    if terpene:
+        from app.models import BatchTerpene, Terpene
+
+        stmt = stmt.where(
+            Batch.id.in_(
+                select(BatchTerpene.batch_id)
+                .join(Terpene, Terpene.id == BatchTerpene.terpene_id)
+                .where(Terpene.name == terpene)
                 .distinct()
             )
         )
