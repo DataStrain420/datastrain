@@ -53,6 +53,15 @@ interface SimilarStrain {
   grower_name?: string | null;
 }
 
+interface StrainPharmacy {
+  id: number;
+  name: string;
+  location: string;
+  website: string | null;
+  logo_url: string | null;
+  verified: boolean;
+}
+
 interface ReviewData {
   id: number;
   username: string | null;
@@ -187,6 +196,7 @@ export default function StrainDetailPage() {
   const [reviewPage, setReviewPage] = useState(1);
   const [similarStrains, setSimilarStrains] = useState<SimilarStrain[]>([]);
   const [similarCards, setSimilarCards] = useState<CardData[]>([]);
+  const [pharmacies, setPharmacies] = useState<StrainPharmacy[]>([]);
   const [loading, setLoading] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
   const similarScrollRef = useRef<HTMLDivElement>(null);
@@ -218,7 +228,7 @@ export default function StrainDetailPage() {
         setLoading(false);
 
         // Phase 2 — similar strains + reviews load in the background.
-        const [similar, batchReviews] = await Promise.all([
+        const [similar, batchReviews, strainPharmacies] = await Promise.all([
           apiFetch<SimilarStrain[]>(`/strains/${id}/similar?limit=12`).catch(() => []),
           batches.length > 0
             ? Promise.all(
@@ -227,9 +237,11 @@ export default function StrainDetailPage() {
                 ),
               )
             : Promise.resolve([] as ReviewData[][]),
+          apiFetch<StrainPharmacy[]>(`/strains/${id}/pharmacies`).catch(() => []),
         ]);
         setSimilarStrains(similar);
         setReviews(batchReviews.flat());
+        setPharmacies(strainPharmacies);
 
         const simCardResults = await Promise.all(
           similar.map(async (sim) => {
@@ -470,6 +482,68 @@ export default function StrainDetailPage() {
                   </div>
                 </div>
               )}
+
+              {/* Where to get it — pharmacies that dispense this strain */}
+              {pharmacies.length > 0 && (
+                <div>
+                  <h2 className="mb-3 text-sm font-bold uppercase tracking-wider text-white">
+                    Where to Get It
+                  </h2>
+                  <div
+                    className="rounded-2xl p-4"
+                    style={{ backgroundColor: C.bgCard, border: `1px solid ${C.textMuted}15` }}
+                  >
+                    <p className="mb-3 text-xs" style={{ color: C.textMuted }}>
+                      UK pharmacies currently dispensing batches of {strain.name}.
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {pharmacies.map((p) => (
+                        <Link
+                          key={p.id}
+                          href={`/pharmacy/${p.id}`}
+                          className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold transition hover:brightness-125"
+                          style={{
+                            backgroundColor: `${C.primary}15`,
+                            color: C.primary,
+                            border: `1px solid ${C.primary}44`,
+                          }}
+                        >
+                          <span>{"\u{1F3E5}"}</span>
+                          <span>{p.name}</span>
+                          {p.verified && <span title="Verified pharmacy">{"\u{2705}"}</span>}
+                          <span aria-hidden style={{ opacity: 0.6 }}>{"→"}</span>
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Prescription CTA — links out to /clinics regardless of
+                  whether pharmacies were found, since patients need a
+                  prescription before any pharmacy will dispense. */}
+              <div
+                className="flex flex-col gap-3 rounded-2xl p-5 sm:flex-row sm:items-center sm:justify-between"
+                style={{
+                  backgroundColor: `${C.secondary}12`,
+                  border: `1px solid ${C.secondary}44`,
+                }}
+              >
+                <div>
+                  <h3 className="text-base font-bold text-white">Need a prescription?</h3>
+                  <p className="mt-0.5 text-sm" style={{ color: C.textMuted }}>
+                    See the UK clinics that can assess and prescribe medical cannabis.
+                  </p>
+                </div>
+                <Link
+                  href="/clinics"
+                  className="inline-flex shrink-0 items-center gap-2 rounded-full px-5 py-2 text-sm font-semibold transition hover:brightness-110"
+                  style={{ backgroundColor: C.secondary, color: C.bgDeep }}
+                >
+                  Browse clinics
+                  <span aria-hidden>{"→"}</span>
+                </Link>
+              </div>
           </div>
 
           {/* RIGHT — reviews list with simple pagination at the bottom. The

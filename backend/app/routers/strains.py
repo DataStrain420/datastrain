@@ -312,6 +312,37 @@ async def get_similar_strains(
     return [_strain_to_response(s) for s in similar.scalars().all()]
 
 
+@router.get("/{strain_id}/pharmacies")
+async def get_strain_pharmacies(strain_id: int, db: AsyncSession = Depends(get_db)):
+    """Return the distinct pharmacies that dispense any batch of this strain.
+
+    Powers the "Where to get it" CTA block on the strain detail page — the
+    homepage discovery grids drive patients to strains, this closes the
+    loop by pointing them at the actual UK pharmacy that stocks it.
+    """
+    from app.models import Pharmacy
+
+    stmt = (
+        select(Pharmacy)
+        .join(Batch, Batch.dispensing_pharmacy_id == Pharmacy.id)
+        .where(Batch.strain_id == strain_id, Batch.approved.is_(True), Pharmacy.is_active.is_(True))
+        .distinct()
+        .order_by(Pharmacy.name)
+    )
+    result = await db.execute(stmt)
+    return [
+        {
+            "id": p.id,
+            "name": p.name,
+            "location": p.location,
+            "website": p.website,
+            "logo_url": p.logo_url,
+            "verified": p.verified,
+        }
+        for p in result.scalars().all()
+    ]
+
+
 @router.get("/{strain_id}", response_model=StrainResponse)
 async def get_strain(strain_id: int, db: AsyncSession = Depends(get_db)):
     result = await db.execute(
