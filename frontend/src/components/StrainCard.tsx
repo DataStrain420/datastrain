@@ -384,6 +384,27 @@ export default function StrainCard({ card }: { card: CardData }) {
                 CBD <span style={{ color: C.secondary }}>{card.cbd_percentage}%</span>
               </span>
             </div>
+
+            {/* "Best for" chip — pulls the top-ranked condition from the batch's
+                reviews. Hidden when no reviews / no top condition, so cold-start
+                strains don't render an awkward empty pill. */}
+            {card.top_condition && (
+              <div className="mt-2 flex justify-center">
+                <span
+                  className="inline-flex items-center gap-1.5 rounded-full px-3 py-0.5 text-[11px] font-semibold"
+                  style={{
+                    backgroundColor: isHolo ? "rgba(0,0,0,0.78)" : `${C.primary}18`,
+                    color: isHolo ? "#fff" : C.primary,
+                    border: isHolo ? "1px solid rgba(0,0,0,0.6)" : `1px solid ${C.primary}44`,
+                  }}
+                  title={`Highest-rated for ${card.top_condition}`}
+                >
+                  <span aria-hidden>{"\u{1FA7A}"}</span>
+                  <span className="uppercase tracking-wider opacity-70">Best for</span>
+                  <span>{card.top_condition}</span>
+                </span>
+              </div>
+            )}
           </div>
 
           {/* ── Bottom info section ───────────────────────────────────── */}
