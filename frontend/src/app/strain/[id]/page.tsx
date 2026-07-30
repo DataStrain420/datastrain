@@ -11,6 +11,7 @@ import Footer from "@/components/Footer";
 import { brand } from "@/lib/brand";
 import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
+import { terpeneSummary } from "@/lib/terpenes";
 
 const C = brand;
 const REVIEWS_PER_PAGE = 10;
@@ -373,7 +374,7 @@ export default function StrainDetailPage() {
                 </div>
               )}
 
-              {/* Terpenes */}
+              {/* Terpenes — hover a name to see what it does / how it smells */}
               {stats && stats.top_terpenes.length > 0 && (
                 <div
                   className="flex flex-wrap items-center gap-3 rounded-xl p-4"
@@ -382,7 +383,17 @@ export default function StrainDetailPage() {
                   <span className="shrink-0 rounded-md px-3 py-1 text-xs font-semibold text-white" style={{ backgroundColor: "#3b82f6" }}>
                     Terpenes
                   </span>
-                  <span className="text-sm text-white">{stats.top_terpenes.join("   ")}</span>
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                    {stats.top_terpenes.map((name) => (
+                      <span
+                        key={name}
+                        title={terpeneSummary(name)}
+                        className="cursor-help text-sm text-white underline decoration-dotted decoration-1 underline-offset-2"
+                      >
+                        {name}
+                      </span>
+                    ))}
+                  </div>
                 </div>
               )}
 

@@ -6,6 +6,7 @@ import { useState, useCallback, useEffect } from "react";
 import { brand } from "@/lib/brand";
 import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
+import { terpeneSummary } from "@/lib/terpenes";
 
 interface TerpeneData {
   terpene_name: string;
@@ -597,8 +598,9 @@ export default function StrainCard({ card }: { card: CardData }) {
               {card.top_terpenes.map((t) => (
                 <div key={t.terpene_name} className="mb-1.5 flex items-center gap-2">
                   <span
-                    className={clsx("w-20 text-xs", isHolo && "font-semibold")}
+                    className={clsx("w-20 cursor-help text-xs underline decoration-dotted decoration-1 underline-offset-2", isHolo && "font-semibold")}
                     style={{ color: back.body }}
+                    title={terpeneSummary(t.terpene_name)}
                   >
                     {t.terpene_name}
                   </span>
