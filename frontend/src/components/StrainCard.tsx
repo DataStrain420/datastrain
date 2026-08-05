@@ -57,20 +57,21 @@ function getRankTier(rank: number): RankTier {
   return "common";
 }
 
-/** Border + shadow styles per tier */
+/** Border + shadow styles per tier — legendary/rare get a coloured trim
+ *  and an outer glow while keeping the standard dark card body. The metallic
+ *  gradient background was too distracting behind data-heavy content.
+ *  Rank hex retains its own gold/silver treatment separately. */
 function tierStyles(tier: RankTier) {
   switch (tier) {
     case "legendary":
       return {
-        background: "linear-gradient(145deg, #6e521c 0%, #946e22 15%, #c9a84c 30%, #e8cc6a 45%, #f5d76e 50%, #e8cc6a 55%, #c9a84c 70%, #946e22 85%, #6e521c 100%)",
-        border: "2px solid #e8cc6a",
-        boxShadow: `0 8px 32px rgba(0,0,0,0.5), 0 2px 8px rgba(0,0,0,0.3), 0 0 30px rgba(201,168,76,0.35), 0 0 60px rgba(255,215,0,0.12), inset 0 1px 0 rgba(255,235,150,0.2), inset 0 -1px 0 rgba(0,0,0,0.2)`,
+        border: "3px solid #e8cc6a",
+        boxShadow: `0 8px 32px rgba(0,0,0,0.5), 0 2px 8px rgba(0,0,0,0.3), 0 0 30px rgba(201,168,76,0.35), 0 0 60px rgba(255,215,0,0.12), inset 0 1px 0 rgba(255,235,150,0.2)`,
       };
     case "rare":
       return {
-        background: "linear-gradient(145deg, #565d65 0%, #757d86 15%, #8a9199 30%, #b0b8c0 45%, #c8d0d8 50%, #b0b8c0 55%, #8a9199 70%, #757d86 85%, #565d65 100%)",
-        border: "2px solid #c0c8d0",
-        boxShadow: `0 8px 32px rgba(0,0,0,0.5), 0 2px 8px rgba(0,0,0,0.3), 0 0 24px rgba(160,170,180,0.25), 0 0 50px rgba(200,210,220,0.1), inset 0 1px 0 rgba(255,255,255,0.2), inset 0 -1px 0 rgba(0,0,0,0.15)`,
+        border: "3px solid #c0c8d0",
+        boxShadow: `0 8px 32px rgba(0,0,0,0.5), 0 2px 8px rgba(0,0,0,0.3), 0 0 24px rgba(160,170,180,0.25), 0 0 50px rgba(200,210,220,0.1), inset 0 1px 0 rgba(255,255,255,0.15)`,
       };
     case "standard":
       return {
@@ -184,7 +185,11 @@ export default function StrainCard({ card }: { card: CardData }) {
   const handleImgError = useCallback(() => setImgError(true), []);
   const displayRank = card.rank ?? 0;
   const tier = getRankTier(displayRank);
-  const isHolo = tier === "legendary" || tier === "rare";
+  // isHolo used to gate dark-on-light text/pill styling for legibility
+  // against the metallic body. Body is now standard dark on all tiers, so
+  // force this false — the RankHex still receives `tier` directly, so
+  // the gold/silver rank badge continues to work.
+  const isHolo = false;
   const cardBorderStyles = tierStyles(tier);
 
   // Back-face color palette — dark tones on holo (gold/silver) cards so the
