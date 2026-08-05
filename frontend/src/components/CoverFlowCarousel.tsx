@@ -77,7 +77,10 @@ export default function CoverFlowCarousel({ children }: CoverFlowCarouselProps) 
           const translateX = offset * SPACING;
           const translateZ = -absOffset * 120;
           const rotateY = offset === 0 ? 0 : offset < 0 ? 45 : -45;
-          const scale = offset === 0 ? 1.15 : Math.max(0.7, 1 - absOffset * 0.12);
+          // Center card stays at 1.0 — scaling up magnifies the raster image
+          // (photo + text) which the browser can't re-sharpen, so it looks
+          // blurred. Side cards scale DOWN, which the GPU handles cleanly.
+          const scale = offset === 0 ? 1 : Math.max(0.7, 1 - absOffset * 0.12);
           const opacity = offset === 0 ? 1 : Math.max(0.3, 1 - absOffset * 0.25);
           const zIndex = 100 - absOffset;
 
