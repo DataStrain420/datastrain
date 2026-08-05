@@ -93,9 +93,10 @@ function RankHex({ rank, tier, reviewCount }: { rank: number; tier: RankTier; re
   const isHolo = isGold || isSilver;
   const hexFill = isGold ? "url(#hex-gold-grad)" : isSilver ? "url(#hex-silver-grad)" : C.secondary;
   const textColor = isGold ? "#2a1f00" : isSilver ? "#1a1d20" : C.bgDeep;
-  // Holo cards need dark "Overall Rank" label for legibility against the
-  // bright metallic background.
-  const labelColor = isHolo ? "rgba(0,0,0,0.75)" : C.textMuted;
+  // Match the RatingBar labels (Appearance/Aroma/etc) — same muted colour
+  // on every tier now that the metallic holo background is gone. The rank
+  // hex fill + inside-hex number still get gold/silver via hexFill/textColor.
+  const labelColor = C.textMuted;
   return (
     <div className="flex flex-col items-end gap-1">
       <div className="flex items-center gap-1.5">
