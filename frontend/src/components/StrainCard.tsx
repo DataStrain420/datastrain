@@ -65,12 +65,12 @@ function tierStyles(tier: RankTier) {
   switch (tier) {
     case "legendary":
       return {
-        border: "3px solid #e8cc6a",
+        border: "2px solid #e8cc6a",
         boxShadow: `0 8px 32px rgba(0,0,0,0.5), 0 2px 8px rgba(0,0,0,0.3), 0 0 30px rgba(201,168,76,0.35), 0 0 60px rgba(255,215,0,0.12), inset 0 1px 0 rgba(255,235,150,0.2)`,
       };
     case "rare":
       return {
-        border: "3px solid #c0c8d0",
+        border: "2px solid #c0c8d0",
         boxShadow: `0 8px 32px rgba(0,0,0,0.5), 0 2px 8px rgba(0,0,0,0.3), 0 0 24px rgba(160,170,180,0.25), 0 0 50px rgba(200,210,220,0.1), inset 0 1px 0 rgba(255,255,255,0.15)`,
       };
     case "standard":
