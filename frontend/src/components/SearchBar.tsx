@@ -78,7 +78,7 @@ function trendingToChip(t: TrendingItem): { label: string; href: string } {
 
 export default function SearchBar({
   size = "sm",
-  placeholder = "Search strains, growers, or conditions...",
+  placeholder = "Search strains, growers, conditions...",
 }: SearchBarProps) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
@@ -220,10 +220,7 @@ export default function SearchBar({
           onChange={(e) => setQuery(e.target.value)}
           onFocus={handleFocus}
           onKeyDown={handleKeyDown}
-          placeholder={isLarge
-            ? "Search strains, growers, or conditions (e.g. 'ADHD', 'Pink Kush')"
-            : placeholder
-          }
+          placeholder={placeholder}
           className={`w-full rounded-xl border text-white placeholder-gray-500 outline-none transition focus:border-opacity-60 ${
             isLarge ? "py-4 pl-5 pr-14 text-base" : "py-1.5 pl-3 pr-8 text-sm"
           }`}
