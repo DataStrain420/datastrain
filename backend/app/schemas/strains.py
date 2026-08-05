@@ -26,6 +26,8 @@ class StrainResponse(BaseModel):
     description: str | None
     grower_id: int | None
     grower_name: str | None = None
+    grower_country: str | None = None
+    grower_verified: bool | None = None
     submitted_by_id: int | None
     approved: bool
     approved_at: datetime | None

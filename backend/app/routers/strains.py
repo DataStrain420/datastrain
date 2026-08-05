@@ -25,6 +25,8 @@ def _strain_to_response(strain: Strain) -> StrainResponse:
         description=strain.description,
         grower_id=strain.grower_id,
         grower_name=strain.grower.name if strain.grower else None,
+        grower_country=strain.grower.country_of_origin if strain.grower else None,
+        grower_verified=strain.grower.verified if strain.grower else None,
         submitted_by_id=strain.submitted_by_id,
         approved=strain.approved,
         approved_at=strain.approved_at,

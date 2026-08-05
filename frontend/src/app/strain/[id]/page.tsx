@@ -7,6 +7,7 @@ import Navbar, { PublicNavActions } from "@/components/Navbar";
 import StrainCard, { CardData } from "@/components/StrainCard";
 import ReviewCard from "@/components/ReviewCard";
 import BatchMiniCard from "@/components/BatchMiniCard";
+import StrainShareRow from "@/components/StrainShareRow";
 import Footer from "@/components/Footer";
 import { brand } from "@/lib/brand";
 import { apiFetch } from "@/lib/api";
@@ -29,6 +30,47 @@ interface Strain {
   description: string | null;
   grower_id: number | null;
   grower_name: string | null;
+  grower_country?: string | null;
+  grower_verified?: boolean | null;
+  created_at?: string;
+}
+
+/** UK 2-letter country codes for the flag emoji trick — accepts common
+ *  full names our seed data uses and returns the emoji. */
+function countryFlag(country: string | null | undefined): string {
+  if (!country) return "";
+  const map: Record<string, string> = {
+    "United Kingdom": "\u{1F1EC}\u{1F1E7}",
+    Canada: "\u{1F1E8}\u{1F1E6}",
+    Netherlands: "\u{1F1F3}\u{1F1F1}",
+    Germany: "\u{1F1E9}\u{1F1EA}",
+    Australia: "\u{1F1E6}\u{1F1FA}",
+    Israel: "\u{1F1EE}\u{1F1F1}",
+    Portugal: "\u{1F1F5}\u{1F1F9}",
+    Uruguay: "\u{1F1FA}\u{1F1FE}",
+    Colombia: "\u{1F1E8}\u{1F1F4}",
+    Spain: "\u{1F1EA}\u{1F1F8}",
+    Denmark: "\u{1F1E9}\u{1F1F0}",
+  };
+  return map[country] ?? "";
+}
+
+/** Compute the pharmacological chemotype from THC:CBD ratio.
+ *  Type I ≈ THC-dominant, II ≈ balanced, III ≈ CBD-dominant.
+ *  Returns null when both values are missing so the chip stays hidden. */
+function chemotype(thc: number | null | undefined, cbd: number | null | undefined): { label: string; hint: string } | null {
+  if (thc == null || cbd == null) return null;
+  if (thc <= 0 && cbd <= 0) return null;
+  const ratio = cbd === 0 ? Infinity : thc / cbd;
+  if (ratio >= 3) return { label: "Type I", hint: "THC-dominant (Type I chemotype)" };
+  if (ratio <= 1 / 3) return { label: "Type III", hint: "CBD-dominant (Type III chemotype)" };
+  return { label: "Type II", hint: "Mixed THC/CBD (Type II chemotype)" };
+}
+
+function formatFirstListed(iso: string | undefined): string {
+  if (!iso) return "";
+  const d = new Date(iso);
+  return d.toLocaleDateString("en-GB", { month: "long", year: "numeric" });
 }
 
 interface StatEntry { name: string; percentage: number }
@@ -343,6 +385,58 @@ export default function StrainDetailPage() {
                 By {strain.grower_name}
               </Link>
             )}
+
+            {/* Provenance + chemotype + first-listed chips.
+                MedBud pattern — surface the "who / where / when / what
+                type of medication" facts right at the top of the page
+                instead of burying them in a sidebar. */}
+            <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
+              {strain.grower_country && (
+                <span
+                  className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 font-medium"
+                  style={{ backgroundColor: C.bgDeep, color: C.textMuted, border: `1px solid ${C.textMuted}22` }}
+                  title={`Produced in ${strain.grower_country}`}
+                >
+                  <span aria-hidden>{countryFlag(strain.grower_country)}</span>
+                  Produced in {strain.grower_country}
+                </span>
+              )}
+              {strain.grower_verified && (
+                <span
+                  className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 font-semibold"
+                  style={{ backgroundColor: `${C.primary}18`, color: C.primary, border: `1px solid ${C.primary}55` }}
+                  title="Verified grower"
+                >
+                  {"\u{2705}"} Verified grower
+                </span>
+              )}
+              {(() => {
+                const ct = chemotype(stats?.avg_thc, stats?.avg_cbd);
+                if (!ct) return null;
+                return (
+                  <span
+                    className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 font-semibold"
+                    style={{ backgroundColor: `${C.secondary}18`, color: C.secondary, border: `1px solid ${C.secondary}55` }}
+                    title={ct.hint}
+                  >
+                    {"\u{1F9EA}"} {ct.label}
+                  </span>
+                );
+              })()}
+              {strain.created_at && (
+                <span
+                  className="inline-flex items-center gap-1 rounded-full px-2.5 py-1"
+                  style={{ backgroundColor: C.bgDeep, color: C.textMuted, border: `1px solid ${C.textMuted}22` }}
+                  title={`First listed on DataStrain ${new Date(strain.created_at).toLocaleDateString("en-GB")}`}
+                >
+                  {"\u{1F5D3}\u{FE0F}"} Listed {formatFirstListed(strain.created_at)}
+                </span>
+              )}
+            </div>
+
+            {/* Share row — one-tap out to common places patients share links.
+                Kept as icon-only pill row so it doesn't dominate the header. */}
+            <StrainShareRow name={strain.name} />
           </div>
           {stats && (
             <PageRankHex rank={stats.overall_rank} totalStrains={stats.total_strains} />
@@ -684,6 +778,44 @@ export default function StrainDetailPage() {
             </div>
           </section>
         )}
+
+        {/* ── Community contributions — always visible so patients know
+              they can help correct the record. MedBud pattern. Simple
+              mailto/prefilled review flow for now — a proper submission
+              form is a later iteration. */}
+        <section className="mt-12 mb-4">
+          <div
+            className="grid gap-3 rounded-2xl p-5 sm:grid-cols-2"
+            style={{ backgroundColor: C.bgCard, border: `1px solid ${C.textMuted}15` }}
+          >
+            <a
+              href={`mailto:corrections@datastrain.co.uk?subject=${encodeURIComponent(`Correction for ${strain.name}`)}&body=${encodeURIComponent(`Strain: ${strain.name}\nURL: ${typeof window !== "undefined" ? window.location.href : ""}\n\nWhat's wrong:\n\n\nSuggested correction:\n`)}`}
+              className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition hover:brightness-125"
+              style={{ backgroundColor: C.bgDeep, color: C.textMuted, border: `1px solid ${C.textMuted}22` }}
+            >
+              <span className="text-lg" aria-hidden>{"\u{270F}\u{FE0F}"}</span>
+              <div className="flex flex-col leading-tight">
+                <span className="text-white">Submit a correction</span>
+                <span className="text-xs" style={{ color: C.textMuted }}>
+                  Spot something wrong on this page? Tell us.
+                </span>
+              </div>
+            </a>
+            <Link
+              href={user ? "/portal/review/new" : "/register?redirect=/portal/review/new"}
+              className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition hover:brightness-125"
+              style={{ backgroundColor: `${C.primary}18`, color: C.primary, border: `1px solid ${C.primary}55` }}
+            >
+              <span className="text-lg" aria-hidden>{"\u{1F4F8}"}</span>
+              <div className="flex flex-col leading-tight">
+                <span className="text-white">Submit a photo review</span>
+                <span className="text-xs" style={{ color: C.textMuted }}>
+                  Add your own batch photos + rating.
+                </span>
+              </div>
+            </Link>
+          </div>
+        </section>
       </main>
 
       <Footer />
