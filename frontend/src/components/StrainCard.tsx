@@ -424,10 +424,10 @@ export default function StrainCard({ card }: { card: CardData }) {
             </div>
 
             {/* Action buttons — three library toggles. Row is left-aligned
-                with right padding so the bottom-right corner is clear for
-                the flip triangle. */}
+                with enough right padding that the rightmost button (Fire)
+                stays clear of the 60px flip triangle in the corner. */}
             <div
-              className="mt-2 flex items-center justify-start gap-6 pr-14"
+              className="mt-2 flex items-center justify-start gap-5 pr-20"
             >
               <LibraryButton
                 active={wishlisted}
