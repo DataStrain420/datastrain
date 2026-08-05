@@ -98,18 +98,17 @@ function RankHex({ rank, tier, reviewCount }: { rank: number; tier: RankTier; re
   // hex fill + inside-hex number still get gold/silver via hexFill/textColor.
   const labelColor = C.textMuted;
   return (
-    <div className="flex flex-col items-end gap-1">
-      <div className="flex items-center gap-1.5">
+    <div className="flex flex-col items-center gap-1">
+      {/* Stacked vertically: label on top, smaller hex in the middle, count
+          underneath. Tighter, easier to read at a glance than the previous
+          horizontal 'Rank [hex] / count' arrangement. */}
       <span
-        className={clsx(
-          "text-right text-xs leading-tight",
-          isHolo ? "font-extrabold" : "font-semibold",
-        )}
+        className="text-xs font-semibold leading-tight"
         style={{ color: labelColor }}
       >
         Rank
       </span>
-      <div className="relative h-12 w-12">
+      <div className="relative h-10 w-10">
         <svg viewBox="0 0 256 256" className="absolute inset-0 h-full w-full">
           <defs>
             {isGold && (
@@ -137,17 +136,12 @@ function RankHex({ rank, tier, reviewCount }: { rank: number; tier: RankTier; re
             strokeLinejoin="round"
           />
         </svg>
-        <span className="absolute inset-0 flex items-center justify-center text-base font-black" style={{ color: textColor }}>
+        <span className="absolute inset-0 flex items-center justify-center text-sm font-black" style={{ color: textColor }}>
           {rank}
         </span>
       </div>
-      </div>
-      {/* Review count beneath the rank hex */}
       <span
-        className={clsx(
-          "text-[10px] leading-none",
-          isHolo ? "font-extrabold" : "font-semibold",
-        )}
+        className="text-[10px] font-semibold leading-none"
         style={{ color: labelColor }}
       >
         {reviewCount.toLocaleString()} rating{reviewCount !== 1 ? "s" : ""}
