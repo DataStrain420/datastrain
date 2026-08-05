@@ -8,6 +8,7 @@ import StrainCardSkeleton from "@/components/StrainCardSkeleton";
 import CardCarousel from "@/components/CardCarousel";
 import GrowerCard from "@/components/GrowerCard";
 import DiscoveryGrid from "@/components/DiscoveryGrid";
+import LatestListings from "@/components/LatestListings";
 import ReviewCard from "@/components/ReviewCard";
 import SearchBar from "@/components/SearchBar";
 import Footer from "@/components/Footer";
@@ -197,6 +198,32 @@ export default function Home() {
         </div>
       </section>
 
+      {/* ── 1b. Trust indicator strip ──────────────────────────────────── */}
+      {/* Four short "why trust this" badges below the hero. MedBud does
+          a longer version of this pattern; we lean on our differentiators
+          (batch-linked, verified reviewers, UK medical only, photo-required).
+          Kept small and horizontally-scrollable so it doesn't crowd the hero. */}
+      <section className="border-y" style={{ borderColor: `${brand.textMuted}15`, backgroundColor: `${brand.bgCard}55` }}>
+        <div className="mx-auto max-w-7xl overflow-x-auto px-4 py-3">
+          <div className="flex min-w-fit items-center justify-center gap-6 text-xs sm:gap-10">
+            {[
+              { icon: "\u{1F9EA}", title: "Batch-Linked Data", desc: "Every review tied to a specific tested batch" },
+              { icon: "\u{1F4F8}", title: "Photos Required", desc: "Product, close-up and packaging verified per review" },
+              { icon: "\u{1F1EC}\u{1F1E7}", title: "UK Medical Only", desc: "Private-prescription flower — no recreational products" },
+              { icon: "\u{2696}\u{FE0F}", title: "Verified Reviewers", desc: "Prescription-holding patients only" },
+            ].map((item) => (
+              <div key={item.title} className="flex shrink-0 items-center gap-2.5">
+                <span className="text-lg" aria-hidden>{item.icon}</span>
+                <div className="flex flex-col leading-tight">
+                  <span className="font-semibold text-white">{item.title}</span>
+                  <span style={{ color: brand.textMuted }}>{item.desc}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ── 2. Top Rated Strains ────────────────────────────────────────── */}
       <section className="mx-auto max-w-7xl px-4 pb-16">
         <SectionHeading>Top Rated Strains</SectionHeading>
@@ -301,6 +328,11 @@ export default function Home() {
             ]}
           />
         </div>
+      </section>
+
+      {/* ── 2c. Latest Batches Added ─────────────────────────────────── */}
+      <section className="mx-auto max-w-7xl px-4 pb-16">
+        <LatestListings />
       </section>
 
       {/* ── 3. Most Recent Reviews ──────────────────────────────────────── */}
