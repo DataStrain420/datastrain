@@ -423,9 +423,11 @@ export default function StrainCard({ card }: { card: CardData }) {
               <RatingBar label="Effect" value={card.avg_effect_rating} dark={isHolo} />
             </div>
 
-            {/* Action buttons */}
+            {/* Action buttons — three library toggles. Row is left-aligned
+                with right padding so the bottom-right corner is clear for
+                the flip triangle. */}
             <div
-              className="mt-2 flex items-center justify-center gap-6"
+              className="mt-2 flex items-center justify-start gap-6 pr-14"
             >
               <LibraryButton
                 active={wishlisted}
@@ -451,21 +453,31 @@ export default function StrainCard({ card }: { card: CardData }) {
             </div>
           </div>
 
-          {/* Flip hint — full-width footer bar signalling the card is two-sided.
-              Tapping anywhere on the card flips it. */}
+          {/* Flip affordance — filled right-triangle wedge in the bottom-right
+              corner tells the user the card is two-sided. The whole card
+              flips on tap (see parent onClick), so this is purely visual. */}
           <div
-            className="flex items-center justify-center gap-1.5 py-1.5 text-[11px] font-semibold tracking-wide"
+            className="pointer-events-none absolute bottom-0 right-0"
+            aria-label="Tap to flip"
+            title="Tap to flip"
             style={{
-              backgroundColor: isHolo ? "rgba(0,0,0,0.12)" : `${C.secondary}14`,
-              borderTop: `1px solid ${isHolo ? "rgba(0,0,0,0.18)" : `${C.secondary}26`}`,
-              color: isHolo ? "rgba(0,0,0,0.7)" : C.secondary,
+              width: 60,
+              height: 60,
+              clipPath: "polygon(100% 0, 100% 100%, 0 100%)",
+              background: `linear-gradient(135deg, transparent 30%, ${C.secondary}55 100%)`,
             }}
           >
-            <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+            <svg
+              className="absolute h-4 w-4"
+              style={{ bottom: 6, right: 6, color: C.secondary }}
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={2.2}
+              viewBox="0 0 24 24"
+            >
               <path strokeLinecap="round" strokeLinejoin="round" d="M19.933 13.04a8 8 0 1 1-9.925-8.788c3.899-1 7.935 1.007 9.425 4.747" />
               <path strokeLinecap="round" strokeLinejoin="round" d="M20 4v5h-5" />
             </svg>
-            Tap to flip
           </div>
 
         </div>
