@@ -58,11 +58,11 @@ interface ReviewData {
 
 /* ── Static data ───────────────────────────────────────────────────────────── */
 
-const filterPills = [
+const filterPills: { label: string; color: string; href: string; type?: string }[] = [
   { label: "Browse All", color: brand.secondary, href: "/strains" },
-  { label: "Sativa", color: "#f59e0b", href: "/strains?type=sativa" },
-  { label: "Indica", color: brand.tertiary, href: "/strains?type=indica" },
-  { label: "Hybrid", color: "#ec4899", href: "/strains?type=hybrid" },
+  { label: "Sativa", color: "#f59e0b", href: "/strains?type=sativa", type: "sativa" },
+  { label: "Indica", color: brand.tertiary, href: "/strains?type=indica", type: "indica" },
+  { label: "Hybrid", color: "#ec4899", href: "/strains?type=hybrid", type: "hybrid" },
 ];
 
 const browseTypes = [
@@ -190,7 +190,11 @@ export default function Home() {
                   color: "white",
                 }}
               >
-                <span className="h-3 w-3 rounded-full" style={{ backgroundColor: pill.color }} />
+                {pill.type ? (
+                  <StrainTypeIcon type={pill.type} size={16} />
+                ) : (
+                  <span className="h-3 w-3 rounded-full" style={{ backgroundColor: pill.color }} />
+                )}
                 {pill.label}
               </Link>
             ))}
