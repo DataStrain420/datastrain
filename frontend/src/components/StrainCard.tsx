@@ -131,7 +131,7 @@ function RankHex({ rank, tier, reviewCount }: { rank: number; tier: RankTier; re
           />
         </svg>
         <div
-          className="absolute inset-0 flex flex-col items-center pt-2 leading-none"
+          className="absolute inset-0 flex flex-col items-center justify-center leading-none"
           style={{ color: textColor }}
         >
           <span className="text-[7px] font-bold uppercase tracking-wider opacity-80">
