@@ -5,7 +5,7 @@ import Link from "next/link";
 import Navbar, { PublicNavActions } from "@/components/Navbar";
 import StrainCard, { CardData } from "@/components/StrainCard";
 import StrainCardSkeleton from "@/components/StrainCardSkeleton";
-import CardCarousel from "@/components/CardCarousel";
+import CoverFlowCarousel from "@/components/CoverFlowCarousel";
 import GrowerCard from "@/components/GrowerCard";
 import DiscoveryGrid from "@/components/DiscoveryGrid";
 import LatestListings from "@/components/LatestListings";
@@ -231,12 +231,14 @@ export default function Home() {
       {/* ── 2. Top Rated Strains ────────────────────────────────────────── */}
       <section className="mx-auto max-w-7xl px-4 pb-16">
         <SectionHeading>Top Rated Strains</SectionHeading>
-        {/* Mobile: horizontal swipe carousel with dots + arrows. sm+: wrap grid. */}
-        <CardCarousel>
+        {/* 3D coverflow — same component the user dashboard uses for their
+            Fire/Wishlist/Tried carousels, so the click-through feels the
+            same everywhere. */}
+        <CoverFlowCarousel>
           {topLoading
             ? Array.from({ length: 8 }).map((_, i) => <StrainCardSkeleton key={i} />)
             : topStrains.map((card) => <StrainCard key={card.id} card={card} />)}
-        </CardCarousel>
+        </CoverFlowCarousel>
         {topStrains.length > 0 && (
           <div className="mt-8 text-center">
             <Link
