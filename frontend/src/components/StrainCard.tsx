@@ -99,16 +99,10 @@ function RankHex({ rank, tier, reviewCount }: { rank: number; tier: RankTier; re
   const labelColor = C.textMuted;
   return (
     <div className="flex flex-col items-center gap-1">
-      {/* Stacked vertically: label on top, smaller hex in the middle, count
-          underneath. Tighter, easier to read at a glance than the previous
-          horizontal 'Rank [hex] / count' arrangement. */}
-      <span
-        className="text-xs font-semibold leading-tight"
-        style={{ color: labelColor }}
-      >
-        Rank
-      </span>
-      <div className="relative h-10 w-10">
+      {/* Hex with 'RANK' label above the number inside it, count underneath.
+          Slightly larger hex than the label-outside version (h-12) so the
+          two stacked labels have room to breathe. */}
+      <div className="relative h-12 w-12">
         <svg viewBox="0 0 256 256" className="absolute inset-0 h-full w-full">
           <defs>
             {isGold && (
@@ -136,9 +130,17 @@ function RankHex({ rank, tier, reviewCount }: { rank: number; tier: RankTier; re
             strokeLinejoin="round"
           />
         </svg>
-        <span className="absolute inset-0 flex items-center justify-center text-sm font-black" style={{ color: textColor }}>
-          {rank}
-        </span>
+        <div
+          className="absolute inset-0 flex flex-col items-center justify-center leading-none"
+          style={{ color: textColor }}
+        >
+          <span className="text-[7px] font-bold uppercase tracking-wider opacity-80">
+            Rank
+          </span>
+          <span className="mt-0.5 text-sm font-black">
+            {rank}
+          </span>
+        </div>
       </div>
       <span
         className="text-[10px] font-semibold leading-none"
