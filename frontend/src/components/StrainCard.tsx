@@ -424,10 +424,11 @@ export default function StrainCard({ card }: { card: CardData }) {
             </div>
 
             {/* Action buttons — three library toggles. Row is left-aligned
-                with enough right padding that the rightmost button (Fire)
-                stays clear of the 60px flip triangle in the corner. */}
+                with right padding so the rightmost button (Fire) stays clear
+                of the 60px flip triangle in the corner. Buttons are compact
+                so the gap can be tight. */}
             <div
-              className="mt-2 flex items-center justify-start gap-5 pr-20"
+              className="mt-2 flex items-center justify-start gap-4 pr-16"
             >
               <LibraryButton
                 active={wishlisted}
@@ -750,10 +751,10 @@ function LibraryButton({
   return (
     <button
       onClick={onClick}
-      className="flex items-center gap-1.5 transition-opacity hover:opacity-80"
+      className="flex items-center gap-1 transition-opacity hover:opacity-80"
     >
       <span
-        className="flex h-8 w-8 items-center justify-center rounded-full text-lg transition-all"
+        className="flex h-6 w-6 items-center justify-center rounded-full text-sm transition-all"
         style={{
           border: active
             ? `2px solid ${C.primary}`
@@ -766,7 +767,7 @@ function LibraryButton({
         {icon}
       </span>
       <span
-        className={clsx("text-xs", isHolo && !active ? "font-extrabold" : "font-semibold")}
+        className={clsx("text-[10px]", isHolo && !active ? "font-extrabold" : "font-semibold")}
         style={{ color: active ? C.primary : inactiveText }}
       >
         {label}
