@@ -270,6 +270,15 @@ export default function StrainCard({ card }: { card: CardData }) {
         });
         setActive(true);
         setLibraryIds((prev) => ({ ...prev, [listType]: entry.id }));
+
+        // Activating "tried" or "favourite" means the wishlist entry no
+        // longer makes sense — you've already got it. Clear it out.
+        if ((listType === "tried" || listType === "favourite") && libraryIds.wishlist) {
+          const wishlistId = libraryIds.wishlist;
+          apiFetch(`/library/${wishlistId}`, { method: "DELETE" }).catch(() => {});
+          setWishlisted(false);
+          setLibraryIds((prev) => { const next = { ...prev }; delete next.wishlist; return next; });
+        }
       }
     } catch {
       // Duplicate or transient error — swallow.
