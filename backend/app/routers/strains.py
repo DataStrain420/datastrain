@@ -119,7 +119,9 @@ async def list_strains(
 
     # Sorting
     if sort == "newest":
-        query = query.order_by(Strain.created_at.desc())
+        # id.desc() as tiebreaker: bulk-seeded strains share created_at
+        # to the second, so without it 'newest' reads as 'oldest'.
+        query = query.order_by(Strain.created_at.desc(), Strain.id.desc())
     elif sort == "top-rated":
         # Subquery for avg rating per strain
         avg_sub = (

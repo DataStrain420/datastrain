@@ -71,7 +71,7 @@ async def list_batches(
         query = query.where(Batch.grower_id == grower_id)
     if approved is not None:
         query = query.where(Batch.approved == approved)
-    query = query.offset(skip).limit(limit).order_by(Batch.created_at.desc())
+    query = query.offset(skip).limit(limit).order_by(Batch.created_at.desc(), Batch.id.desc())
     result = await db.execute(query)
     return [_batch_to_response(b) for b in result.scalars().unique().all()]
 
@@ -245,7 +245,10 @@ async def list_batch_cards(
         )
         stmt = stmt.outerjoin(count_sub, Batch.id == count_sub.c.batch_id).order_by(count_sub.c.cnt.desc().nullslast())
     elif sort == "newest":
-        stmt = stmt.order_by(Batch.created_at.desc())
+        # id.desc() as tiebreaker: bulk-seeded batches share created_at
+        # to the second, so without it Postgres falls back to id-ascending
+        # and 'newest' reads as 'oldest'.
+        stmt = stmt.order_by(Batch.created_at.desc(), Batch.id.desc())
     elif sort == "thc-high":
         stmt = stmt.order_by(Batch.thc_percentage.desc().nullslast())
     elif sort == "thc-low":
