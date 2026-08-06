@@ -215,31 +215,41 @@ export default function Home() {
           (batch-linked, verified reviewers, UK medical only, photo-required).
           Kept small and horizontally-scrollable so it doesn't crowd the hero. */}
       <section className="border-y" style={{ borderColor: `${brand.textMuted}15`, backgroundColor: `${brand.bgCard}55` }}>
-        <div className="mx-auto max-w-7xl overflow-x-auto px-4 py-3">
-          <div className="flex min-w-fit items-center justify-center gap-6 text-xs sm:gap-10">
-            {[
-              {
-                icon: "\u{1F331}",
-                title: publicStats ? `${roundStat(publicStats.total_strains)} strains tracked` : "Strains tracked",
-                desc: "Curated UK medical cannabis catalogue",
-              },
-              {
-                icon: "\u{2B50}",
-                title: publicStats ? `${roundStat(publicStats.total_reviews)} reviews` : "Patient reviews",
-                desc: "Verified reviews across every batch",
-              },
-              { icon: "\u{1F9EA}", title: "Batch-Linked Data", desc: "Every review tied to a specific tested batch" },
-              { icon: "\u{1F4F8}", title: "Photos Required", desc: "Product, close-up and packaging verified per review" },
-              { icon: "\u{1F1EC}\u{1F1E7}", title: "UK Medical Only", desc: "Private-prescription flower — no recreational products" },
-            ].map((item) => (
-              <div key={item.title} className="flex shrink-0 items-center gap-2.5">
-                <span className="text-lg" aria-hidden>{item.icon}</span>
-                <div className="flex flex-col leading-tight">
-                  <span className="font-semibold text-white">{item.title}</span>
-                  <span style={{ color: brand.textMuted }}>{item.desc}</span>
+        <div className="mx-auto max-w-7xl overflow-hidden px-4 py-3">
+          <div className="trust-marquee-track gap-10 text-xs">
+            {(() => {
+              const items = [
+                {
+                  icon: "\u{1F331}",
+                  title: publicStats ? `${roundStat(publicStats.total_strains)} strains tracked` : "Strains tracked",
+                  desc: "Curated UK medical cannabis catalogue",
+                },
+                {
+                  icon: "\u{2B50}",
+                  title: publicStats ? `${roundStat(publicStats.total_reviews)} reviews` : "Patient reviews",
+                  desc: "Verified reviews across every batch",
+                },
+                { icon: "\u{1F9EA}", title: "Batch-Linked Data", desc: "Every review tied to a specific tested batch" },
+                { icon: "\u{1F4F8}", title: "Photos Required", desc: "Product, close-up and packaging verified per review" },
+                { icon: "\u{1F1EC}\u{1F1E7}", title: "UK Medical Only", desc: "Private-prescription flower — no recreational products" },
+              ];
+              // Two identical copies — the CSS translates the track by -50%
+              // so the second copy lands exactly where the first started for a
+              // seamless loop.
+              return [...items, ...items].map((item, i) => (
+                <div
+                  key={`${item.title}-${i}`}
+                  className="flex shrink-0 items-center gap-2.5 pr-10"
+                  aria-hidden={i >= items.length ? "true" : undefined}
+                >
+                  <span className="text-lg" aria-hidden>{item.icon}</span>
+                  <div className="flex flex-col leading-tight">
+                    <span className="font-semibold text-white">{item.title}</span>
+                    <span style={{ color: brand.textMuted }}>{item.desc}</span>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ));
+            })()}
           </div>
         </div>
       </section>

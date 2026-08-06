@@ -169,6 +169,31 @@
   }
 }
 
+/* ── Trust strip marquee ──────────────────────────────────────────────
+   Two identical copies of the content are laid out side-by-side and the
+   whole track slides left by 50% — the moment it wraps back to 0 the
+   second copy is exactly where the first started, so the transition is
+   seamless. Pauses on hover so people can actually read the tiles. */
+@keyframes trust-marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+.trust-marquee-track {
+  display: flex;
+  width: max-content;
+  animation: trust-marquee 40s linear infinite;
+  will-change: transform;
+}
+.trust-marquee-track:hover {
+  animation-play-state: paused;
+}
+@media (prefers-reduced-motion: reduce) {
+  .trust-marquee-track {
+    animation: none;
+    transform: none;
+  }
+}
+
 /* ── Prevent iOS zoom-on-focus ──────────────────────────────────────────
    Mobile Safari zooms the whole page in when a focused input has a
    font-size below 16px (e.g. Tailwind's text-sm = 14px), which pushes the
