@@ -138,10 +138,12 @@ async def submit_review(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    # Validate batch exists and is approved
+    # Batch must exist. Unapproved batches are allowed because patients can
+    # submit a new batch inline during the review flow; the review itself
+    # stays PENDING and admins moderate both together.
     batch = await db.get(Batch, batch_id)
-    if not batch or not batch.approved:
-        raise HTTPException(status_code=400, detail="Batch not found or not approved")
+    if not batch:
+        raise HTTPException(status_code=400, detail="Batch not found")
 
     # Check one review per user per batch
     existing = await db.execute(

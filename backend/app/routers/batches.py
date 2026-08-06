@@ -1,17 +1,18 @@
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.auth import get_current_admin
+from app.auth import get_current_admin, get_current_user
 from app.database import get_db
-from app.models import Batch, BatchTerpene, ConditionRating, Review, ReviewStatus, Terpene
+from app.models import Batch, BatchTerpene, ConditionRating, Review, ReviewStatus, Strain, Terpene, User
 from app.schemas.batches import (
     BatchCardResponse,
     BatchCreate,
     BatchResponse,
+    BatchSubmit,
     BatchUpdate,
 )
 from app.schemas.terpenes import BatchTerpeneResponse
@@ -106,6 +107,69 @@ async def create_batch(
     await db.flush()
 
     # Reload with relationships
+    result = await db.execute(
+        select(Batch)
+        .options(
+            selectinload(Batch.strain),
+            selectinload(Batch.grower),
+            selectinload(Batch.terpene_profiles).selectinload(BatchTerpene.terpene),
+        )
+        .where(Batch.id == batch.id)
+    )
+    batch = result.scalar_one()
+    return _batch_to_response(batch)
+
+
+@router.post("/submit", response_model=BatchResponse, status_code=201)
+async def submit_batch(
+    data: BatchSubmit,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Patient-facing endpoint. Creates an unapproved batch (and optionally an
+    unapproved strain) so a review can be attached to something admins can
+    later approve."""
+    # Batch number must be unique — reject early with a clear message.
+    existing = await db.execute(
+        select(Batch).where(func.lower(Batch.batch_number) == data.batch_number.strip().lower())
+    )
+    if existing.scalars().first():
+        raise HTTPException(
+            status_code=409,
+            detail="A batch with that number already exists. Try searching for it instead.",
+        )
+
+    strain_id = data.strain_id
+    if strain_id is None:
+        if not data.new_strain_name or not data.new_strain_type:
+            raise HTTPException(
+                status_code=422,
+                detail="Either strain_id or both new_strain_name and new_strain_type must be provided.",
+            )
+        strain = Strain(
+            name=data.new_strain_name.strip(),
+            strain_type=data.new_strain_type,
+            grower_id=data.grower_id,
+            submitted_by_id=current_user.id,
+            approved=False,
+        )
+        db.add(strain)
+        await db.flush()
+        strain_id = strain.id
+
+    batch = Batch(
+        strain_id=strain_id,
+        grower_id=data.grower_id,
+        batch_number=data.batch_number.strip(),
+        thc_percentage=data.thc_percentage,
+        cbd_percentage=data.cbd_percentage,
+        tested_date=data.tested_date or date.today(),
+        irradiated=data.irradiated,
+        approved=False,
+    )
+    db.add(batch)
+    await db.flush()
+
     result = await db.execute(
         select(Batch)
         .options(

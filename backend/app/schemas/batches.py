@@ -18,6 +18,20 @@ class BatchCreate(BaseModel):
     terpene_profiles: list[BatchTerpeneCreate] = []
 
 
+class BatchSubmit(BaseModel):
+    """Patient-submitted batch — created unapproved, admin approves later."""
+
+    grower_id: int
+    batch_number: str = Field(max_length=50)
+    strain_id: int | None = None
+    new_strain_name: str | None = Field(default=None, max_length=200)
+    new_strain_type: str | None = Field(default=None, pattern="^(indica|sativa|hybrid)$")
+    thc_percentage: float = Field(ge=0, le=100)
+    cbd_percentage: float = Field(ge=0, le=100)
+    tested_date: date | None = None
+    irradiated: bool | None = None
+
+
 class BatchUpdate(BaseModel):
     thc_percentage: float | None = None
     cbd_percentage: float | None = None

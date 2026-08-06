@@ -5,6 +5,7 @@ import { apiFetch } from "@/lib/api";
 import { brand } from "@/lib/brand";
 import StarRating from "./StarRating";
 import PhotoUpload from "./PhotoUpload";
+import AddBatchPanel from "./AddBatchPanel";
 
 const C = brand;
 
@@ -89,6 +90,8 @@ export default function ReviewStepOne({ onSuccess, onCancel }: ReviewStepOneProp
   const [matchedBatch, setMatchedBatch] = useState<BatchResult | null>(null);
   const [batchError, setBatchError] = useState("");
   const [batchSearching, setBatchSearching] = useState(false);
+  const [showAddBatch, setShowAddBatch] = useState(false);
+  const [pendingBatchApproval, setPendingBatchApproval] = useState(false);
 
   const [photoProduct, setPhotoProduct] = useState<File | null>(null);
   const [photoCloseup, setPhotoCloseup] = useState<File | null>(null);
@@ -115,9 +118,13 @@ export default function ReviewStepOne({ onSuccess, onCancel }: ReviewStepOneProp
   }, []);
 
   useEffect(() => {
+    // A just-submitted batch should stick until grower/batch change explicitly.
+    if (pendingBatchApproval) return;
+
     if (!growerId || batchNumber.trim().length < 2) {
       setMatchedBatch(null);
       setBatchError("");
+      setShowAddBatch(false);
       return;
     }
 
@@ -134,9 +141,10 @@ export default function ReviewStepOne({ onSuccess, onCancel }: ReviewStepOneProp
         if (match) {
           setMatchedBatch(match);
           setBatchError("");
+          setShowAddBatch(false);
         } else {
           setMatchedBatch(null);
-          setBatchError("Batch not found. Check the number and grower.");
+          setBatchError("Batch not found. Check the number and grower — or add it below.");
         }
       } catch {
         setBatchError("Failed to search batches.");
@@ -146,7 +154,7 @@ export default function ReviewStepOne({ onSuccess, onCancel }: ReviewStepOneProp
     }, 500);
 
     return () => clearTimeout(timeout);
-  }, [growerId, batchNumber]);
+  }, [growerId, batchNumber, pendingBatchApproval]);
 
   const productComplete = !!matchedBatch;
   const photosComplete = !!photoProduct && !!photoCloseup && !!photoPackaging;
@@ -297,6 +305,8 @@ export default function ReviewStepOne({ onSuccess, onCancel }: ReviewStepOneProp
               onChange={(e) => {
                 setGrowerId(e.target.value ? Number(e.target.value) : "");
                 setMatchedBatch(null);
+                setPendingBatchApproval(false);
+                setShowAddBatch(false);
               }}
               className="w-full rounded-lg px-3 py-3 text-sm text-white focus:outline-none focus:ring-2"
               style={{ ...inputStyle, outlineColor: C.primary }}
@@ -317,7 +327,14 @@ export default function ReviewStepOne({ onSuccess, onCancel }: ReviewStepOneProp
             <input
               type="text"
               value={batchNumber}
-              onChange={(e) => setBatchNumber(e.target.value)}
+              onChange={(e) => {
+                setBatchNumber(e.target.value);
+                if (pendingBatchApproval) {
+                  setPendingBatchApproval(false);
+                  setMatchedBatch(null);
+                  setShowAddBatch(false);
+                }
+              }}
               placeholder="e.g. XY-2405-A"
               className="w-full rounded-lg px-3 py-3 text-sm text-white placeholder:text-white/25 focus:outline-none focus:ring-2"
               style={{ ...inputStyle, outlineColor: C.primary }}
@@ -330,26 +347,60 @@ export default function ReviewStepOne({ onSuccess, onCancel }: ReviewStepOneProp
             {batchError && (
               <p className="mt-2 text-xs text-red-400">{batchError}</p>
             )}
+
+            {batchError && !matchedBatch && growerId && batchNumber.trim().length >= 2 && !showAddBatch && (
+              <button
+                type="button"
+                onClick={() => setShowAddBatch(true)}
+                className="mt-2 text-xs font-semibold underline"
+                style={{ color: C.secondary }}
+              >
+                + Add this batch instead
+              </button>
+            )}
+
+            {showAddBatch && growerId && batchNumber.trim().length >= 2 && !matchedBatch && (
+              <AddBatchPanel
+                growerId={Number(growerId)}
+                batchNumber={batchNumber}
+                onSubmitted={(batch) => {
+                  setMatchedBatch({
+                    id: batch.id,
+                    batch_number: batch.batch_number,
+                    strain_name: batch.strain_name,
+                  });
+                  setPendingBatchApproval(true);
+                  setShowAddBatch(false);
+                  setBatchError("");
+                }}
+              />
+            )}
           </div>
 
           {matchedBatch && (
             <div
               className="flex items-center gap-3 rounded-lg p-3"
               style={{
-                backgroundColor: `${C.primary}12`,
-                border: `1px solid ${C.primary}55`,
+                backgroundColor: pendingBatchApproval ? `${C.secondary}12` : `${C.primary}12`,
+                border: `1px solid ${pendingBatchApproval ? `${C.secondary}55` : `${C.primary}55`}`,
               }}
             >
               <span
                 className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-lg"
-                style={{ backgroundColor: `${C.primary}22`, color: C.primary }}
+                style={{
+                  backgroundColor: pendingBatchApproval ? `${C.secondary}22` : `${C.primary}22`,
+                  color: pendingBatchApproval ? C.secondary : C.primary,
+                }}
                 aria-hidden
               >
-                🌿
+                {pendingBatchApproval ? "⏳" : "🌿"}
               </span>
               <div className="min-w-0 flex-1">
-                <p className="text-xs uppercase tracking-wide" style={{ color: C.primary }}>
-                  Batch matched
+                <p
+                  className="text-xs uppercase tracking-wide"
+                  style={{ color: pendingBatchApproval ? C.secondary : C.primary }}
+                >
+                  {pendingBatchApproval ? "Batch submitted · pending approval" : "Batch matched"}
                 </p>
                 <p className="truncate text-sm font-semibold text-white">
                   {matchedBatch.strain_name}
