@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { apiFetch } from "@/lib/api";
 import { brand } from "@/lib/brand";
@@ -122,7 +123,8 @@ function SectionBox({ title, icon, privacyKey, isPublic, onToggle, children }: {
 }
 
 export default function PortalDashboard() {
-  const { user: authUser } = useAuth();
+  const { user: authUser, logout } = useAuth();
+  const router = useRouter();
   const [profile, setProfile] = useState<MeProfile | null>(null);
   const [reviews, setReviews] = useState<ReviewData[]>([]);
   const [library, setLibrary] = useState<LibraryEntry[]>([]);
@@ -141,9 +143,20 @@ export default function PortalDashboard() {
 
   useEffect(() => {
     async function load() {
+      let p: MeProfile;
       try {
-        const [p, r, lib] = await Promise.all([
-          apiFetch<MeProfile>("/users/me"),
+        // Fetch profile first on its own so we can auto-recover from a
+        // stale token (401) — e.g. the user's row was wiped by a re-seed
+        // but their JWT is still cached in localStorage.
+        p = await apiFetch<MeProfile>("/users/me");
+      } catch (err) {
+        console.warn("[dashboard] /users/me failed, clearing stale auth:", err);
+        logout();
+        router.push("/login");
+        return;
+      }
+      try {
+        const [r, lib] = await Promise.all([
           apiFetch<ReviewData[]>(`/reviews/?user_id=${authUser?.id}&status=`).catch(() => []),
           apiFetch<LibraryEntry[]>("/library/").catch(() => []),
         ]);
