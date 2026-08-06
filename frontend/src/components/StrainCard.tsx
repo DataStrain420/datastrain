@@ -358,65 +358,66 @@ export default function StrainCard({ card }: { card: CardData }) {
             />
           </div>
 
-          {/* ── Segmented attribute pill: type · irradiation · THC · CBD ── */}
-          {/* Single dark pill stretching the full image-width so all four
-              sections share the same height. Each segment flex-1 (icon
-              segment auto-width) and tight padding so the labels fit at
-              the smallest card width without truncating. */}
+          {/* ── Attribute row: type + irradiation | THC + CBD ──────────── */}
+          {/* Two-group layout: type/irradiation chips on the left, THC/CBD
+              chips on the right, justified so THC/CBD get room to breathe
+              instead of getting squeezed inside a 4-part segmented pill. */}
           <div className="px-5 pb-2 pt-2">
-            <div
-              className="flex h-7 w-full items-stretch overflow-hidden rounded-full border text-[11px] font-semibold text-white"
-              style={{ backgroundColor: C.bgDeep, borderColor: `${C.textMuted}33` }}
-            >
-              <span className="flex flex-1 items-center justify-center gap-1 px-1.5">
-                <StrainTypeIcon type={card.strain_type} size={12} />
-                <span>{typeLbl}</span>
-              </span>
-              {card.irradiated !== undefined && card.irradiated !== null && (
+            <div className="flex items-center justify-between gap-2 text-[11px] font-semibold text-white">
+              {/* Left group */}
+              <div className="flex items-center gap-1.5">
                 <span
-                  className="flex items-center justify-center px-1.5 text-sm leading-none"
-                  style={{
-                    borderLeft: `1px solid ${C.textMuted}33`,
-                    color: card.irradiated ? "#f59e0b" : C.primary,
-                  }}
-                  title={card.irradiated ? "Gamma-irradiated for microbial sterilisation" : "Not gamma-irradiated"}
-                  aria-label={card.irradiated ? "Irradiated" : "Non-irradiated"}
+                  className="inline-flex h-6 items-center gap-1 rounded-full border px-2"
+                  style={{ backgroundColor: C.bgDeep, borderColor: `${C.textMuted}33` }}
                 >
-                  {card.irradiated ? "☢" : "\u{1F33F}"}
+                  <StrainTypeIcon type={card.strain_type} size={12} />
+                  <span>{typeLbl}</span>
                 </span>
-              )}
-              <span
-                className="flex flex-1 items-center justify-center gap-1 px-1.5"
-                style={{ borderLeft: `1px solid ${C.textMuted}33` }}
-              >
-                THC <span style={{ color: C.secondary }}>{card.thc_percentage}%</span>
-              </span>
-              <span
-                className="flex flex-1 items-center justify-center gap-1 px-1.5"
-                style={{ borderLeft: `1px solid ${C.textMuted}33` }}
-              >
-                CBD <span style={{ color: C.secondary }}>{card.cbd_percentage}%</span>
-              </span>
+                {card.irradiated !== undefined && card.irradiated !== null && (
+                  <span
+                    className="inline-flex h-6 w-6 items-center justify-center rounded-full border text-sm leading-none"
+                    style={{
+                      backgroundColor: C.bgDeep,
+                      borderColor: `${C.textMuted}33`,
+                      color: card.irradiated ? "#f59e0b" : C.primary,
+                    }}
+                    title={card.irradiated ? "Gamma-irradiated for microbial sterilisation" : "Not gamma-irradiated"}
+                    aria-label={card.irradiated ? "Irradiated" : "Non-irradiated"}
+                  >
+                    {card.irradiated ? "☢" : "\u{1F33F}"}
+                  </span>
+                )}
+              </div>
+              {/* Right group */}
+              <div className="flex items-center gap-1.5">
+                <span
+                  className="inline-flex h-6 items-center gap-1 rounded-full border px-2"
+                  style={{ backgroundColor: C.bgDeep, borderColor: `${C.textMuted}33` }}
+                >
+                  <span style={{ color: C.textMuted }}>THC</span>
+                  <span style={{ color: C.secondary }}>{card.thc_percentage}%</span>
+                </span>
+                <span
+                  className="inline-flex h-6 items-center gap-1 rounded-full border px-2"
+                  style={{ backgroundColor: C.bgDeep, borderColor: `${C.textMuted}33` }}
+                >
+                  <span style={{ color: C.textMuted }}>CBD</span>
+                  <span style={{ color: C.secondary }}>{card.cbd_percentage}%</span>
+                </span>
+              </div>
             </div>
 
-            {/* "Best for" chip — pulls the top-ranked condition from the batch's
-                reviews. Hidden when no reviews / no top condition, so cold-start
-                strains don't render an awkward empty pill. */}
+            {/* Best-for line — full width text label with a subtle divider
+                above, sits centred under the two chip groups. Hidden when
+                the strain has no top condition data (cold-start). */}
             {card.top_condition && (
-              <div className="mt-2 flex justify-center">
-                <span
-                  className="inline-flex items-center gap-1.5 rounded-full px-3 py-0.5 text-[11px] font-semibold"
-                  style={{
-                    backgroundColor: isHolo ? "rgba(0,0,0,0.78)" : `${C.primary}18`,
-                    color: isHolo ? "#fff" : C.primary,
-                    border: isHolo ? "1px solid rgba(0,0,0,0.6)" : `1px solid ${C.primary}44`,
-                  }}
-                  title={`Highest-rated for ${card.top_condition}`}
-                >
-                  <span aria-hidden>{"\u{1FA7A}"}</span>
-                  <span className="uppercase tracking-wider opacity-70">Best for</span>
-                  <span>{card.top_condition}</span>
-                </span>
+              <div
+                className="mt-2 flex items-center justify-center gap-1.5 text-[11px] font-semibold"
+                style={{ color: C.textMuted }}
+              >
+                <span aria-hidden>{"\u{1FA7A}"}</span>
+                <span className="uppercase tracking-wider">Best for</span>
+                <span style={{ color: C.primary }}>{card.top_condition}</span>
               </div>
             )}
           </div>
