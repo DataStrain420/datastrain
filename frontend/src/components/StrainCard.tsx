@@ -680,17 +680,11 @@ export default function StrainCard({ card }: { card: CardData }) {
           )}
 
           <div className="mt-auto px-5 pb-5 pt-4">
-            <p
-              className={clsx("mb-3 text-center text-xs", isHolo && "font-semibold")}
-              style={{ color: back.body }}
-            >
-              {card.review_count} review{card.review_count !== 1 ? "s" : ""}
-            </p>
             <Link
               href={card.strain_id ? `/strain/${card.strain_id}` : `/batch/${card.id}`}
               onClick={(e) => e.stopPropagation()}
-              className="block rounded-xl py-2.5 text-center text-sm font-bold text-white transition hover:opacity-90"
-              style={{ backgroundColor: C.success }}
+              className="block rounded-xl py-2.5 text-center text-sm font-bold transition hover:opacity-90"
+              style={{ backgroundColor: C.primary, color: C.bgDeep }}
             >
               View Details
             </Link>
