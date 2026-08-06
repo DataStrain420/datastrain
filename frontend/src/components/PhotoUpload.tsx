@@ -8,9 +8,11 @@ interface PhotoUploadProps {
   sublabel: string;
   file: File | null;
   onChange: (f: File) => void;
+  icon?: string;
+  hint?: string;
 }
 
-export default function PhotoUpload({ label, sublabel, file, onChange }: PhotoUploadProps) {
+export default function PhotoUpload({ label, sublabel, file, onChange, icon = "📷", hint }: PhotoUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const preview = file ? URL.createObjectURL(file) : null;
 
@@ -18,28 +20,46 @@ export default function PhotoUpload({ label, sublabel, file, onChange }: PhotoUp
     <button
       type="button"
       onClick={() => inputRef.current?.click()}
-      className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed p-3 transition hover:opacity-80"
+      className="group relative flex aspect-square flex-col items-center justify-center rounded-xl border-2 border-dashed p-3 text-center transition hover:opacity-90"
       style={{
         borderColor: file ? brand.primary : `${brand.textMuted}44`,
-        backgroundColor: file ? `${brand.primary}08` : "transparent",
-        minHeight: 100,
+        backgroundColor: file ? `${brand.primary}0f` : `${brand.bgCard}66`,
       }}
     >
       {preview ? (
-        <img
-          src={preview}
-          alt={label}
-          className="mb-1 h-14 w-14 rounded-lg object-cover"
-        />
+        <>
+          <img
+            src={preview}
+            alt={label}
+            className="absolute inset-1 rounded-lg object-cover"
+            style={{ width: "calc(100% - 8px)", height: "calc(100% - 8px)" }}
+          />
+          <span
+            className="absolute right-2 top-2 z-10 flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold"
+            style={{ backgroundColor: brand.primary, color: brand.bgDeep }}
+          >
+            ✓
+          </span>
+        </>
       ) : (
-        <span className="mb-1 text-2xl" style={{ color: brand.primary }}>
-          📷
-        </span>
+        <>
+          <span className="mb-1 text-3xl" aria-hidden>
+            {icon}
+          </span>
+          <span className="text-xs font-semibold text-white">{sublabel}</span>
+          {hint && (
+            <span className="mt-0.5 text-[10px] leading-tight" style={{ color: brand.textMuted }}>
+              {hint}
+            </span>
+          )}
+          <span
+            className="mt-1 text-[10px] font-medium uppercase tracking-wide"
+            style={{ color: brand.primary }}
+          >
+            + {label}
+          </span>
+        </>
       )}
-      <span className="text-xs font-medium text-white">{label}</span>
-      <span className="text-[10px]" style={{ color: brand.textMuted }}>
-        {sublabel}
-      </span>
       <input
         ref={inputRef}
         type="file"
