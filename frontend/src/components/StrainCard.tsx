@@ -478,9 +478,11 @@ export default function StrainCard({ card }: { card: CardData }) {
               width: 60,
               height: 60,
               clipPath: "polygon(100% 0, 100% 100%, 0 100%)",
-              // Punchier fill so the wedge actually reads against the dark
-              // card body — the previous 55 alpha was near-invisible.
-              background: `linear-gradient(135deg, ${C.secondary}22 0%, ${C.secondary}cc 100%)`,
+              // Soft blend into the card — start fully transparent for
+              // the first third of the wedge, then fade in to a subtle
+              // brand-cyan tint at the corner. Reads as an accent, not
+              // a hard shape.
+              background: `linear-gradient(135deg, transparent 33%, ${C.secondary}66 100%)`,
             }}
           >
             <svg
