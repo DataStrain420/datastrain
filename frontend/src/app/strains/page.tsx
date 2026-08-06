@@ -275,11 +275,12 @@ function thcBucketFromParams(params: URLSearchParams): string {
 }
 
 const sortOptions = [
-  { label: "Name (A-Z)", value: "" },
+  // Empty value = default landing state; buildApiUrl maps this to sort=newest.
+  { label: "Newest", value: "" },
+  { label: "Name (A-Z)", value: "name" },
   { label: "Top Rated (All Time)", value: "top-rated" },
   { label: "Top Rated (This Week)", value: "top-rated-week" },
   { label: "Most Reviewed", value: "most-reviewed" },
-  { label: "Newest", value: "newest" },
   { label: "THC: High to Low", value: "thc-high" },
   { label: "THC: Low to High", value: "thc-low" },
 ];
