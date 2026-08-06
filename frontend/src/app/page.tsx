@@ -99,6 +99,20 @@ const browseEffects = [
   { label: "Calm", icon: "\u{1F9D8}" },
 ];
 
+/* ── Stat rounding helper ─────────────────────────────────────────────────── */
+
+// Rounds a raw count down to a "friendly" figure with a trailing "+" so the
+// trust strip reads like curated marketing copy instead of a live counter.
+// Small numbers stay exact so a new site with 4 strains doesn't awkwardly
+// display "0+".
+function roundStat(n: number): string {
+  if (n < 10) return String(n);
+  if (n < 100) return `${Math.floor(n / 10) * 10}+`;
+  if (n < 1000) return `${Math.floor(n / 100) * 100}+`;
+  if (n < 10000) return `${(Math.floor(n / 500) * 500).toLocaleString()}+`;
+  return `${(Math.floor(n / 1000) * 1000).toLocaleString()}+`;
+}
+
 /* ── Section heading helper ────────────────────────────────────────────────── */
 
 function SectionHeading({ children }: { children: React.ReactNode }) {
@@ -120,7 +134,12 @@ export default function Home() {
   const [topLoading, setTopLoading] = useState(true);
   const [recentReviews, setRecentReviews] = useState<ReviewData[]>([]);
   const [latestReviews, setLatestReviews] = useState<ReviewData[]>([]);
+  const [publicStats, setPublicStats] = useState<{ total_strains: number; total_reviews: number } | null>(null);
   useEffect(() => {
+    apiFetch<{ total_strains: number; total_reviews: number }>("/stats/public")
+      .then(setPublicStats)
+      .catch(() => {});
+
     // Top rated growers
     apiFetch<RankedGrower[]>("/growers/top-rated?limit=12")
       .then(setGrowers)
@@ -159,25 +178,7 @@ export default function Home() {
             <SearchBar size="lg" />
           </div>
 
-          <div className="mx-auto mt-6 flex flex-wrap items-center justify-center gap-6">
-            <span className="text-sm font-medium" style={{ color: brand.textMuted }}>{"\u2B50"} 4,000+ reviews</span>
-            <span className="text-sm font-medium" style={{ color: brand.textMuted }}>{"\u{1F331}"} 120+ strains tracked</span>
-            <span className="inline-flex items-center gap-1.5 text-sm font-medium" style={{ color: brand.textMuted }}>
-              <svg viewBox="0 0 60 30" className="inline-block h-3.5 w-7 rounded-sm" xmlns="http://www.w3.org/2000/svg">
-                <clipPath id="uk"><rect width="60" height="30"/></clipPath>
-                <g clipPath="url(#uk)">
-                  <rect width="60" height="30" fill="#012169"/>
-                  <path d="M0,0 L60,30 M60,0 L0,30" stroke="#fff" strokeWidth="6"/>
-                  <path d="M0,0 L60,30 M60,0 L0,30" stroke="#C8102E" strokeWidth="4" clipPath="url(#uk)"/>
-                  <path d="M30,0 V30 M0,15 H60" stroke="#fff" strokeWidth="10"/>
-                  <path d="M30,0 V30 M0,15 H60" stroke="#C8102E" strokeWidth="6"/>
-                </g>
-              </svg>
-              UK medical products only
-            </span>
-          </div>
-
-          <div className="mx-auto mt-10">
+          <div className="mx-auto mt-8">
             <p className="mb-3 text-center text-xs font-semibold uppercase tracking-widest" style={{ color: brand.textMuted }}>
               Quick Browse
             </p>
@@ -217,19 +218,27 @@ export default function Home() {
         <div className="mx-auto max-w-7xl overflow-x-auto px-4 py-3">
           <div className="flex min-w-fit items-center justify-center gap-6 text-xs sm:gap-10">
             {[
+              publicStats
+                ? { icon: "\u{1F331}", title: `${roundStat(publicStats.total_strains)} strains tracked`, desc: "Curated UK medical cannabis catalogue" }
+                : null,
+              publicStats
+                ? { icon: "\u{2B50}", title: `${roundStat(publicStats.total_reviews)} reviews`, desc: "Verified patient reviews across batches" }
+                : null,
               { icon: "\u{1F9EA}", title: "Batch-Linked Data", desc: "Every review tied to a specific tested batch" },
               { icon: "\u{1F4F8}", title: "Photos Required", desc: "Product, close-up and packaging verified per review" },
               { icon: "\u{1F1EC}\u{1F1E7}", title: "UK Medical Only", desc: "Private-prescription flower — no recreational products" },
               { icon: "\u{2696}\u{FE0F}", title: "Verified Reviewers", desc: "Prescription-holding patients only" },
-            ].map((item) => (
-              <div key={item.title} className="flex shrink-0 items-center gap-2.5">
-                <span className="text-lg" aria-hidden>{item.icon}</span>
-                <div className="flex flex-col leading-tight">
-                  <span className="font-semibold text-white">{item.title}</span>
-                  <span style={{ color: brand.textMuted }}>{item.desc}</span>
+            ]
+              .filter((x): x is { icon: string; title: string; desc: string } => x !== null)
+              .map((item) => (
+                <div key={item.title} className="flex shrink-0 items-center gap-2.5">
+                  <span className="text-lg" aria-hidden>{item.icon}</span>
+                  <div className="flex flex-col leading-tight">
+                    <span className="font-semibold text-white">{item.title}</span>
+                    <span style={{ color: brand.textMuted }}>{item.desc}</span>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
           </div>
         </div>
       </section>
