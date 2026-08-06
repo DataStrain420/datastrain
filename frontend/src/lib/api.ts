@@ -1,5 +1,35 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001/api/v1";
 
+/** FastAPI returns 422 `detail` as an array of {loc, msg, type, ...}. Flatten
+ * it into a human message like "effect_duration_hours: Input should be
+ * less than or equal to 24". Plain string details pass through. */
+function formatApiError(err: unknown): string {
+  if (!err || typeof err !== "object") return "";
+  const detail = (err as { detail?: unknown }).detail;
+  if (typeof detail === "string") return detail;
+  if (Array.isArray(detail)) {
+    return detail
+      .map((item) => {
+        if (typeof item === "string") return item;
+        if (item && typeof item === "object") {
+          const msg = (item as { msg?: string }).msg;
+          const loc = (item as { loc?: unknown[] }).loc;
+          const field = Array.isArray(loc)
+            ? loc.filter((p) => p !== "body").join(".")
+            : "";
+          return field && msg ? `${field}: ${msg}` : msg || JSON.stringify(item);
+        }
+        return String(item);
+      })
+      .join("; ");
+  }
+  if (detail && typeof detail === "object") {
+    const msg = (detail as { msg?: string }).msg;
+    return msg || JSON.stringify(detail);
+  }
+  return "";
+}
+
 export async function apiFetch<T>(
   path: string,
   options: RequestInit = {}
@@ -50,7 +80,7 @@ export async function apiFetch<T>(
 
   if (!res.ok) {
     const error = await res.json().catch(() => ({ detail: "Request failed" }));
-    throw new Error(error.detail || `HTTP ${res.status}`);
+    throw new Error(formatApiError(error) || `HTTP ${res.status}`);
   }
 
   return res.json();

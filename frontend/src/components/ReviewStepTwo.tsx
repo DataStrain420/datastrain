@@ -48,8 +48,20 @@ export default function ReviewStepTwo({ reviewId, strainName, onDone }: ReviewSt
   }
 
   async function handleSubmit() {
-    setSubmitting(true);
     setError("");
+
+    const hoursNum = durationHours ? parseInt(durationHours) : null;
+    const minsNum = durationMins ? parseInt(durationMins) : null;
+    if (hoursNum !== null && (isNaN(hoursNum) || hoursNum < 0 || hoursNum > 24)) {
+      setError("Hours must be between 0 and 24. For anything longer, adjust the value.");
+      return;
+    }
+    if (minsNum !== null && (isNaN(minsNum) || minsNum < 0 || minsNum > 59)) {
+      setError("Minutes must be between 0 and 59.");
+      return;
+    }
+
+    setSubmitting(true);
 
     const body: Record<string, unknown> = {};
     if (thc) body.thc_content = parseFloat(thc);
@@ -58,8 +70,8 @@ export default function ReviewStepTwo({ reviewId, strainName, onDone }: ReviewSt
     if (selectedEffects.length > 0) body.effects = selectedEffects;
     body.conditions_public = conditionsPublic;
     if (efficacy > 0) body.condition_efficacy_rating = efficacy;
-    if (durationHours) body.effect_duration_hours = parseInt(durationHours);
-    if (durationMins) body.effect_duration_mins = parseInt(durationMins);
+    if (hoursNum !== null) body.effect_duration_hours = hoursNum;
+    if (minsNum !== null) body.effect_duration_mins = minsNum;
     if (selectedConditions.length > 0) {
       body.condition_ratings = selectedConditions.map((id) => {
         const cond = CONDITIONS.find((c) => c.id === id);
@@ -265,9 +277,12 @@ export default function ReviewStepTwo({ reviewId, strainName, onDone }: ReviewSt
 
       {/* Duration */}
       <div>
-        <label className="mb-3 block text-sm font-bold text-white">
+        <label className="mb-1 block text-sm font-bold text-white">
           How long did the effects last?
         </label>
+        <p className="mb-3 text-xs" style={{ color: C.textMuted }}>
+          Hours (0–24) and minutes (0–59)
+        </p>
         <div className="grid grid-cols-2 gap-4">
           <div className="relative">
             <input
