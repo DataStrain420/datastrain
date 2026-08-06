@@ -511,7 +511,7 @@ function StrainsContent() {
       <div className="flex-1">
 
         {loading ? (
-          <div className="flex flex-wrap justify-center gap-6">
+          <div className="flex flex-wrap justify-start gap-6">
             {Array.from({ length: 9 }).map((_, i) => (
               <StrainCardSkeleton key={i} />
             ))}
@@ -530,7 +530,7 @@ function StrainsContent() {
             )}
           </div>
         ) : (
-          <div className="flex flex-wrap justify-center gap-6">
+          <div className="flex flex-wrap justify-start gap-6">
             {cards.map((card) => (
               <StrainCard key={card.id} card={card} />
             ))}
