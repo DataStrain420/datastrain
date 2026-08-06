@@ -209,7 +209,9 @@ function buildApiUrl(params: URLSearchParams): string {
   const thcMax = params.get("thc_max");
   const irradiated = params.get("irradiated");
 
-  if (sort) qp.set("sort", sort);
+  // Default to newest-first when no explicit sort is chosen, so the
+  // landing view for /strains shows the freshest catalogue additions.
+  qp.set("sort", sort || "newest");
   if (type) qp.set("strain_type", type);
   if (effect) qp.set("effect", effect);
   if (condition) qp.set("condition", condition);

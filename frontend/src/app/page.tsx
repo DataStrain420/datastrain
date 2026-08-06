@@ -177,15 +177,15 @@ export default function Home() {
             </span>
           </div>
 
-          <div className="mx-auto mt-10 flex max-w-2xl flex-wrap items-center justify-center gap-4">
-            <p className="w-full text-center text-xs font-semibold uppercase tracking-widest" style={{ color: brand.textMuted }}>
+          <div className="mx-auto mt-10 flex max-w-2xl flex-wrap items-center justify-center gap-4 md:max-w-none md:flex-nowrap md:gap-3">
+            <p className="w-full text-center text-xs font-semibold uppercase tracking-widest md:w-auto md:mr-2" style={{ color: brand.textMuted }}>
               Quick Browse
             </p>
             {filterPills.map((pill) => (
               <Link
                 key={pill.label}
                 href={pill.href}
-                className="flex items-center gap-2.5 rounded-full border px-6 py-2.5 text-base font-semibold transition hover:brightness-110 hover:text-white"
+                className="flex items-center gap-2.5 whitespace-nowrap rounded-full border px-6 py-2.5 text-base font-semibold transition hover:brightness-110 hover:text-white md:px-4 md:py-2 md:text-sm"
                 style={{
                   borderColor: `${pill.color}66`,
                   backgroundColor: `${pill.color}18`,
