@@ -14,9 +14,9 @@ const C = brand;
 
 const strainsMega = {
   featured: [
+    { label: "Newest Strains", href: "/strains?sort=newest", icon: "\u{2728}" },
     { label: "Top Rated Strains", href: "/strains?sort=top-rated", icon: "\u{1F3C6}" },
     { label: "Most Reviewed", href: "/strains?sort=most-reviewed", icon: "\u{1F4DD}" },
-    { label: "Newest Strains", href: "/strains?sort=newest", icon: "\u{2728}" },
     { label: "View All Strains", href: "/strains", icon: "\u{1F33F}" },
   ],
   byType: [
