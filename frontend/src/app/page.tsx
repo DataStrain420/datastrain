@@ -177,10 +177,11 @@ export default function Home() {
             </span>
           </div>
 
-          <div className="mx-auto mt-10 flex max-w-2xl flex-wrap items-center justify-center gap-4 md:max-w-none md:flex-nowrap md:gap-3">
-            <p className="w-full text-center text-xs font-semibold uppercase tracking-widest md:w-auto md:mr-2" style={{ color: brand.textMuted }}>
+          <div className="mx-auto mt-10">
+            <p className="mb-3 text-center text-xs font-semibold uppercase tracking-widest" style={{ color: brand.textMuted }}>
               Quick Browse
             </p>
+            <div className="mx-auto flex max-w-2xl flex-wrap items-center justify-center gap-4 md:max-w-none md:flex-nowrap md:gap-3">
             {filterPills.map((pill) => (
               <Link
                 key={pill.label}
@@ -202,6 +203,7 @@ export default function Home() {
                 {pill.label}
               </Link>
             ))}
+            </div>
           </div>
         </div>
       </section>
