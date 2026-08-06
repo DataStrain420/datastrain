@@ -782,8 +782,10 @@ function LibraryButton({
   label: string;
   onClick: (e: React.MouseEvent) => void;
 }) {
-  const inactiveText = isHolo ? "rgba(0,0,0,0.75)" : `${C.textMuted}88`;
-  const inactiveBorder = isHolo ? "rgba(0,0,0,0.5)" : `${C.textMuted}44`;
+  // Match the RatingBar label colour so the icons + labels share the
+  // same muted grey as Appearance/Aroma/etc.
+  const inactiveText = isHolo ? "rgba(0,0,0,0.75)" : C.textMuted;
+  const inactiveBorder = isHolo ? "rgba(0,0,0,0.5)" : C.textMuted;
   const inactiveBorderWidth = isHolo ? 1.5 : 1;
 
   return (
