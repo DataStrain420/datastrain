@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import Navbar, { PublicNavActions } from "@/components/Navbar";
 import StrainCard, { CardData } from "@/components/StrainCard";
 import StrainCardSkeleton from "@/components/StrainCardSkeleton";
+import SubmitReviewPromoCard from "@/components/SubmitReviewPromoCard";
 import Footer from "@/components/Footer";
 import { brand } from "@/lib/brand";
 import { apiFetch } from "@/lib/api";
@@ -534,6 +535,10 @@ function StrainsContent() {
             {cards.map((card) => (
               <StrainCard key={card.id} card={card} />
             ))}
+            {/* Promo card slotted after real results — fills any empty slot
+                on the last row, or starts its own row if the grid is full.
+                Kept intentionally CTA-styled rather than filler-styled. */}
+            <SubmitReviewPromoCard />
           </div>
         )}
       </div>
