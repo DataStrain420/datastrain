@@ -427,7 +427,7 @@ export default function StrainCard({ card }: { card: CardData }) {
             {/* Rating bars — averaged review scores.
                 Holo (gold/silver) cards switch the bars to dark text/track/fill
                 so they stay readable against the bright metallic background. */}
-            <div className="mb-2 space-y-2">
+            <div className="mb-2 space-y-0.5">
               <RatingBar label="Appearance" value={card.avg_appearance_rating} dark={isHolo} />
               <RatingBar label="Aroma" value={card.avg_aroma_rating} dark={isHolo} />
               <RatingBar label="Moisture" value={card.avg_moisture_rating} dark={isHolo} />
