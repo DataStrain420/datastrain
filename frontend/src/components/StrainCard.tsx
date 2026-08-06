@@ -339,7 +339,7 @@ export default function StrainCard({ card }: { card: CardData }) {
 
           {/* ── Photo area ────────────────────────────────────────────── */}
           <div
-            className="relative mx-4 flex h-40 items-center justify-center overflow-hidden rounded-xl"
+            className="relative mx-4 flex h-52 items-center justify-center overflow-hidden rounded-xl"
             style={{ backgroundColor: C.bgDeep }}
           >
             <img
@@ -441,7 +441,7 @@ export default function StrainCard({ card }: { card: CardData }) {
                 so the gap can be tight. relative + z-10 so clicks land here
                 and don't get stolen by the absolute-positioned flip wedge. */}
             <div
-              className="relative z-10 mt-2 flex items-center justify-start gap-4 pr-16"
+              className="relative z-10 mt-4 flex items-center justify-start gap-4 pr-16"
             >
               <LibraryButton
                 active={wishlisted}
