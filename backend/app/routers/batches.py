@@ -206,13 +206,27 @@ async def list_batch_cards(
             )
         )
     if terpene:
+        # Only include batches where the requested terpene is one of the
+        # top-3 by percentage — the same three shown on the card. Without
+        # this, a batch with the terpene at trace level (e.g. 0.2%) would
+        # match the filter but never surface the terpene in its card,
+        # which reads to patients as an incorrect result.
         from app.models import BatchTerpene, Terpene
+        from sqlalchemy import func as f
 
+        rank_col = f.rank().over(
+            partition_by=BatchTerpene.batch_id,
+            order_by=BatchTerpene.percentage.desc(),
+        ).label("rn")
+        ranked = (
+            select(BatchTerpene.batch_id, BatchTerpene.terpene_id, rank_col)
+            .subquery()
+        )
         stmt = stmt.where(
             Batch.id.in_(
-                select(BatchTerpene.batch_id)
-                .join(Terpene, Terpene.id == BatchTerpene.terpene_id)
-                .where(Terpene.name == terpene)
+                select(ranked.c.batch_id)
+                .join(Terpene, Terpene.id == ranked.c.terpene_id)
+                .where(Terpene.name == terpene, ranked.c.rn <= 3)
                 .distinct()
             )
         )

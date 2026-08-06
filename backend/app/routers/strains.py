@@ -102,17 +102,28 @@ async def list_strains(
             )
         )
 
-    # Filter by terpene — strains whose batches were tested with this
-    # terpene above a floor (any % > 0 counts as "present").
+    # Filter by terpene — strains whose batches list this terpene in the
+    # top-3 by percentage (matches the card's terpene display). Trace-level
+    # matches were confusing patients: a batch with the terpene at 0.2%
+    # would pass the filter but never render the terpene on its card.
     if terpene:
         from app.models import BatchTerpene, Terpene
+        from sqlalchemy import func as f
 
+        rank_col = f.rank().over(
+            partition_by=BatchTerpene.batch_id,
+            order_by=BatchTerpene.percentage.desc(),
+        ).label("rn")
+        ranked = (
+            select(BatchTerpene.batch_id, BatchTerpene.terpene_id, rank_col)
+            .subquery()
+        )
         query = query.where(
             Strain.id.in_(
                 select(Batch.strain_id)
-                .join(BatchTerpene, BatchTerpene.batch_id == Batch.id)
-                .join(Terpene, Terpene.id == BatchTerpene.terpene_id)
-                .where(Terpene.name == terpene)
+                .join(ranked, ranked.c.batch_id == Batch.id)
+                .join(Terpene, Terpene.id == ranked.c.terpene_id)
+                .where(Terpene.name == terpene, ranked.c.rn <= 3)
                 .distinct()
             )
         )
