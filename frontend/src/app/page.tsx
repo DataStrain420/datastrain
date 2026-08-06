@@ -231,7 +231,6 @@ export default function Home() {
               { icon: "\u{1F9EA}", title: "Batch-Linked Data", desc: "Every review tied to a specific tested batch" },
               { icon: "\u{1F4F8}", title: "Photos Required", desc: "Product, close-up and packaging verified per review" },
               { icon: "\u{1F1EC}\u{1F1E7}", title: "UK Medical Only", desc: "Private-prescription flower — no recreational products" },
-              { icon: "\u{2696}\u{FE0F}", title: "Verified Reviewers", desc: "Prescription-holding patients only" },
             ].map((item) => (
               <div key={item.title} className="flex shrink-0 items-center gap-2.5">
                 <span className="text-lg" aria-hidden>{item.icon}</span>
