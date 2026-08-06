@@ -138,7 +138,7 @@ export default function Home() {
   useEffect(() => {
     apiFetch<{ total_strains: number; total_reviews: number }>("/stats/public")
       .then(setPublicStats)
-      .catch(() => {});
+      .catch((err) => console.error("Public stats:", err));
 
     // Top rated growers
     apiFetch<RankedGrower[]>("/growers/top-rated?limit=12")
@@ -218,27 +218,29 @@ export default function Home() {
         <div className="mx-auto max-w-7xl overflow-x-auto px-4 py-3">
           <div className="flex min-w-fit items-center justify-center gap-6 text-xs sm:gap-10">
             {[
-              publicStats
-                ? { icon: "\u{1F331}", title: `${roundStat(publicStats.total_strains)} strains tracked`, desc: "Curated UK medical cannabis catalogue" }
-                : null,
-              publicStats
-                ? { icon: "\u{2B50}", title: `${roundStat(publicStats.total_reviews)} reviews`, desc: "Verified patient reviews across batches" }
-                : null,
+              {
+                icon: "\u{1F331}",
+                title: publicStats ? `${roundStat(publicStats.total_strains)} strains tracked` : "Strains tracked",
+                desc: "Curated UK medical cannabis catalogue",
+              },
+              {
+                icon: "\u{2B50}",
+                title: publicStats ? `${roundStat(publicStats.total_reviews)} reviews` : "Patient reviews",
+                desc: "Verified reviews across every batch",
+              },
               { icon: "\u{1F9EA}", title: "Batch-Linked Data", desc: "Every review tied to a specific tested batch" },
               { icon: "\u{1F4F8}", title: "Photos Required", desc: "Product, close-up and packaging verified per review" },
               { icon: "\u{1F1EC}\u{1F1E7}", title: "UK Medical Only", desc: "Private-prescription flower — no recreational products" },
               { icon: "\u{2696}\u{FE0F}", title: "Verified Reviewers", desc: "Prescription-holding patients only" },
-            ]
-              .filter((x): x is { icon: string; title: string; desc: string } => x !== null)
-              .map((item) => (
-                <div key={item.title} className="flex shrink-0 items-center gap-2.5">
-                  <span className="text-lg" aria-hidden>{item.icon}</span>
-                  <div className="flex flex-col leading-tight">
-                    <span className="font-semibold text-white">{item.title}</span>
-                    <span style={{ color: brand.textMuted }}>{item.desc}</span>
-                  </div>
+            ].map((item) => (
+              <div key={item.title} className="flex shrink-0 items-center gap-2.5">
+                <span className="text-lg" aria-hidden>{item.icon}</span>
+                <div className="flex flex-col leading-tight">
+                  <span className="font-semibold text-white">{item.title}</span>
+                  <span style={{ color: brand.textMuted }}>{item.desc}</span>
                 </div>
-              ))}
+              </div>
+            ))}
           </div>
         </div>
       </section>
