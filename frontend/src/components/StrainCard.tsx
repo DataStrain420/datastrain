@@ -650,7 +650,7 @@ export default function StrainCard({ card }: { card: CardData }) {
               {card.review_count} review{card.review_count !== 1 ? "s" : ""}
             </p>
             <Link
-              href={`/batch/${card.id}`}
+              href={card.strain_id ? `/strain/${card.strain_id}` : `/batch/${card.id}`}
               onClick={(e) => e.stopPropagation()}
               className="block rounded-xl py-2.5 text-center text-sm font-bold text-white transition hover:opacity-90"
               style={{ backgroundColor: C.success }}
