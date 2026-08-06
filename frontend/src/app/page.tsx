@@ -58,11 +58,13 @@ interface ReviewData {
 
 /* ── Static data ───────────────────────────────────────────────────────────── */
 
-const filterPills: { label: string; color: string; href: string; type?: string }[] = [
+const filterPills: { label: string; color: string; href: string; type?: string; emoji?: string }[] = [
   { label: "Browse All", color: brand.secondary, href: "/strains" },
   { label: "Sativa", color: "#f59e0b", href: "/strains?type=sativa", type: "sativa" },
   { label: "Indica", color: brand.tertiary, href: "/strains?type=indica", type: "indica" },
   { label: "Hybrid", color: "#ec4899", href: "/strains?type=hybrid", type: "hybrid" },
+  { label: "Irradiated", color: "#f59e0b", href: "/strains?irradiated=true", emoji: "☢" },
+  { label: "Non-irradiated", color: brand.primary, href: "/strains?irradiated=false", emoji: "\u{1F33F}" },
 ];
 
 const browseTypes = [
@@ -192,6 +194,8 @@ export default function Home() {
               >
                 {pill.type ? (
                   <StrainTypeIcon type={pill.type} size={16} />
+                ) : pill.emoji ? (
+                  <span className="text-base leading-none" aria-hidden>{pill.emoji}</span>
                 ) : (
                   <span className="h-3 w-3 rounded-full" style={{ backgroundColor: pill.color }} />
                 )}
