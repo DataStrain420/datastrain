@@ -642,7 +642,7 @@ export default function StrainDetailPage() {
 
           {/* RIGHT — reviews list with simple pagination at the bottom. The
               column has no fixed height; the page itself scrolls. */}
-          <div ref={reviewsTopRef}>
+          <div ref={reviewsTopRef} id="reviews">
             <div className="mb-3 flex items-center justify-between gap-3">
               <h2 className="text-lg font-bold text-white">
                 Reviews{reviews.length > 0 && ` (${reviews.length})`}

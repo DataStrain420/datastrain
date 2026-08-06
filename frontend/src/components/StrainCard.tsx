@@ -87,8 +87,10 @@ function tierStyles(tier: RankTier) {
   }
 }
 
-/** Hexagon with rank number — gold gradient for #1, default cyan otherwise */
-function RankHex({ rank, tier, reviewCount }: { rank: number; tier: RankTier; reviewCount: number }) {
+/** Hexagon with rank number — gold gradient for #1, default cyan otherwise.
+ *  When strainId is provided, the review-count line becomes a link that
+ *  jumps to the strain page's Reviews section (#reviews). */
+function RankHex({ rank, tier, reviewCount, strainId }: { rank: number; tier: RankTier; reviewCount: number; strainId?: number | null }) {
   const isGold = tier === "legendary";
   const isSilver = tier === "rare";
   const isHolo = isGold || isSilver;
@@ -143,12 +145,23 @@ function RankHex({ rank, tier, reviewCount }: { rank: number; tier: RankTier; re
           </span>
         </div>
       </div>
-      <span
-        className="text-[10px] font-semibold leading-none"
-        style={{ color: labelColor }}
-      >
-        {reviewCount.toLocaleString()} rating{reviewCount !== 1 ? "s" : ""}
-      </span>
+      {strainId ? (
+        <Link
+          href={`/strain/${strainId}#reviews`}
+          onClick={(e) => e.stopPropagation()}
+          className="text-[10px] font-semibold leading-none transition hover:underline"
+          style={{ color: labelColor }}
+        >
+          {reviewCount.toLocaleString()} rating{reviewCount !== 1 ? "s" : ""}
+        </Link>
+      ) : (
+        <span
+          className="text-[10px] font-semibold leading-none"
+          style={{ color: labelColor }}
+        >
+          {reviewCount.toLocaleString()} rating{reviewCount !== 1 ? "s" : ""}
+        </span>
+      )}
     </div>
   );
 }
@@ -334,7 +347,7 @@ export default function StrainCard({ card }: { card: CardData }) {
                 )}
               </p>
             </div>
-            <RankHex rank={displayRank} tier={tier} reviewCount={card.review_count} />
+            <RankHex rank={displayRank} tier={tier} reviewCount={card.review_count} strainId={card.strain_id} />
           </div>
 
           {/* ── Photo area ────────────────────────────────────────────── */}
@@ -363,7 +376,10 @@ export default function StrainCard({ card }: { card: CardData }) {
               chips on the right, justified so THC/CBD get room to breathe
               instead of getting squeezed inside a 4-part segmented pill. */}
           <div className="px-5 pb-2 pt-2">
-            <div className="flex items-center justify-between gap-2 text-[11px] font-semibold text-white">
+            <div
+              className="flex items-center justify-between gap-2 text-[11px] font-semibold"
+              style={{ color: C.textMuted }}
+            >
               {/* Left group */}
               <div className="flex items-center gap-1.5">
                 <span
@@ -407,17 +423,24 @@ export default function StrainCard({ card }: { card: CardData }) {
               </div>
             </div>
 
-            {/* Best-for line — full width text label with a subtle divider
-                above, sits centred under the two chip groups. Hidden when
-                the strain has no top condition data (cold-start). */}
+            {/* Best-for line — sits centred under the two chip groups.
+                The condition itself links to /strains?condition=X so
+                patients can jump straight to strains for that use case.
+                Hidden when there's no top condition (cold-start). */}
             {card.top_condition && (
               <div
                 className="mt-2 flex items-center justify-center gap-1.5 text-[11px] font-semibold"
                 style={{ color: C.textMuted }}
               >
-                <span aria-hidden>{"\u{1FA7A}"}</span>
-                <span className="uppercase tracking-wider">Best for</span>
-                <span style={{ color: C.primary }}>{card.top_condition}</span>
+                <span>Best for</span>
+                <Link
+                  href={`/strains?condition=${encodeURIComponent(card.top_condition)}`}
+                  onClick={(e) => e.stopPropagation()}
+                  className="transition hover:underline"
+                  style={{ color: C.primary }}
+                >
+                  {card.top_condition}
+                </Link>
               </div>
             )}
           </div>
