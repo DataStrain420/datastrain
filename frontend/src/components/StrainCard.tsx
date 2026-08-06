@@ -2,6 +2,7 @@
 
 import clsx from "clsx";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState, useCallback, useEffect } from "react";
 import { brand } from "@/lib/brand";
 import { apiFetch } from "@/lib/api";
@@ -207,6 +208,7 @@ export default function StrainCard({ card }: { card: CardData }) {
 
   // Library button states
   const { token } = useAuth();
+  const router = useRouter();
   const [wishlisted, setWishlisted] = useState(false);
   const [tried, setTried] = useState(false);
   const [fired, setFired] = useState(false);
@@ -234,6 +236,15 @@ export default function StrainCard({ card }: { card: CardData }) {
   }, [card.id, token]);
 
   async function toggleLibrary(listType: string, isActive: boolean, setActive: (v: boolean) => void) {
+    // Logged-out patients previously hit a silent 401 here, making the
+    // buttons appear unresponsive. Route to register with a returnable
+    // redirect so the action is discoverable — the strain page they came
+    // from is the sensible landing after sign-up.
+    if (!token) {
+      const redirect = typeof window !== "undefined" ? window.location.pathname : "/";
+      router.push(`/register?redirect=${encodeURIComponent(redirect)}`);
+      return;
+    }
     try {
       if (isActive && libraryIds[listType]) {
         await apiFetch(`/library/${libraryIds[listType]}`, { method: "DELETE" });
@@ -248,7 +259,7 @@ export default function StrainCard({ card }: { card: CardData }) {
         setLibraryIds((prev) => ({ ...prev, [listType]: entry.id }));
       }
     } catch {
-      // Not logged in or duplicate
+      // Duplicate or transient error — swallow.
     }
   }
 
