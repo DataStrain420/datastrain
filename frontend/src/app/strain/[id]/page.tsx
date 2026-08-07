@@ -336,6 +336,7 @@ export default function StrainDetailPage() {
   const [stats, setStats] = useState<StrainStats | null>(null);
   const [card, setCard] = useState<CardData | null>(null);
   const [batchCards, setBatchCards] = useState<CardData[]>([]);
+  const [batchApproved, setBatchApproved] = useState<Record<number, boolean>>({});
   const [reviews, setReviews] = useState<ReviewData[]>([]);
   const [reviewPage, setReviewPage] = useState(1);
   const [similarStrains, setSimilarStrains] = useState<SimilarStrain[]>([]);
@@ -355,10 +356,17 @@ export default function StrainDetailPage() {
         const [s, st, batches] = await Promise.all([
           apiFetch<Strain>(`/strains/${id}`),
           apiFetch<StrainStats>(`/strains/${id}/stats`),
-          apiFetch<{ id: number }[]>(`/batches/?strain_id=${id}&approved=true`),
+          // Post-moderation: patient-submitted batches go live immediately
+          // with an "Unverified" badge — so include unapproved batches in
+          // the strain's batch list. approved={approved} tracked per batch
+          // via approvedById lookup below.
+          apiFetch<{ id: number; approved: boolean }[]>(`/batches/?strain_id=${id}`),
         ]);
         setStrain(s);
         setStats(st);
+
+        const approvedById: Record<number, boolean> = {};
+        for (const b of batches) approvedById[b.id] = b.approved;
 
         const cardResults = await Promise.all(
           batches.map((b) =>
@@ -367,7 +375,12 @@ export default function StrainDetailPage() {
         );
         const filteredCards = cardResults.filter((c): c is CardData => c !== null);
         setBatchCards(filteredCards);
-        if (filteredCards.length > 0) setCard(filteredCards[0]);
+        setBatchApproved(approvedById);
+        // Pick the newest APPROVED batch as the featured card so the hero
+        // still reflects the strain's verified state. Falls back to the
+        // newest of any batches if there are no approved ones yet.
+        const firstApproved = filteredCards.find((c) => approvedById[c.id]);
+        setCard(firstApproved ?? filteredCards[0] ?? null);
 
         setLoading(false);
 
@@ -763,6 +776,7 @@ export default function StrainDetailPage() {
                     batchNumber={bc.batch_number}
                     growerName={bc.grower_name}
                     growerId={bc.grower_id ?? undefined}
+                    approved={batchApproved[bc.id] ?? true}
                     avgRating={
                       bc.avg_appearance_rating && bc.avg_aroma_rating && bc.avg_moisture_rating && bc.avg_flavour_rating && bc.avg_effect_rating
                         ? (bc.avg_appearance_rating + bc.avg_aroma_rating + bc.avg_moisture_rating + bc.avg_flavour_rating + bc.avg_effect_rating) / 5

@@ -53,7 +53,7 @@ def _batch_to_response(batch: Batch) -> BatchResponse:
 async def list_batches(
     strain_id: int | None = None,
     grower_id: int | None = None,
-    approved: bool | None = True,
+    approved: bool | None = None,
     skip: int = Query(0, ge=0),
     limit: int = Query(50, ge=1, le=100),
     db: AsyncSession = Depends(get_db),
