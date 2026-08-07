@@ -280,8 +280,44 @@ async def get_strain_stats(strain_id: int, db: AsyncSession = Depends(get_db)):
     )
     top_terpenes = [r[0] for r in terp_result.all()]
 
-    # Simple rank: position among all strains by avg overall rating
-    overall_rank = 1  # default
+    # Overall rank — must match the batches card endpoint's ranking so a
+    # strain's rank on its own page agrees with the rank shown on its card
+    # elsewhere (similar strains, top-rated lists, etc). Rank strains by
+    # the avg of the 5 sub-ratings of their latest approved batch.
+    latest_batch = (
+        select(Batch.strain_id, f.max(Batch.id).label("batch_id"))
+        .where(Batch.approved.is_(True))
+        .group_by(Batch.strain_id)
+        .subquery()
+    )
+    avg_expr = f.avg(
+        (
+            Review.appearance_rating
+            + Review.aroma_rating
+            + Review.moisture_rating
+            + Review.flavour_rating
+            + Review.effect_rating
+        )
+        / 5.0
+    )
+    ranking_stmt = (
+        select(Batch.strain_id)
+        .join(latest_batch, Batch.id == latest_batch.c.batch_id)
+        .join(Review, Review.batch_id == Batch.id)
+        .where(
+            Batch.approved.is_(True),
+            Review.status == ReviewStatus.APPROVED.value,
+        )
+        .group_by(Batch.strain_id)
+        .order_by(avg_expr.desc(), Batch.strain_id.asc())
+    )
+    ranked_ids = [row[0] for row in (await db.execute(ranking_stmt)).all()]
+    if strain_id in ranked_ids:
+        overall_rank = ranked_ids.index(strain_id) + 1
+    else:
+        # Strain has no approved reviews yet — put it at the bottom rather
+        # than lying about it being #1.
+        overall_rank = total_strains
 
     return StrainStatsResponse(
         strain_id=strain_id,
