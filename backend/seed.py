@@ -411,13 +411,92 @@ async def seed():
                 review_count += 1
         await db.flush()
 
+        # ── Sibling batches for trend-demo ────────────────────────────────
+        # Add a SECOND (newer) batch for a handful of strains so the
+        # "quality trend" line on card backs actually has data to render.
+        # Ratings on the new batch are targeted to produce each of the three
+        # trend states — improving, steady, declining — so all colours show
+        # up somewhere in the catalogue.
+        print("Seeding sibling batches for trend demo...")
+        trend_scenarios = [
+            # (strain index, rating min, rating max) — original seed reviews
+            # land in randint(2,5) → mean ~3.5, so anchor bands around that.
+            (0, 4, 5),   # improving
+            (5, 4, 5),   # improving
+            (10, 3, 4),  # steady
+            (15, 3, 4),  # steady
+            (20, 1, 2),  # declining
+            (25, 1, 2),  # declining
+        ]
+        sibling_count = 0
+        for idx, rmin, rmax in trend_scenarios:
+            if idx >= len(strain_objs):
+                continue
+            strain = strain_objs[idx]
+            grower_name = grower_by_id.get(strain.grower_id, "")
+            irradiated = IRRADIATION_BY_GROWER.get(grower_name)
+            if irradiated is None:
+                irradiated = random.random() < 0.7
+            new_batch = Batch(
+                strain_id=strain.id,
+                grower_id=strain.grower_id,
+                batch_number=f"BN-2026-{idx+1:03d}B",
+                thc_percentage=round(random.uniform(14.0, 28.0), 1),
+                cbd_percentage=round(random.uniform(0.0, 2.0), 1),
+                tested_date=date(2026, random.randint(5, 7), random.randint(1, 28)),
+                irradiated=irradiated,
+                dispensing_pharmacy_id=(random.choice(pharmacy_ids) if pharmacy_ids else None),
+                approved=True,
+            )
+            db.add(new_batch)
+            await db.flush()
+            sibling_count += 1
+
+            for t in random.sample(terpene_objs, k=random.randint(2, 5)):
+                db.add(BatchTerpene(
+                    batch_id=new_batch.id,
+                    terpene_id=t.id,
+                    percentage=round(random.uniform(0.1, 1.8), 2),
+                ))
+
+            reviewers = random.sample(user_objs, k=random.randint(3, min(4, len(user_objs))))
+            for user in reviewers:
+                r = Review(
+                    user_id=user.id,
+                    batch_id=new_batch.id,
+                    appearance_rating=random.randint(rmin, rmax),
+                    aroma_rating=random.randint(rmin, rmax),
+                    moisture_rating=random.randint(rmin, rmax),
+                    flavour_rating=random.randint(rmin, rmax),
+                    effect_rating=random.randint(rmin, rmax),
+                    written_narrative=random.choice(NARRATIVES),
+                    photo_product_url=PLACEHOLDER_PHOTO,
+                    photo_closeup_url=PLACEHOLDER_PHOTO,
+                    photo_packaging_url=PLACEHOLDER_PHOTO,
+                    effects=json.dumps(random.sample(EFFECTS_POOL, k=3)),
+                    flavours=json.dumps(random.sample(FLAVOURS_POOL, k=3)),
+                    confirmed_own_experience=True,
+                    confirmed_medical_only=True,
+                    status=ReviewStatus.APPROVED.value,
+                    helpful_votes=random.randint(0, 45),
+                )
+                db.add(r)
+                await db.flush()
+                db.add(ConditionRating(
+                    review_id=r.id,
+                    condition_name=random.choice(CONDITIONS_POOL),
+                    efficacy_rating=random.randint(rmin, rmax),
+                ))
+                review_count += 1
+        await db.flush()
+
         await db.commit()
         print(
             f"\nSeed complete:\n"
             f"  {len(grower_objs)} growers\n"
             f"  {len(terpene_objs)} terpenes\n"
             f"  {len(strain_objs)} strains\n"
-            f"  {len(batch_objs)} batches\n"
+            f"  {len(batch_objs) + sibling_count} batches ({sibling_count} sibling for trend demo)\n"
             f"  {len(user_objs)} users\n"
             f"  {review_count} reviews"
         )
