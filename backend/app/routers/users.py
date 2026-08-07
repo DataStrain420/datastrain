@@ -50,9 +50,11 @@ async def register(data: UserCreate, db: AsyncSession = Depends(get_db)):
     await db.refresh(user)
 
     token = create_access_token({"sub": str(user.id)})
+    resp = UserResponse.model_validate(user)
+    resp.is_admin = (user.email or "").lower() in settings.admin_email_list
     return TokenResponse(
         access_token=token,
-        user=UserResponse.model_validate(user),
+        user=resp,
     )
 
 
@@ -66,9 +68,11 @@ async def login(data: UserLogin, db: AsyncSession = Depends(get_db)):
         raise HTTPException(status_code=403, detail="Account is deactivated")
 
     token = create_access_token({"sub": str(user.id)})
+    resp = UserResponse.model_validate(user)
+    resp.is_admin = (user.email or "").lower() in settings.admin_email_list
     return TokenResponse(
         access_token=token,
-        user=UserResponse.model_validate(user),
+        user=resp,
     )
 
 

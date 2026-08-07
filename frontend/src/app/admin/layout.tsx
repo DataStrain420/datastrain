@@ -23,7 +23,9 @@ export default function AdminLayout({
 }) {
   const pathname = usePathname();
 
-  // Don't wrap login page with auth guard
+  // /admin/login is a compatibility redirect to /login now — don't wrap it
+  // in the guard, otherwise the guard's own redirect competes with the
+  // page's useEffect redirect.
   if (pathname === "/admin/login") {
     return <>{children}</>;
   }

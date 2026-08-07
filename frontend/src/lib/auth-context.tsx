@@ -21,6 +21,7 @@ interface UserData {
   following_count: number;
   review_count: number;
   is_verified: boolean;
+  is_admin?: boolean;
   created_at: string;
 }
 

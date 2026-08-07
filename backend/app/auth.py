@@ -121,49 +121,21 @@ def _init_firebase():
 
 
 async def get_current_admin(
-    authorization: str = Header(None),
+    current_user: User = Depends(get_current_user),
 ) -> dict:
-    """Verify Firebase ID token for admin access.
+    """Admin access uses the same patient JWT — no separate Firebase login.
 
-    In dev mode without Firebase credentials, accepts a header value of
-    'Bearer dev-admin' for testing.
-
-    Even with a valid Firebase token, the account's email must appear in
-    settings.ADMIN_EMAILS. Firebase auth by default admits any Google
-    account, so without this second check anyone with a Google login
-    could sign in and get full admin access.
+    A patient becomes an admin when their account email appears in
+    settings.ADMIN_EMAILS. Empty allow-list = nobody is admin, which
+    locks the panel down until an operator explicitly names accounts.
     """
-    if not authorization or not authorization.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="Admin authentication required")
-
-    token = authorization[7:]
     allowed = settings.admin_email_list
-
-    # Dev bypass when Firebase is not configured
-    if not settings.FIREBASE_CREDENTIALS_PATH:
-        if token == "dev-admin":
-            return {"uid": "dev-admin", "email": "admin@datastrain.co.uk"}
-        raise HTTPException(
-            status_code=401,
-            detail="Firebase not configured. Use 'Bearer dev-admin' for dev mode.",
-        )
-
-    _init_firebase()
-
-    try:
-        from firebase_admin import auth
-
-        decoded = auth.verify_id_token(token)
-    except Exception:
-        raise HTTPException(status_code=401, detail="Invalid admin token")
-
-    email = (decoded.get("email") or "").lower()
     if not allowed:
         raise HTTPException(
             status_code=403,
             detail="Admin access is not configured. Set ADMIN_EMAILS on the backend to authorise accounts.",
         )
+    email = (current_user.email or "").lower()
     if email not in allowed:
         raise HTTPException(status_code=403, detail="This account is not authorised for admin access.")
-
-    return decoded
+    return {"uid": str(current_user.id), "email": current_user.email}

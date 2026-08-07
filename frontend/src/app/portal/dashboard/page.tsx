@@ -281,7 +281,7 @@ export default function PortalDashboard() {
           auth systems are independent. */}
       {profile.is_admin && (
         <Link
-          href="/admin/login"
+          href="/admin/dashboard"
           className="mb-6 flex items-center justify-between gap-3 rounded-2xl p-4 transition hover:brightness-110"
           style={{
             backgroundColor: `${C.secondary}12`,
@@ -297,9 +297,9 @@ export default function PortalDashboard() {
               {"\u{1F6E1}\u{FE0F}"}
             </span>
             <div>
-              <p className="text-sm font-bold text-white">Admin panel</p>
+              <p className="text-sm font-bold text-white">Admin dashboard</p>
               <p className="text-xs" style={{ color: C.textMuted }}>
-                Sign in with Google to moderate reviews and manage the catalogue.
+                Moderate reviews and manage the catalogue.
               </p>
             </div>
           </div>
