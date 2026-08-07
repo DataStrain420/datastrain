@@ -504,6 +504,15 @@ export default function StrainDetailPage() {
               </Link>
             )}
 
+            {/* Description sits directly under the byline so the reader
+                gets the strain's own words before the metadata chips and
+                the shareables cluster below. */}
+            {strain.description && (
+              <p className="mt-3 text-sm leading-relaxed" style={{ color: C.textMuted }}>
+                {strain.description}
+              </p>
+            )}
+
             {/* Provenance + chemotype + first-listed chips.
                 MedBud pattern — surface the "who / where / when / what
                 type of medication" facts right at the top of the page
@@ -657,23 +666,6 @@ export default function StrainDetailPage() {
               </div>
             )}
 
-            {/* Description */}
-            {strain.description && (
-              <div
-                className="rounded-2xl p-5"
-                style={{ backgroundColor: C.bgCard, borderTop: `3px solid ${C.secondary}44` }}
-              >
-                <p className="text-sm leading-relaxed" style={{ color: C.textMuted }}>
-                  {strain.description}
-                </p>
-                <button
-                  className="mt-3 flex items-center gap-1.5 text-xs transition hover:text-white"
-                  style={{ color: C.textMuted }}
-                >
-                  <span>{"✎"}</span> Suggest a page edit
-                </button>
-              </div>
-            )}
           </div>
         </div>
 
