@@ -819,6 +819,43 @@ export default function StrainCard({ card }: { card: CardData }) {
             >
               View Details
             </Link>
+
+            {/* Mirror the front-face action row on the back — same four
+                buttons in the same spot so the card feels consistent no
+                matter which side you're on. Flip stays "active" here
+                because clicking it takes you back to the front. */}
+            <div className="relative z-10 mt-4 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-4">
+                <LibraryButton
+                  active={wishlisted}
+                  isHolo={isHolo}
+                  icon={"+"}
+                  label="Wishlist"
+                  onClick={(e) => { e.stopPropagation(); toggleLibrary("wishlist", wishlisted, setWishlisted); }}
+                />
+                <LibraryButton
+                  active={tried}
+                  isHolo={isHolo}
+                  icon={"✓"}
+                  label="Tried"
+                  onClick={(e) => { e.stopPropagation(); toggleLibrary("tried", tried, setTried); }}
+                />
+                <LibraryButton
+                  active={fired}
+                  isHolo={isHolo}
+                  icon={"\u{1F525}"}
+                  label="Fire"
+                  onClick={(e) => { e.stopPropagation(); toggleLibrary("favourite", fired, setFired); }}
+                />
+              </div>
+              <LibraryButton
+                active={flipped}
+                isHolo={isHolo}
+                icon={"↻"}
+                label="Flip"
+                onClick={(e) => { e.stopPropagation(); setFlipped(!flipped); }}
+              />
+            </div>
           </div>
         </div>
       </div>
