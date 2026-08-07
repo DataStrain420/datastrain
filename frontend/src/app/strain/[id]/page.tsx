@@ -600,10 +600,10 @@ export default function StrainDetailPage() {
                 conditions / flavours) alongside the objective chemistry
                 (terpene bar chart, same visual language as the card back). */}
             {((stats && stats.review_count > 0) || (card && card.top_terpenes.length > 0)) && (
-              <div className="grid gap-4 md:grid-cols-2">
+              <div className="grid gap-4 md:grid-cols-3">
                 {stats && stats.review_count > 0 && (
                   <div
-                    className="space-y-3 rounded-2xl p-5"
+                    className="space-y-3 rounded-2xl p-5 md:col-span-2"
                     style={{ backgroundColor: C.bgCard, border: `1px solid ${C.textMuted}15` }}
                   >
                     <p className="text-sm" style={{ color: C.textMuted }}>
@@ -617,7 +617,7 @@ export default function StrainDetailPage() {
 
                 {card && card.top_terpenes.length > 0 && (
                   <div
-                    className="rounded-2xl p-5"
+                    className="rounded-2xl p-5 md:col-span-1"
                     style={{ backgroundColor: C.bgCard, border: `1px solid ${C.textMuted}15` }}
                   >
                     <p className="mb-3 text-xs font-bold uppercase tracking-widest" style={{ color: C.textMuted }}>
@@ -648,24 +648,22 @@ export default function StrainDetailPage() {
                         </span>
                       </div>
                     ))}
+
+                    {/* Genetics sits inside the terpene card so both pieces
+                        of "what this strain is made of" live together. */}
+                    {strain.genetics && (
+                      <>
+                        <div className="my-3 h-px w-full" style={{ backgroundColor: `${C.textMuted}22` }} />
+                        <p className="mb-1 text-xs font-bold uppercase tracking-widest" style={{ color: C.textMuted }}>
+                          Genetics
+                        </p>
+                        <p className="text-sm text-white">{strain.genetics}</p>
+                      </>
+                    )}
                   </div>
                 )}
               </div>
             )}
-
-            {/* Genetics */}
-            {strain.genetics && (
-              <div
-                className="flex flex-wrap items-center gap-3 rounded-xl p-4"
-                style={{ backgroundColor: C.bgCard, border: `1px solid ${C.textMuted}15` }}
-              >
-                <span className="shrink-0 rounded-md px-3 py-1 text-xs font-semibold text-white" style={{ backgroundColor: "#6b7280" }}>
-                  Genetics
-                </span>
-                <span className="text-sm text-white">{strain.genetics}</span>
-              </div>
-            )}
-
           </div>
         </div>
 
