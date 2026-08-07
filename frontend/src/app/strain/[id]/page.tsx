@@ -468,7 +468,7 @@ export default function StrainDetailPage() {
         {/* ── Hero: strain card (left) + name/grower/chips/share (right) on
               desktop. Mobile stacks with the card on top so the visual
               anchor still leads. */}
-        <div className="mb-8 flex flex-col gap-6 lg:flex-row lg:items-start">
+        <div className="mb-8 flex flex-col gap-6 lg:flex-row lg:items-stretch">
           <div className="mx-auto w-full shrink-0 lg:mx-0" style={{ maxWidth: LEFT_COLUMN_MAX }}>
             {card ? (
               <StrainCard card={stats ? { ...card, rank: stats.overall_rank } : card} />
@@ -482,7 +482,7 @@ export default function StrainDetailPage() {
             )}
           </div>
 
-          <div className="min-w-0 flex-1 space-y-4">
+          <div className="flex min-w-0 flex-1 flex-col gap-4">
           <header
             className="flex flex-wrap items-start justify-between gap-4 rounded-2xl px-6 py-5"
             style={{ backgroundColor: C.bgCard, border: `1px solid ${C.textMuted}15` }}
@@ -600,7 +600,7 @@ export default function StrainDetailPage() {
                 conditions / flavours) alongside the objective chemistry
                 (terpene bar chart, same visual language as the card back). */}
             {((stats && stats.review_count > 0) || (card && card.top_terpenes.length > 0)) && (
-              <div className="grid gap-4 md:grid-cols-3">
+              <div className="grid flex-1 gap-4 md:grid-cols-3">
                 {stats && stats.review_count > 0 && (
                   <div
                     className="space-y-3 rounded-2xl p-5 md:col-span-2"
