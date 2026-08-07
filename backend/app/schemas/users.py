@@ -68,6 +68,9 @@ class UserResponse(BaseModel):
     show_followers: bool = True
     show_kudos: bool = True
     show_effects: bool = True
+    # True when the account's email is in ADMIN_EMAILS — lets the patient
+    # dashboard show a cross-link into the admin portal.
+    is_admin: bool = False
 
     model_config = {"from_attributes": True}
 

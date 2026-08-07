@@ -9,6 +9,7 @@ from app.auth import (
     hash_password,
     verify_password,
 )
+from app.config import settings
 from app.database import get_db
 import json
 
@@ -91,6 +92,7 @@ async def get_me(
     resp.next_status = progression["next_status"]
     resp.next_status_label = progression["next_status_label"]
     resp.next_status_threshold = progression["next_status_threshold"]
+    resp.is_admin = (current_user.email or "").lower() in settings.admin_email_list
     return resp
 
 
@@ -123,6 +125,7 @@ async def update_me(
     resp.next_status = progression["next_status"]
     resp.next_status_label = progression["next_status_label"]
     resp.next_status_threshold = progression["next_status_threshold"]
+    resp.is_admin = (current_user.email or "").lower() in settings.admin_email_list
     return resp
 
 
@@ -150,6 +153,7 @@ async def upload_avatar(
     resp.next_status = progression["next_status"]
     resp.next_status_label = progression["next_status_label"]
     resp.next_status_threshold = progression["next_status_threshold"]
+    resp.is_admin = (current_user.email or "").lower() in settings.admin_email_list
     return resp
 
 

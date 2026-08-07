@@ -41,6 +41,7 @@ interface MeProfile {
   show_followers: boolean;
   show_kudos: boolean;
   show_effects: boolean;
+  is_admin?: boolean;
   // Rank progression
   current_status_threshold?: number;
   next_status?: string | null;
@@ -273,6 +274,44 @@ export default function PortalDashboard() {
 
   return (
     <div className="mx-auto max-w-5xl">
+      {/* Cross-link into the admin portal. Only rendered for accounts whose
+          email matches the backend's ADMIN_EMAILS allow-list — the /users/me
+          response carries the is_admin flag. Admins still need to sign in
+          separately at /admin/login (Firebase Google OAuth) since the two
+          auth systems are independent. */}
+      {profile.is_admin && (
+        <Link
+          href="/admin/login"
+          className="mb-6 flex items-center justify-between gap-3 rounded-2xl p-4 transition hover:brightness-110"
+          style={{
+            backgroundColor: `${C.secondary}12`,
+            border: `1px solid ${C.secondary}55`,
+          }}
+        >
+          <div className="flex items-center gap-3">
+            <span
+              className="flex h-10 w-10 items-center justify-center rounded-xl text-lg"
+              style={{ backgroundColor: `${C.secondary}22`, color: C.secondary }}
+              aria-hidden
+            >
+              {"\u{1F6E1}\u{FE0F}"}
+            </span>
+            <div>
+              <p className="text-sm font-bold text-white">Admin panel</p>
+              <p className="text-xs" style={{ color: C.textMuted }}>
+                Sign in with Google to moderate reviews and manage the catalogue.
+              </p>
+            </div>
+          </div>
+          <span
+            className="shrink-0 rounded-full px-3 py-1 text-xs font-semibold"
+            style={{ backgroundColor: C.secondary, color: C.bgDeep }}
+          >
+            Open →
+          </span>
+        </Link>
+      )}
+
       {/* ── Top section: Profile left, Strain Card right ─────────── */}
       <div className="grid gap-8 lg:grid-cols-2">
         {/* Left — Profile info */}

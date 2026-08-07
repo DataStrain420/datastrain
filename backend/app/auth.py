@@ -127,11 +127,17 @@ async def get_current_admin(
 
     In dev mode without Firebase credentials, accepts a header value of
     'Bearer dev-admin' for testing.
+
+    Even with a valid Firebase token, the account's email must appear in
+    settings.ADMIN_EMAILS. Firebase auth by default admits any Google
+    account, so without this second check anyone with a Google login
+    could sign in and get full admin access.
     """
     if not authorization or not authorization.startswith("Bearer "):
         raise HTTPException(status_code=401, detail="Admin authentication required")
 
     token = authorization[7:]
+    allowed = settings.admin_email_list
 
     # Dev bypass when Firebase is not configured
     if not settings.FIREBASE_CREDENTIALS_PATH:
@@ -148,6 +154,16 @@ async def get_current_admin(
         from firebase_admin import auth
 
         decoded = auth.verify_id_token(token)
-        return decoded
     except Exception:
         raise HTTPException(status_code=401, detail="Invalid admin token")
+
+    email = (decoded.get("email") or "").lower()
+    if not allowed:
+        raise HTTPException(
+            status_code=403,
+            detail="Admin access is not configured. Set ADMIN_EMAILS on the backend to authorise accounts.",
+        )
+    if email not in allowed:
+        raise HTTPException(status_code=403, detail="This account is not authorised for admin access.")
+
+    return decoded
