@@ -91,3 +91,10 @@ class BatchCardResponse(BaseModel):
     top_flavour_rank: int | None = None
     strain_image_url: str | None = None
     strain_description: str | None = None
+    # Previous batch of the same strain by the same grower — surfaces a
+    # quality trend on cards so patients can see whether a producer is
+    # improving or slipping. None when there is no prior sibling batch.
+    previous_batch_id: int | None = None
+    previous_batch_number: str | None = None
+    previous_avg_rating: float | None = None
+    previous_review_count: int | None = None

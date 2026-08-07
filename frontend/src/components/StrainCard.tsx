@@ -43,6 +43,10 @@ export interface CardData {
   top_flavour_rank?: number | null;
   strain_image_url?: string | null;
   strain_description?: string | null;
+  previous_batch_id?: number | null;
+  previous_batch_number?: string | null;
+  previous_avg_rating?: number | null;
+  previous_review_count?: number | null;
 }
 
 const C = brand;
@@ -553,6 +557,39 @@ export default function StrainCard({ card }: { card: CardData }) {
             >
               Batch: {card.batch_number}
             </p>
+            {/* Batch history — surfaces the previous sibling batch's rating
+                so patients can see if the grower is improving on this
+                strain or slipping. Only renders when both batches actually
+                have ratings, otherwise the delta is meaningless. */}
+            {(() => {
+              const ratings = [
+                card.avg_appearance_rating,
+                card.avg_aroma_rating,
+                card.avg_moisture_rating,
+                card.avg_flavour_rating,
+                card.avg_effect_rating,
+              ].filter((v): v is number => typeof v === "number");
+              const currentAvg = ratings.length === 5 ? ratings.reduce((a, b) => a + b, 0) / 5 : null;
+              const prev = card.previous_avg_rating ?? null;
+              if (currentAvg === null || prev === null || !card.previous_batch_number) return null;
+              const delta = currentAvg - prev;
+              const trend =
+                delta > 0.3
+                  ? { icon: "↑", label: "Improving", color: C.primary }
+                  : delta < -0.3
+                    ? { icon: "↓", label: "Declining", color: "#f87171" }
+                    : { icon: "→", label: "Steady", color: back.body };
+              return (
+                <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px]">
+                  <span style={{ color: back.body }}>
+                    Prev <span className="font-mono">{card.previous_batch_number}</span>: <b style={{ color: back.heading }}>{prev.toFixed(1)}</b>
+                  </span>
+                  <span className="font-semibold" style={{ color: trend.color }}>
+                    {trend.icon} {trend.label}
+                  </span>
+                </div>
+              );
+            })()}
           </div>
 
           {card.strain_description && (

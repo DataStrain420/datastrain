@@ -642,6 +642,48 @@ async def _build_cards(batch_ids: list[int], db: AsyncSession) -> list[BatchCard
     for bid, url in photo_result.all():
         photos.setdefault(bid, url)
 
+    # Previous sibling batch per current batch — same strain + grower with
+    # a lower id. Two bulk queries: one to discover the prev batch id, one
+    # to fetch its number and review stats.
+    from sqlalchemy.orm import aliased
+
+    Prev = aliased(Batch)
+    prev_lookup_stmt = (
+        select(Batch.id, func.max(Prev.id))
+        .join(
+            Prev,
+            (Prev.strain_id == Batch.strain_id)
+            & (Prev.grower_id == Batch.grower_id)
+            & (Prev.id < Batch.id)
+            & (Prev.approved.is_(True)),
+        )
+        .where(Batch.id.in_(batch_ids))
+        .group_by(Batch.id)
+    )
+    prev_lookup = dict((row[0], row[1]) for row in (await db.execute(prev_lookup_stmt)).all())
+
+    prev_stats: dict[int, tuple[str, float | None, int]] = {}
+    prev_ids = list({v for v in prev_lookup.values() if v is not None})
+    if prev_ids:
+        prev_rating_expr = _avg_rating_expr()
+        prev_stats_stmt = (
+            select(
+                Batch.id,
+                Batch.batch_number,
+                prev_rating_expr,
+                func.count(Review.id),
+            )
+            .outerjoin(
+                Review,
+                (Review.batch_id == Batch.id)
+                & (Review.status == ReviewStatus.APPROVED.value),
+            )
+            .where(Batch.id.in_(prev_ids))
+            .group_by(Batch.id, Batch.batch_number)
+        )
+        for pid, pnum, pavg, pcount in (await db.execute(prev_stats_stmt)).all():
+            prev_stats[pid] = (pnum, float(pavg) if pavg is not None else None, int(pcount or 0))
+
     ctx = _RankContext(db)
     cards: list[BatchCardResponse] = []
     for bid in batch_ids:
@@ -691,6 +733,18 @@ async def _build_cards(batch_ids: list[int], db: AsyncSession) -> list[BatchCard
             top_flavour_label=top_flavour_label,
             strain_image_url=photos.get(bid),
             strain_description=batch.strain.description if batch.strain else None,
+            previous_batch_id=prev_lookup.get(bid),
+            previous_batch_number=(prev_stats.get(prev_lookup.get(bid)) or (None, None, 0))[0],
+            previous_avg_rating=(
+                round(prev_stats[prev_lookup[bid]][1], 1)
+                if prev_lookup.get(bid) and prev_stats.get(prev_lookup[bid]) and prev_stats[prev_lookup[bid]][1] is not None
+                else None
+            ),
+            previous_review_count=(
+                prev_stats[prev_lookup[bid]][2]
+                if prev_lookup.get(bid) and prev_stats.get(prev_lookup[bid])
+                else None
+            ),
         )
 
         card_dict = card.model_dump()
