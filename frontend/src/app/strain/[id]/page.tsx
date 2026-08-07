@@ -537,147 +537,115 @@ export default function StrainDetailPage() {
           </div>
         </div>
 
-        {/* ── Supporting content grid: left column stacks batches +
-              pharmacies + prescription CTA; right column is the paginated
-              reviews list. */}
-        <div className="mb-8 grid items-start gap-8 lg:grid-cols-2">
-          <div className="space-y-6">
-
-              {/* Most Recent Batches */}
-              {batchCards.length > 0 && (
-                <div>
-                  <h2 className="mb-3 text-sm font-bold uppercase tracking-wider text-white">
-                    Most Recent Batches
-                  </h2>
-                  <div className="relative">
-                    <div
-                      ref={scrollRef}
-                      className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide"
-                      style={{ scrollbarWidth: "none" }}
-                    >
-                      {batchCards.map((bc) => (
-                        <BatchMiniCard
-                          key={bc.id}
-                          id={bc.id}
-                          batchNumber={bc.batch_number}
-                          growerName={bc.grower_name}
-                          growerId={bc.grower_id ?? undefined}
-                          avgRating={
-                            bc.avg_appearance_rating && bc.avg_aroma_rating && bc.avg_moisture_rating && bc.avg_flavour_rating && bc.avg_effect_rating
-                              ? (bc.avg_appearance_rating + bc.avg_aroma_rating + bc.avg_moisture_rating + bc.avg_flavour_rating + bc.avg_effect_rating) / 5
-                              : 0
-                          }
-                        />
-                      ))}
-                    </div>
-                    {batchCards.length > 2 && (
-                      <button
-                        onClick={() => scrollBatches("right")}
-                        className="absolute -right-2 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full transition hover:opacity-80"
-                        style={{ backgroundColor: C.primary }}
-                        aria-label="Scroll batches right"
-                      >
-                        <svg className="h-4 w-4" fill="none" stroke={C.bgDeep} viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
-                        </svg>
-                      </button>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* Where to get it — pharmacies that dispense this strain */}
-              {pharmacies.length > 0 && (
-                <div>
-                  <h2 className="mb-3 text-sm font-bold uppercase tracking-wider text-white">
-                    Where to Get It
-                  </h2>
-                  <div
-                    className="rounded-2xl p-4"
-                    style={{ backgroundColor: C.bgCard, border: `1px solid ${C.textMuted}15` }}
-                  >
-                    <p className="mb-3 text-xs" style={{ color: C.textMuted }}>
-                      UK pharmacies currently dispensing batches of {strain.name}.
-                    </p>
-                    <div className="flex flex-wrap gap-2">
-                      {pharmacies.map((p) => (
-                        <Link
-                          key={p.id}
-                          href={`/pharmacy/${p.id}`}
-                          className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold transition hover:brightness-125"
-                          style={{
-                            backgroundColor: `${C.primary}15`,
-                            color: C.primary,
-                            border: `1px solid ${C.primary}44`,
-                          }}
-                        >
-                          <span>{"\u{1F3E5}"}</span>
-                          <span>{p.name}</span>
-                          {p.verified && <span title="Verified pharmacy">{"\u{2705}"}</span>}
-                          <span aria-hidden style={{ opacity: 0.6 }}>{"→"}</span>
-                        </Link>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Prescription CTA — links out to /clinics regardless of
-                  whether pharmacies were found, since patients need a
-                  prescription before any pharmacy will dispense. */}
+        {/* ── Most Recent Batches — full-width horizontal row so the
+              batches read as a sequence rather than a stack. */}
+        {batchCards.length > 0 && (
+          <section className="mb-8">
+            <h2 className="mb-3 text-sm font-bold uppercase tracking-wider text-white">
+              Most Recent Batches
+            </h2>
+            <div className="relative">
               <div
-                className="flex flex-col gap-3 rounded-2xl p-5 sm:flex-row sm:items-center sm:justify-between"
-                style={{
-                  backgroundColor: `${C.secondary}12`,
-                  border: `1px solid ${C.secondary}44`,
-                }}
+                ref={scrollRef}
+                className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide"
+                style={{ scrollbarWidth: "none" }}
               >
-                <div>
-                  <h3 className="text-base font-bold text-white">Need a prescription?</h3>
-                  <p className="mt-0.5 text-sm" style={{ color: C.textMuted }}>
-                    See the UK clinics that can assess and prescribe medical cannabis.
-                  </p>
-                </div>
-                <Link
-                  href="/clinics"
-                  className="inline-flex shrink-0 items-center gap-2 rounded-full px-5 py-2 text-sm font-semibold transition hover:brightness-110"
-                  style={{ backgroundColor: C.secondary, color: C.bgDeep }}
-                >
-                  Browse clinics
-                  <span aria-hidden>{"→"}</span>
-                </Link>
+                {batchCards.map((bc) => (
+                  <BatchMiniCard
+                    key={bc.id}
+                    id={bc.id}
+                    batchNumber={bc.batch_number}
+                    growerName={bc.grower_name}
+                    growerId={bc.grower_id ?? undefined}
+                    avgRating={
+                      bc.avg_appearance_rating && bc.avg_aroma_rating && bc.avg_moisture_rating && bc.avg_flavour_rating && bc.avg_effect_rating
+                        ? (bc.avg_appearance_rating + bc.avg_aroma_rating + bc.avg_moisture_rating + bc.avg_flavour_rating + bc.avg_effect_rating) / 5
+                        : 0
+                    }
+                  />
+                ))}
               </div>
+              {batchCards.length > 2 && (
+                <button
+                  onClick={() => scrollBatches("right")}
+                  className="absolute -right-2 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full transition hover:opacity-80"
+                  style={{ backgroundColor: C.primary }}
+                  aria-label="Scroll batches right"
+                >
+                  <svg className="h-4 w-4" fill="none" stroke={C.bgDeep} viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              )}
+            </div>
+          </section>
+        )}
+
+        {/* ── Where to get it — pharmacies that dispense this strain */}
+        {pharmacies.length > 0 && (
+          <section className="mb-8">
+            <h2 className="mb-3 text-sm font-bold uppercase tracking-wider text-white">
+              Where to Get It
+            </h2>
+            <div
+              className="rounded-2xl p-4"
+              style={{ backgroundColor: C.bgCard, border: `1px solid ${C.textMuted}15` }}
+            >
+              <p className="mb-3 text-xs" style={{ color: C.textMuted }}>
+                UK pharmacies currently dispensing batches of {strain.name}.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {pharmacies.map((p) => (
+                  <Link
+                    key={p.id}
+                    href={`/pharmacy/${p.id}`}
+                    className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold transition hover:brightness-125"
+                    style={{
+                      backgroundColor: `${C.primary}15`,
+                      color: C.primary,
+                      border: `1px solid ${C.primary}44`,
+                    }}
+                  >
+                    <span>{"\u{1F3E5}"}</span>
+                    <span>{p.name}</span>
+                    {p.verified && <span title="Verified pharmacy">{"\u{2705}"}</span>}
+                    <span aria-hidden style={{ opacity: 0.6 }}>{"→"}</span>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* ── Reviews — full width; the cards themselves flow into two
+              columns on desktop so the section fills the viewport width. */}
+        <section ref={reviewsTopRef} id="reviews" className="mb-8">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <h2 className="text-lg font-bold text-white">
+              Reviews{reviews.length > 0 && ` (${reviews.length})`}
+            </h2>
+            <Link
+              href={user ? "/portal/review/new" : "/login"}
+              className="shrink-0 rounded-lg px-3 py-1.5 text-xs font-semibold transition hover:opacity-90"
+              style={{ backgroundColor: C.primary, color: C.bgDeep }}
+            >
+              {user ? "Write a Review" : "Sign in to Review"}
+            </Link>
           </div>
 
-          {/* RIGHT — reviews list with simple pagination at the bottom. The
-              column has no fixed height; the page itself scrolls. */}
-          <div ref={reviewsTopRef} id="reviews">
-            <div className="mb-3 flex items-center justify-between gap-3">
-              <h2 className="text-lg font-bold text-white">
-                Reviews{reviews.length > 0 && ` (${reviews.length})`}
-              </h2>
-              <Link
-                href={user ? "/portal/review/new" : "/login"}
-                className="shrink-0 rounded-lg px-3 py-1.5 text-xs font-semibold transition hover:opacity-90"
-                style={{ backgroundColor: C.primary, color: C.bgDeep }}
-              >
-                {user ? "Write a Review" : "Sign in to Review"}
-              </Link>
+          {reviews.length === 0 ? (
+            <div
+              className="flex items-center justify-center rounded-2xl p-8 text-center"
+              style={{ backgroundColor: C.bgCard, border: `1px solid ${C.textMuted}15` }}
+            >
+              <p className="text-sm" style={{ color: C.textMuted }}>
+                No reviews yet. Be the first!
+              </p>
             </div>
-
-            {reviews.length === 0 ? (
-              <div
-                className="flex items-center justify-center rounded-2xl p-8 text-center"
-                style={{ backgroundColor: C.bgCard, border: `1px solid ${C.textMuted}15` }}
-              >
-                <p className="text-sm" style={{ color: C.textMuted }}>
-                  No reviews yet. Be the first!
-                </p>
-              </div>
-            ) : (
-              <>
-                <div className="flex flex-col gap-4">
-                  {pageReviews.map((r) => (
+          ) : (
+            <>
+              <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                {pageReviews.map((r) => (
                     <ReviewCard
                       key={r.id}
                       id={r.id}
@@ -741,8 +709,35 @@ export default function StrainDetailPage() {
                 )}
               </>
             )}
+        </section>
+
+        {/* ── Prescription CTA — links out to /clinics regardless of
+              whether pharmacies were found, since patients need a
+              prescription before any pharmacy will dispense. */}
+        <section className="mb-8">
+          <div
+            className="flex flex-col gap-3 rounded-2xl p-5 sm:flex-row sm:items-center sm:justify-between"
+            style={{
+              backgroundColor: `${C.secondary}12`,
+              border: `1px solid ${C.secondary}44`,
+            }}
+          >
+            <div>
+              <h3 className="text-base font-bold text-white">Need a prescription?</h3>
+              <p className="mt-0.5 text-sm" style={{ color: C.textMuted }}>
+                See the UK clinics that can assess and prescribe medical cannabis.
+              </p>
+            </div>
+            <Link
+              href="/clinics"
+              className="inline-flex shrink-0 items-center gap-2 rounded-full px-5 py-2 text-sm font-semibold transition hover:brightness-110"
+              style={{ backgroundColor: C.secondary, color: C.bgDeep }}
+            >
+              Browse clinics
+              <span aria-hidden>{"→"}</span>
+            </Link>
           </div>
-        </div>
+        </section>
 
         {/* ── Similar Strains (full width, unchanged) ──────────────────── */}
         {similarCards.length > 0 && (
