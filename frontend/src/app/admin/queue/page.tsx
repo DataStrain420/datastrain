@@ -91,10 +91,22 @@ export default function AdminQueuePage() {
   const [busyId, setBusyId] = useState<number | null>(null);
 
   async function load() {
+    // Independent .catch() per call so a 500 on batches (or strains) can't
+    // hide the reviews queue — historically one endpoint failing dropped
+    // the whole tab to zero silently.
     const [r, s, b] = await Promise.all([
-      adminFetch<Review[]>("/admin/queue/reviews"),
-      adminFetch<Strain[]>("/admin/queue/strains"),
-      adminFetch<Batch[]>("/admin/queue/batches"),
+      adminFetch<Review[]>("/admin/queue/reviews").catch((err) => {
+        console.error("queue/reviews:", err);
+        return [] as Review[];
+      }),
+      adminFetch<Strain[]>("/admin/queue/strains").catch((err) => {
+        console.error("queue/strains:", err);
+        return [] as Strain[];
+      }),
+      adminFetch<Batch[]>("/admin/queue/batches").catch((err) => {
+        console.error("queue/batches:", err);
+        return [] as Batch[];
+      }),
     ]);
     setReviews(r);
     setStrains(s);

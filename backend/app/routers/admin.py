@@ -108,6 +108,7 @@ async def pending_batches(
             cbd_percentage=b.cbd_percentage,
             tested_date=b.tested_date,
             lab_report_url=b.lab_report_url,
+            irradiated=b.irradiated,
             dispensing_pharmacy_id=b.dispensing_pharmacy_id,
             approved=b.approved,
             created_at=b.created_at,

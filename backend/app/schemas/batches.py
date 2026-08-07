@@ -50,9 +50,9 @@ class BatchResponse(BaseModel):
     thc_percentage: float
     cbd_percentage: float
     tested_date: date
-    lab_report_url: str | None
-    irradiated: bool | None
-    dispensing_pharmacy_id: int | None
+    lab_report_url: str | None = None
+    irradiated: bool | None = None
+    dispensing_pharmacy_id: int | None = None
     approved: bool
     created_at: datetime
     terpene_profiles: list[BatchTerpeneResponse] = []
