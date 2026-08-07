@@ -327,6 +327,11 @@ export default function StrainCard({ card }: { card: CardData }) {
             tier === "legendary" && "card-holographic-gold",
             tier === "rare" && "card-holographic",
             tier === "legendary" && "card-glow-pulse",
+            // backface-visibility only affects painting, not hit-testing —
+            // browsers vary on whether the hidden face still swallows
+            // clicks. Explicitly turn pointer events off on whichever
+            // face isn't currently facing the viewer.
+            flipped && "pointer-events-none",
           )}
           style={{
             backgroundColor: C.bgCard,
@@ -634,6 +639,10 @@ export default function StrainCard({ card }: { card: CardData }) {
             tier === "legendary" && "card-holographic-gold",
             tier === "rare" && "card-holographic",
             tier === "legendary" && "card-glow-pulse",
+            // Mirror of the front-face pointer-events guard: the back is
+            // only interactive while it's the face the viewer sees, so
+            // hidden-back clicks can't intercept front controls.
+            !flipped && "pointer-events-none",
           )}
           style={{
             backgroundColor: C.bgCard,
