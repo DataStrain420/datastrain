@@ -157,7 +157,7 @@ export default function PortalDashboard() {
       }
       try {
         const [r, lib] = await Promise.all([
-          apiFetch<ReviewData[]>(`/reviews/?user_id=${authUser?.id}&status=`).catch(() => []),
+          apiFetch<ReviewData[]>(`/reviews/mine`).catch(() => []),
           apiFetch<LibraryEntry[]>("/library/").catch(() => []),
         ]);
         setProfile(p);
@@ -258,6 +258,18 @@ export default function PortalDashboard() {
   const wishlist = library.filter((e) => e.list_type === "wishlist");
   const triedList = library.filter((e) => e.list_type === "tried");
   const approvedReviews = reviews.filter((r) => r.status === "approved");
+  const pendingReviews = reviews.filter((r) => r.status === "pending");
+  const rejectedReviews = reviews.filter((r) => r.status === "rejected");
+
+  async function deleteReview(id: number) {
+    if (!confirm("Delete this review? This can't be undone.")) return;
+    try {
+      await apiFetch(`/reviews/${id}`, { method: "DELETE" });
+      setReviews((prev) => prev.filter((r) => r.id !== id));
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Failed to delete review");
+    }
+  }
 
   return (
     <div className="mx-auto max-w-5xl">
@@ -558,6 +570,74 @@ export default function PortalDashboard() {
         isPublic={profile.show_reviews}
         onToggle={() => togglePrivacy("show_reviews")}
       >
+        {(pendingReviews.length > 0 || rejectedReviews.length > 0) && (
+          <div className="mb-4 space-y-2">
+            {pendingReviews.map((r) => (
+              <div
+                key={r.id}
+                className="flex flex-wrap items-center justify-between gap-3 rounded-xl p-3"
+                style={{
+                  backgroundColor: `${C.secondary}12`,
+                  border: `1px solid ${C.secondary}44`,
+                }}
+              >
+                <div className="min-w-0 flex-1 text-sm">
+                  <span
+                    className="mr-2 inline-block rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider"
+                    style={{ backgroundColor: C.secondary, color: C.bgDeep }}
+                  >
+                    Awaiting moderation
+                  </span>
+                  <span className="text-white">{r.strain_name || "Unknown strain"}</span>
+                  {r.batch_number && (
+                    <span className="ml-1" style={{ color: C.textMuted }}>
+                      · {r.batch_number}
+                    </span>
+                  )}
+                </div>
+                <button
+                  onClick={() => deleteReview(r.id)}
+                  className="shrink-0 text-xs underline"
+                  style={{ color: C.textMuted }}
+                >
+                  Delete
+                </button>
+              </div>
+            ))}
+            {rejectedReviews.map((r) => (
+              <div
+                key={r.id}
+                className="flex flex-wrap items-center justify-between gap-3 rounded-xl p-3"
+                style={{
+                  backgroundColor: "#7f1d1d22",
+                  border: `1px solid #7f1d1d66`,
+                }}
+              >
+                <div className="min-w-0 flex-1 text-sm">
+                  <span
+                    className="mr-2 inline-block rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider"
+                    style={{ backgroundColor: "#f87171", color: C.bgDeep }}
+                  >
+                    Rejected
+                  </span>
+                  <span className="text-white">{r.strain_name || "Unknown strain"}</span>
+                  {r.batch_number && (
+                    <span className="ml-1" style={{ color: C.textMuted }}>
+                      · {r.batch_number}
+                    </span>
+                  )}
+                </div>
+                <button
+                  onClick={() => deleteReview(r.id)}
+                  className="shrink-0 rounded-lg px-3 py-1 text-xs font-semibold"
+                  style={{ backgroundColor: "#f87171", color: C.bgDeep }}
+                >
+                  Delete & retry
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
         {approvedReviews.length === 0 ? (
           <div className="rounded-xl p-6 text-center" style={{ backgroundColor: C.bgCard }}>
             <p className="text-sm" style={{ color: C.textMuted }}>No reviews yet.</p>

@@ -145,15 +145,27 @@ async def submit_review(
     if not batch:
         raise HTTPException(status_code=400, detail="Batch not found")
 
-    # Check one review per user per batch
+    # Check one review per user per batch. Message tells them the status
+    # so they know where to find it (or that it's still awaiting approval).
     existing = await db.execute(
         select(Review).where(
             Review.user_id == current_user.id, Review.batch_id == batch_id
         )
     )
-    if existing.scalar_one_or_none():
+    prior = existing.scalar_one_or_none()
+    if prior:
+        if prior.status == ReviewStatus.PENDING.value:
+            raise HTTPException(
+                status_code=409,
+                detail="Your review of this batch is still awaiting moderation — check your dashboard.",
+            )
+        if prior.status == ReviewStatus.REJECTED.value:
+            raise HTTPException(
+                status_code=409,
+                detail="Your previous review of this batch was rejected. Delete it from your dashboard before submitting a new one.",
+            )
         raise HTTPException(
-            status_code=409, detail="You have already reviewed this batch"
+            status_code=409, detail="You have already reviewed this batch."
         )
 
     # Save photos
@@ -273,7 +285,55 @@ async def update_review_step2(
     return _review_to_response(review)
 
 
+@router.delete("/{review_id}", status_code=204)
+async def delete_review(
+    review_id: int,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Let a patient delete their own review — but only while it's PENDING
+    or REJECTED. Approved reviews are part of the public record and count
+    toward denormalised stats; deleting them is an admin action."""
+    review = await db.get(Review, review_id)
+    if not review:
+        raise HTTPException(status_code=404, detail="Review not found")
+    if review.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Not your review")
+    if review.status == ReviewStatus.APPROVED.value:
+        raise HTTPException(
+            status_code=400,
+            detail="Approved reviews can't be deleted — contact support if you need it removed.",
+        )
+    await db.delete(review)
+    await db.flush()
+    # Keep the user's review counter honest.
+    if current_user.review_count > 0:
+        current_user.review_count -= 1
+    return None
+
+
 # ── List & detail ────────────────────────────────────────────────────────────
+
+
+@router.get("/mine", response_model=list[ReviewResponse])
+async def list_my_reviews(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+    skip: int = Query(0, ge=0),
+    limit: int = Query(100, ge=1, le=200),
+):
+    """Return every review the current user has authored, at any status —
+    the public list_reviews defaults to APPROVED-only, so PENDING or
+    REJECTED reviews would otherwise be invisible to their own author."""
+    query = (
+        _load_review_query()
+        .where(Review.user_id == current_user.id)
+        .offset(skip)
+        .limit(limit)
+        .order_by(Review.created_at.desc())
+    )
+    result = await db.execute(query)
+    return [_review_to_response(r) for r in result.scalars().unique().all()]
 
 
 @router.get("/", response_model=list[ReviewResponse])
