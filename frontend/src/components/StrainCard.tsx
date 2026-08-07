@@ -35,6 +35,7 @@ export interface CardData {
   avg_flavour_rating: number | null;
   avg_effect_rating: number | null;
   review_count: number;
+  strain_review_count?: number;
   recent_rank?: number | null;
   top_condition?: string | null;
   top_condition_rank?: number | null;
@@ -431,7 +432,7 @@ export default function StrainCard({ card }: { card: CardData }) {
               <RankHex
                 rank={displayRank}
                 tier={tier}
-                reviewCount={card.review_count}
+                reviewCount={card.strain_review_count ?? card.review_count}
                 strainId={card.strain_id}
               />
             ) : (

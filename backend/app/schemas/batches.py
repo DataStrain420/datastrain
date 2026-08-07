@@ -83,6 +83,11 @@ class BatchCardResponse(BaseModel):
     avg_flavour_rating: float | None
     avg_effect_rating: float | None
     review_count: int
+    # Total approved reviews across every batch of the strain (not just
+    # this one) — powers the "N ratings" count on the strain card so a
+    # popular strain isn't undersold by looking at the current batch's
+    # count in isolation.
+    strain_review_count: int = 0
     recent_rank: int | None = None
     top_condition: str | None = None
     top_condition_rank: int | None = None

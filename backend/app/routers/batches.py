@@ -667,6 +667,25 @@ async def _build_cards(batch_ids: list[int], db: AsyncSession) -> list[BatchCard
     for bid, url in photo_result.all():
         photos.setdefault(bid, url)
 
+    # Strain-wide review count — sum of approved reviews across every batch
+    # of the strain, keyed by strain_id. Powers the "N ratings" figure on
+    # the strain card so a strain isn't undersold by only reflecting the
+    # current batch's count.
+    strain_ids = {b.strain_id for b in batches.values() if b.strain_id is not None}
+    strain_review_counts: dict[int, int] = {}
+    if strain_ids:
+        strain_count_stmt = (
+            select(Batch.strain_id, func.count(Review.id))
+            .join(Review, Review.batch_id == Batch.id)
+            .where(
+                Batch.strain_id.in_(strain_ids),
+                Review.status == ReviewStatus.APPROVED.value,
+            )
+            .group_by(Batch.strain_id)
+        )
+        for sid, cnt in (await db.execute(strain_count_stmt)).all():
+            strain_review_counts[sid] = int(cnt or 0)
+
     # Previous sibling batch per current batch — same strain + grower with
     # a lower id. Two bulk queries: one to discover the prev batch id, one
     # to fetch its number and review stats.
@@ -754,6 +773,7 @@ async def _build_cards(batch_ids: list[int], db: AsyncSession) -> list[BatchCard
             avg_flavour_rating=round(avg_flavour, 1) if avg_flavour else None,
             avg_effect_rating=round(avg_effect, 1) if avg_effect else None,
             review_count=review_count,
+            strain_review_count=strain_review_counts.get(batch.strain.id if batch.strain else 0, 0),
             top_condition=cond,
             top_effect=top_effect,
             top_flavour_label=top_flavour_label,
