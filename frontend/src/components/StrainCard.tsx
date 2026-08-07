@@ -580,61 +580,43 @@ export default function StrainCard({ card }: { card: CardData }) {
                 so the gap can be tight. relative + z-10 so clicks land here
                 and don't get stolen by the absolute-positioned flip wedge. */}
             <div
-              className="relative z-10 mt-4 flex items-center justify-start gap-4 pr-16"
+              className="relative z-10 mt-4 flex items-center justify-between gap-3"
             >
+              <div className="flex items-center gap-4">
+                <LibraryButton
+                  active={wishlisted}
+                  isHolo={isHolo}
+                  icon={"+"}
+                  label="Wishlist"
+                  onClick={(e) => { e.stopPropagation(); toggleLibrary("wishlist", wishlisted, setWishlisted); }}
+                />
+                <LibraryButton
+                  active={tried}
+                  isHolo={isHolo}
+                  icon={"\u2713"}
+                  label="Tried"
+                  onClick={(e) => { e.stopPropagation(); toggleLibrary("tried", tried, setTried); }}
+                />
+                <LibraryButton
+                  active={fired}
+                  isHolo={isHolo}
+                  icon={"\u{1F525}"}
+                  label="Fire"
+                  onClick={(e) => { e.stopPropagation(); toggleLibrary("favourite", fired, setFired); }}
+                />
+              </div>
+              {/* Flip \u2014 replaces the old corner-triangle wedge. Same
+                  LibraryButton chrome so all four actions read as one row.
+                  "Active" while the card is flipped so patients can see
+                  they're on the back and can flip back. */}
               <LibraryButton
-                active={wishlisted}
+                active={flipped}
                 isHolo={isHolo}
-                icon={"+"}
-                label="Wishlist"
-                onClick={(e) => { e.stopPropagation(); toggleLibrary("wishlist", wishlisted, setWishlisted); }}
-              />
-              <LibraryButton
-                active={tried}
-                isHolo={isHolo}
-                icon={"\u2713"}
-                label="Tried"
-                onClick={(e) => { e.stopPropagation(); toggleLibrary("tried", tried, setTried); }}
-              />
-              <LibraryButton
-                active={fired}
-                isHolo={isHolo}
-                icon={"\u{1F525}"}
-                label="Fire"
-                onClick={(e) => { e.stopPropagation(); toggleLibrary("favourite", fired, setFired); }}
+                icon={"\u21bb"}
+                label="Flip"
+                onClick={(e) => { e.stopPropagation(); setFlipped(!flipped); }}
               />
             </div>
-          </div>
-
-          {/* Flip affordance — filled right-triangle wedge in the bottom-right
-              corner tells the user the card is two-sided. The whole card
-              flips on tap (see parent onClick), so this is purely visual. */}
-          <div
-            className="pointer-events-none absolute bottom-0 right-0"
-            aria-label="Tap to flip"
-            title="Tap to flip"
-            style={{
-              width: 60,
-              height: 60,
-              clipPath: "polygon(100% 0, 100% 100%, 0 100%)",
-              // Soft blend into the card — start fully transparent for
-              // the first third of the wedge, then fade in to a subtle
-              // brand-cyan tint at the corner. Reads as an accent, not
-              // a hard shape.
-              background: `linear-gradient(135deg, transparent 33%, ${C.secondary}66 100%)`,
-            }}
-          >
-            <svg
-              className="absolute h-4 w-4"
-              style={{ bottom: 6, right: 6, color: C.secondary }}
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={2.2}
-              viewBox="0 0 24 24"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" d="M19.933 13.04a8 8 0 1 1-9.925-8.788c3.899-1 7.935 1.007 9.425 4.747" />
-              <path strokeLinecap="round" strokeLinejoin="round" d="M20 4v5h-5" />
-            </svg>
           </div>
 
         </div>
