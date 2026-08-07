@@ -33,6 +33,10 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    # X-Total-Count is set by paginated list endpoints so the frontend can
+    # render "Page N of M" controls. Browsers block reading custom headers
+    # unless the server explicitly exposes them.
+    expose_headers=["X-Total-Count"],
 )
 
 # Serve uploaded images in dev

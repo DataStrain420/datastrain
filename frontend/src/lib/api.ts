@@ -85,3 +85,42 @@ export async function apiFetch<T>(
 
   return res.json();
 }
+
+/**
+ * Same auth + error handling as apiFetch, but also exposes response
+ * headers. Used by paginated list endpoints that surface X-Total-Count
+ * so the client can render "Page N of M" controls.
+ */
+export async function apiFetchWithMeta<T>(
+  path: string,
+  options: RequestInit = {}
+): Promise<{ data: T; total: number | null }> {
+  const token =
+    typeof window !== "undefined" ? localStorage.getItem("ds_token") : null;
+
+  const headers: Record<string, string> = {
+    ...(options.headers as Record<string, string>),
+  };
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+  if (!(options.body instanceof FormData) && !headers["Content-Type"]) {
+    headers["Content-Type"] = "application/json";
+  }
+
+  let res: Response;
+  try {
+    res = await fetch(`${API_URL}${path}`, { ...options, headers });
+  } catch (err) {
+    console.error(`[apiFetchWithMeta] Network error on ${path}:`, err);
+    throw new Error("Cannot connect to server. Is the backend running?");
+  }
+
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({ detail: "Request failed" }));
+    throw new Error(formatApiError(error) || `HTTP ${res.status}`);
+  }
+
+  const totalHeader = res.headers.get("X-Total-Count");
+  const total = totalHeader ? parseInt(totalHeader, 10) : null;
+  const data = (await res.json()) as T;
+  return { data, total: Number.isFinite(total as number) ? total : null };
+}

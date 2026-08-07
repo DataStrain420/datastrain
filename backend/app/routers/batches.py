@@ -1,6 +1,6 @@
 from datetime import date, datetime, timedelta, timezone
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from sqlalchemy import case, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -185,6 +185,7 @@ async def submit_batch(
 
 @router.get("/cards", response_model=list[BatchCardResponse])
 async def list_batch_cards(
+    response: Response,
     strain_type: str | None = None,
     effect: str | None = None,
     condition: str | None = None,
@@ -333,6 +334,12 @@ async def list_batch_cards(
         stmt = stmt.order_by(Batch.thc_percentage.asc().nullslast())
     else:
         stmt = stmt.order_by(Strain.name)
+
+    # Total matching rows (before pagination) — surfaced via X-Total-Count
+    # so the frontend can render "Page N of M" controls.
+    count_stmt = select(func.count()).select_from(stmt.subquery())
+    total = (await db.scalar(count_stmt)) or 0
+    response.headers["X-Total-Count"] = str(total)
 
     stmt = stmt.offset(skip).limit(limit)
     result = await db.execute(stmt)

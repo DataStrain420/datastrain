@@ -8,7 +8,9 @@ import StrainCardSkeleton from "@/components/StrainCardSkeleton";
 import SubmitReviewPromoCard from "@/components/SubmitReviewPromoCard";
 import Footer from "@/components/Footer";
 import { brand } from "@/lib/brand";
-import { apiFetch } from "@/lib/api";
+import { apiFetch, apiFetchWithMeta } from "@/lib/api";
+
+const PAGE_SIZE = 20;
 
 const C = brand;
 
@@ -195,9 +197,10 @@ function StrainsBanner({ config, count }: { config: BannerConfig; count: number 
   );
 }
 
-function buildApiUrl(params: URLSearchParams): string {
+function buildApiUrl(params: URLSearchParams, page: number): string {
   const qp = new URLSearchParams();
-  qp.set("limit", "20");
+  qp.set("limit", String(PAGE_SIZE));
+  qp.set("skip", String(Math.max(0, (page - 1) * PAGE_SIZE)));
 
   const sort = params.get("sort");
   const type = params.get("type");
@@ -319,12 +322,84 @@ function FilterBtn({
   );
 }
 
+/* ── Page controls ─────────────────────────────────────────────────────────── */
+
+/** Builds the list of pages to render — [1, ...current-1, current, current+1, ..., last]
+ *  with ellipses in place of long runs. Always renders first and last. */
+function pageWindow(current: number, total: number): (number | "…")[] {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+  const items: (number | "…")[] = [1];
+  const start = Math.max(2, current - 1);
+  const end = Math.min(total - 1, current + 1);
+  if (start > 2) items.push("…");
+  for (let i = start; i <= end; i++) items.push(i);
+  if (end < total - 1) items.push("…");
+  items.push(total);
+  return items;
+}
+
+function PageControls({
+  page,
+  totalPages,
+  onGo,
+}: {
+  page: number;
+  totalPages: number;
+  onGo: (p: number) => void;
+}) {
+  const items = pageWindow(page, totalPages);
+  const btnBase = "rounded-lg px-3 py-1.5 text-sm font-semibold transition hover:brightness-110 disabled:opacity-40 disabled:cursor-not-allowed";
+  return (
+    <nav className="mt-10 flex flex-wrap items-center justify-center gap-2" aria-label="Pagination">
+      <button
+        onClick={() => onGo(page - 1)}
+        disabled={page === 1}
+        className={btnBase}
+        style={{ backgroundColor: C.bgCard, border: `1px solid ${C.textMuted}33`, color: C.textMuted }}
+      >
+        ‹ Prev
+      </button>
+      {items.map((item, i) =>
+        item === "…" ? (
+          <span key={`e-${i}`} className="px-2 text-sm" style={{ color: C.textMuted }}>
+            …
+          </span>
+        ) : (
+          <button
+            key={item}
+            onClick={() => onGo(item)}
+            disabled={item === page}
+            className={btnBase}
+            style={
+              item === page
+                ? { backgroundColor: C.primary, color: C.bgDeep, border: `1px solid ${C.primary}` }
+                : { backgroundColor: C.bgCard, border: `1px solid ${C.textMuted}33`, color: "white" }
+            }
+            aria-current={item === page ? "page" : undefined}
+          >
+            {item}
+          </button>
+        ),
+      )}
+      <button
+        onClick={() => onGo(page + 1)}
+        disabled={page >= totalPages}
+        className={btnBase}
+        style={{ backgroundColor: C.bgCard, border: `1px solid ${C.textMuted}33`, color: C.textMuted }}
+      >
+        Next ›
+      </button>
+    </nav>
+  );
+}
+
 /* ── Content (needs Suspense for useSearchParams) ──────────────────────────── */
 
 function StrainsContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [cards, setCards] = useState<CardData[]>([]);
+  const [total, setTotal] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
 
   const bannerConfig = buildBanner(searchParams);
@@ -334,14 +409,31 @@ function StrainsContent() {
   const activeSort = searchParams.get("sort") || "";
   const activeThc = thcBucketFromParams(searchParams);
   const activeIrradiation = searchParams.get("irradiated") || ""; // "true" | "false" | ""
+  const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10) || 1);
+  const totalPages = total !== null ? Math.max(1, Math.ceil(total / PAGE_SIZE)) : null;
 
   useEffect(() => {
     setLoading(true);
-    apiFetch<CardData[]>(buildApiUrl(searchParams))
-      .then(setCards)
-      .catch(() => setCards([]))
+    apiFetchWithMeta<CardData[]>(buildApiUrl(searchParams, page))
+      .then(({ data, total: t }) => {
+        setCards(data);
+        setTotal(t);
+      })
+      .catch(() => {
+        setCards([]);
+        setTotal(null);
+      })
       .finally(() => setLoading(false));
-  }, [searchParams]);
+    // Scroll to top on page change so the next page's grid starts at eye level.
+    if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [searchParams, page]);
+
+  function gotoPage(p: number) {
+    const params = new URLSearchParams(searchParams.toString());
+    if (p <= 1) params.delete("page");
+    else params.set("page", String(p));
+    router.push(`/strains?${params.toString()}`);
+  }
 
   function setFilter(key: string, value: string) {
     const qp = new URLSearchParams(searchParams.toString());
@@ -350,6 +442,9 @@ function StrainsContent() {
     } else {
       qp.set(key, value);
     }
+    // Any filter change resets pagination — the page you were on may not
+    // exist in the new result set, and the old page number is meaningless.
+    qp.delete("page");
     router.push(`/strains?${qp.toString()}`);
   }
 
@@ -363,6 +458,7 @@ function StrainsContent() {
     const qp = new URLSearchParams(searchParams.toString());
     qp.delete("thc_min");
     qp.delete("thc_max");
+    qp.delete("page");
     if (bucketId !== activeThc) {
       const bucket = thcFilters.find((b) => b.id === bucketId);
       if (bucket?.min !== null && bucket?.min !== undefined) qp.set("thc_min", String(bucket.min));
@@ -376,7 +472,7 @@ function StrainsContent() {
   return (
     <>
       {/* ── Banner — spans the full content width above the filter sidebar ─ */}
-      <StrainsBanner config={bannerConfig} count={cards.length} />
+      <StrainsBanner config={bannerConfig} count={total ?? cards.length} />
 
       <div className="flex gap-8">
       {/* ── Sidebar filters ────────────────────────────────────────── */}
@@ -531,15 +627,20 @@ function StrainsContent() {
             )}
           </div>
         ) : (
-          <div className="flex flex-wrap justify-start gap-6">
-            {cards.map((card) => (
-              <StrainCard key={card.id} card={card} />
-            ))}
-            {/* Promo card slotted after real results — fills any empty slot
-                on the last row, or starts its own row if the grid is full.
-                Kept intentionally CTA-styled rather than filler-styled. */}
-            <SubmitReviewPromoCard />
-          </div>
+          <>
+            <div className="flex flex-wrap justify-start gap-6">
+              {cards.map((card) => (
+                <StrainCard key={card.id} card={card} />
+              ))}
+              {/* Promo card slotted after real results — only on the last
+                  page so it doesn't split the grid mid-way through. */}
+              {(totalPages === null || page === totalPages) && <SubmitReviewPromoCard />}
+            </div>
+
+            {totalPages !== null && totalPages > 1 && (
+              <PageControls page={page} totalPages={totalPages} onGo={gotoPage} />
+            )}
+          </>
         )}
       </div>
       </div>
