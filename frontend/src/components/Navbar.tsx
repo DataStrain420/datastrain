@@ -541,7 +541,7 @@ export function PublicNavActions() {
     return (
       <>
         <Link
-          href="/portal/review/new"
+          href="/write-review"
           className="rounded-lg px-4 py-1.5 text-sm font-semibold transition hover:opacity-90"
           style={{ backgroundColor: C.primary, color: C.bgDeep }}
         >
@@ -633,18 +633,31 @@ export function PublicNavActions() {
     );
   }
 
+  // Signed-out visitors still see the Write Review CTA — it points to the
+  // /write-review gateway which asks them to sign in first. Removing the
+  // button entirely for anonymous users hides one of the primary reasons
+  // to make an account, so keep it visible always.
   return (
-    <Link
-      href="/login"
-      aria-label="Login or register"
-      className="flex h-9 w-9 items-center justify-center gap-2 rounded-full border text-sm font-semibold text-white transition hover:opacity-90 sm:h-auto sm:w-auto sm:px-4 sm:py-2"
-      style={{ borderColor: C.primary, backgroundColor: `${C.primary}15` }}
-    >
-      <svg className="h-5 w-5 sm:h-4 sm:w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-      </svg>
-      <span className="hidden sm:inline">Login/Register</span>
-    </Link>
+    <>
+      <Link
+        href="/write-review"
+        className="rounded-lg px-4 py-1.5 text-sm font-semibold transition hover:opacity-90"
+        style={{ backgroundColor: C.primary, color: C.bgDeep }}
+      >
+        Write Review
+      </Link>
+      <Link
+        href="/login"
+        aria-label="Login or register"
+        className="flex h-9 w-9 items-center justify-center gap-2 rounded-full border text-sm font-semibold text-white transition hover:opacity-90 sm:h-auto sm:w-auto sm:px-4 sm:py-2"
+        style={{ borderColor: C.primary, backgroundColor: `${C.primary}15` }}
+      >
+        <svg className="h-5 w-5 sm:h-4 sm:w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+        </svg>
+        <span className="hidden sm:inline">Login/Register</span>
+      </Link>
+    </>
   );
 }
 

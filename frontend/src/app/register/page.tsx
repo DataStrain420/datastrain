@@ -4,12 +4,29 @@ import { useAuth } from "@/lib/auth-context";
 import { brand } from "@/lib/brand";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { FormEvent, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { FormEvent, Suspense, useState } from "react";
+
+// Only honour redirects that stay on this app, so a crafted ?redirect=https://…
+// can't bounce a fresh session off to a phishing site.
+function safeRedirect(value: string | null): string {
+  if (!value) return "/portal/dashboard";
+  if (value.startsWith("/") && !value.startsWith("//")) return value;
+  return "/portal/dashboard";
+}
 
 export default function RegisterPage() {
+  return (
+    <Suspense fallback={null}>
+      <RegisterPageInner />
+    </Suspense>
+  );
+}
+
+function RegisterPageInner() {
   const { register } = useAuth();
-  const router = useRouter();
+  const params = useSearchParams();
+  const redirect = safeRedirect(params.get("redirect"));
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -27,7 +44,7 @@ export default function RegisterPage() {
     setLoading(true);
     try {
       await register(username, email, password, isVerified);
-      window.location.href = "/portal/dashboard";
+      window.location.href = redirect;
     } catch (err: any) {
       setError(err.message || "Registration failed");
       setLoading(false);
