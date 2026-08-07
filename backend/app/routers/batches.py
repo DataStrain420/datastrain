@@ -713,6 +713,7 @@ async def _build_cards(batch_ids: list[int], db: AsyncSession) -> list[BatchCard
             batch_number=batch.batch_number,
             thc_percentage=batch.thc_percentage,
             cbd_percentage=batch.cbd_percentage,
+            tested_date=batch.tested_date,
             irradiated=batch.irradiated,
             top_terpenes=[
                 BatchTerpeneResponse(

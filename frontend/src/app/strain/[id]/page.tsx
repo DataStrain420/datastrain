@@ -489,21 +489,102 @@ export default function StrainDetailPage() {
             style={{ backgroundColor: C.bgCard, border: `1px solid ${C.textMuted}15` }}
           >
             <div className="min-w-0 flex-1">
-              <h1 className="text-3xl font-extrabold text-white">{strain.name}</h1>
-            {strain.aliases && (
-              <p className="mt-1 text-sm" style={{ color: C.textMuted }}>
-                Also known as: {strain.aliases}
-              </p>
-            )}
-            {strain.grower_name && strain.grower_id && (
-              <Link
-                href={`/grower/${strain.grower_id}`}
-                className="mt-1 inline-block text-sm font-medium transition hover:underline"
-                style={{ color: C.primary }}
-              >
-                By {strain.grower_name}
-              </Link>
-            )}
+              {/* Batch-first hero — the current batch is the primary
+                  identity on this page; the strain is the subtitle. Reads
+                  as "Batch BN-2026-003, an Aurora by Farm Gas". */}
+              {card ? (
+                <>
+                  <p
+                    className="text-[11px] font-bold uppercase tracking-widest"
+                    style={{ color: C.secondary }}
+                  >
+                    Current batch
+                  </p>
+                  <h1 className="font-mono text-2xl font-extrabold text-white sm:text-3xl">
+                    {card.batch_number}
+                  </h1>
+                  <p className="mt-1 text-sm" style={{ color: C.textMuted }}>
+                    <Link
+                      href={`/strain/${strain.id}`}
+                      className="font-semibold transition hover:underline"
+                      style={{ color: C.primary }}
+                    >
+                      {strain.name}
+                    </Link>
+                    {strain.grower_name && strain.grower_id && (
+                      <>
+                        {" · by "}
+                        <Link
+                          href={`/grower/${strain.grower_id}`}
+                          className="font-semibold transition hover:underline"
+                          style={{ color: C.primary }}
+                        >
+                          {strain.grower_name}
+                        </Link>
+                      </>
+                    )}
+                  </p>
+                </>
+              ) : (
+                <>
+                  <h1 className="text-3xl font-extrabold text-white">{strain.name}</h1>
+                  {strain.grower_name && strain.grower_id && (
+                    <Link
+                      href={`/grower/${strain.grower_id}`}
+                      className="mt-1 inline-block text-sm font-medium transition hover:underline"
+                      style={{ color: C.primary }}
+                    >
+                      By {strain.grower_name}
+                    </Link>
+                  )}
+                </>
+              )}
+
+              {strain.aliases && (
+                <p className="mt-1 text-xs" style={{ color: C.textMuted }}>
+                  Also known as: {strain.aliases}
+                </p>
+              )}
+
+              {/* Batch facts row — tested date + potency + irradiation.
+                  These change with every batch, so they belong up here
+                  with the batch identity instead of in the "chips" below. */}
+              {card && (
+                <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
+                  {card.tested_date && (
+                    <span
+                      className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 font-medium"
+                      style={{ backgroundColor: C.bgDeep, color: C.textMuted, border: `1px solid ${C.textMuted}22` }}
+                      title={`Tested ${new Date(card.tested_date).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}`}
+                    >
+                      <span aria-hidden>{"\u{1F5D3}\u{FE0F}"}</span>
+                      Tested {new Date(card.tested_date).toLocaleDateString("en-GB", { month: "short", year: "numeric" })}
+                    </span>
+                  )}
+                  <span
+                    className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 font-semibold"
+                    style={{ backgroundColor: `${C.primary}18`, color: C.primary, border: `1px solid ${C.primary}55` }}
+                  >
+                    THC {card.thc_percentage}%
+                  </span>
+                  <span
+                    className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 font-semibold"
+                    style={{ backgroundColor: `${C.tertiary}18`, color: C.tertiary, border: `1px solid ${C.tertiary}55` }}
+                  >
+                    CBD {card.cbd_percentage}%
+                  </span>
+                  {card.irradiated !== null && card.irradiated !== undefined && (
+                    <span
+                      className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 font-medium"
+                      style={{ backgroundColor: C.bgDeep, color: C.textMuted, border: `1px solid ${C.textMuted}22` }}
+                      title={card.irradiated ? "Gamma-irradiated for sterilisation" : "Not irradiated"}
+                    >
+                      <span aria-hidden>{card.irradiated ? "\u{2622}\u{FE0F}" : "\u{1F33F}"}</span>
+                      {card.irradiated ? "Irradiated" : "Non-irradiated"}
+                    </span>
+                  )}
+                </div>
+              )}
 
             {/* Description sits directly under the byline so the reader
                 gets the strain's own words before the metadata chips and

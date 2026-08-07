@@ -26,6 +26,7 @@ export interface CardData {
   rank?: number | null;
   thc_percentage: number;
   cbd_percentage: number;
+  tested_date?: string | null;
   irradiated?: boolean | null;
   top_terpenes: TerpeneData[];
   avg_appearance_rating: number | null;

@@ -74,6 +74,7 @@ class BatchCardResponse(BaseModel):
     rank: int | None = None
     thc_percentage: float
     cbd_percentage: float
+    tested_date: date | None = None
     irradiated: bool | None = None
     top_terpenes: list[BatchTerpeneResponse]
     avg_appearance_rating: float | None
