@@ -162,27 +162,67 @@ function StatRow({ label, color, entries }: { label: string; color: string; entr
 const HEX_PATH =
   "M219.9,66.7l-84,-47.4c-4.888,-2.799-10.912,-2.799-15.8,0l-84,47.4c-4.997,2.885-8.089,8.23-8.1,14l0,94.6c0.011,5.77,3.103,11.115,8.1,14l84,47.4c4.888,2.799,10.912,2.799,15.8,0l84,-47.4c4.997,-2.885,8.089,-8.23,8.1,-14l0,-94.6c-0.011,-5.77-3.103,-11.115-8.1,-14Z";
 
-function PageRankHex({ rank, totalStrains }: { rank: number; totalStrains: number }) {
-  // Mirror StrainCard's tier logic so the header hex visually matches the
-  // rank hex inside the card (gold for #1, silver for 2–10, cyan otherwise).
+/** Rich rank/rating summary panel that sits on the right of the strain
+ *  header. Combines the branded rank hex with the average rating, review
+ *  count, percentile chip and a rank-trend indicator so the reader gets
+ *  the strain's "one-line reputation" without leaving the hero. */
+function RankStatsPanel({
+  rank,
+  totalStrains,
+  reviewCount,
+  avgRating,
+  recentRank,
+}: {
+  rank: number;
+  totalStrains: number;
+  reviewCount: number;
+  avgRating: number | null;
+  recentRank: number | null;
+}) {
   const isGold = rank === 1;
   const isSilver = rank >= 2 && rank <= 10;
   const isHolo = isGold || isSilver;
   const fill = isGold ? "url(#page-hex-gold)" : isSilver ? "url(#page-hex-silver)" : C.secondary;
   const textColor = isGold ? "#2a1f00" : isSilver ? "#1a1d20" : C.bgDeep;
   const stroke = isGold ? "#6b4a0e" : isSilver ? "#3a3f46" : "none";
-  const labelColor = isHolo ? "rgba(0,0,0,0.75)" : C.textMuted;
+  const accent = isGold ? "#f5d76e" : isSilver ? "#c0c8d0" : C.secondary;
+
+  // Percentile — how highly this strain scores against the catalogue. Clamp
+  // to a minimum of 1% so a #1 rank shows "Top 1%" instead of "Top 0%".
+  const percentile = Math.max(1, Math.ceil((rank / Math.max(totalStrains, 1)) * 100));
+
+  // Rank trend — recent_rank comes off the current batch card. Lower rank
+  // is better, so recent < overall means the strain is climbing.
+  let trend: { label: string; icon: string; color: string } | null = null;
+  if (recentRank && recentRank !== rank) {
+    if (recentRank < rank) trend = { label: "Rising this month", icon: "↑", color: C.primary };
+    else trend = { label: "Cooling this month", icon: "↓", color: C.textMuted };
+  } else if (recentRank && recentRank === rank) {
+    trend = { label: "Steady this month", icon: "→", color: C.textMuted };
+  }
+
+  // Star row — five stars, filled proportional to the average rating.
+  const stars = avgRating !== null
+    ? [1, 2, 3, 4, 5].map((i) => {
+        const diff = avgRating - i + 1;
+        if (diff >= 1) return "full";
+        if (diff >= 0.5) return "half";
+        return "empty";
+      })
+    : null;
 
   return (
-    <div className="flex flex-col items-end gap-1 shrink-0">
-      <div className="flex items-center gap-1.5">
-        <span
-          className="text-right text-xs leading-tight font-extrabold"
-          style={{ color: labelColor }}
-        >
-          Rank
-        </span>
-        <div className="relative h-14 w-14">
+    <div
+      className="w-full max-w-[220px] shrink-0 rounded-2xl p-4"
+      style={{
+        backgroundColor: C.bgDeep,
+        border: `1px solid ${C.textMuted}22`,
+        boxShadow: `inset 0 0 0 1px ${accent}18`,
+      }}
+    >
+      {/* Rank hex + rank line */}
+      <div className="flex items-center gap-3">
+        <div className="relative h-14 w-14 shrink-0">
           <svg viewBox="0 0 256 256" className="absolute inset-0 h-full w-full">
             <defs>
               {isGold && (
@@ -217,10 +257,71 @@ function PageRankHex({ rank, totalStrains }: { rank: number; totalStrains: numbe
             {rank}
           </span>
         </div>
+        <div className="min-w-0 flex-1">
+          <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: C.textMuted }}>
+            Overall rank
+          </p>
+          <p className="text-sm font-semibold text-white">
+            #{rank} <span style={{ color: C.textMuted }}>of {totalStrains.toLocaleString()}</span>
+          </p>
+          <span
+            className="mt-1 inline-block rounded-full px-2 py-0.5 text-[10px] font-bold"
+            style={{ backgroundColor: `${accent}22`, color: accent }}
+          >
+            Top {percentile}%
+          </span>
+        </div>
       </div>
-      <span className="text-[10px] font-semibold" style={{ color: labelColor }}>
-        of {totalStrains.toLocaleString()}
-      </span>
+
+      {/* Divider */}
+      <div className="my-3 h-px w-full" style={{ backgroundColor: `${C.textMuted}22` }} />
+
+      {/* Rating */}
+      {avgRating !== null ? (
+        <div>
+          <div className="flex items-baseline gap-2">
+            <span className="text-2xl font-extrabold" style={{ color: C.primary }}>
+              {avgRating.toFixed(1)}
+            </span>
+            <span className="text-[10px] uppercase tracking-wider" style={{ color: C.textMuted }}>
+              / 5
+            </span>
+          </div>
+          <div className="mt-1 flex items-center gap-0.5 text-sm">
+            {stars!.map((s, i) => (
+              <span
+                key={i}
+                style={{
+                  color: s === "empty" ? `${C.textMuted}44` : C.primary,
+                }}
+              >
+                {s === "half" ? "⯪" : "★"}
+              </span>
+            ))}
+          </div>
+          <p className="mt-1 text-xs" style={{ color: C.textMuted }}>
+            {reviewCount.toLocaleString()} {reviewCount === 1 ? "review" : "reviews"}
+          </p>
+        </div>
+      ) : (
+        <div>
+          <p className="text-sm font-semibold text-white">Not yet rated</p>
+          <p className="mt-0.5 text-xs" style={{ color: C.textMuted }}>
+            Be the first to review
+          </p>
+        </div>
+      )}
+
+      {/* Trend */}
+      {trend && (
+        <>
+          <div className="my-3 h-px w-full" style={{ backgroundColor: `${C.textMuted}22` }} />
+          <p className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: trend.color }}>
+            <span aria-hidden>{trend.icon}</span>
+            {trend.label}
+          </p>
+        </>
+      )}
     </div>
   );
 }
@@ -455,9 +556,28 @@ export default function StrainDetailPage() {
                 Kept as icon-only pill row so it doesn't dominate the header. */}
             <StrainShareRow name={strain.name} />
           </div>
-            {stats && (
-              <PageRankHex rank={stats.overall_rank} totalStrains={stats.total_strains} />
-            )}
+            {stats && (() => {
+              const r = card
+                ? [
+                    card.avg_appearance_rating,
+                    card.avg_aroma_rating,
+                    card.avg_moisture_rating,
+                    card.avg_flavour_rating,
+                    card.avg_effect_rating,
+                  ]
+                : [];
+              const ratings = r.filter((v): v is number => typeof v === "number");
+              const avg = ratings.length === 5 ? ratings.reduce((a, b) => a + b, 0) / 5 : null;
+              return (
+                <RankStatsPanel
+                  rank={stats.overall_rank}
+                  totalStrains={stats.total_strains}
+                  reviewCount={stats.review_count}
+                  avgRating={avg}
+                  recentRank={card?.recent_rank ?? null}
+                />
+              );
+            })()}
           </header>
 
             {/* Info blocks that sit next to the card on desktop —
