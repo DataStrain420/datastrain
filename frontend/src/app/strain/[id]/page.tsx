@@ -586,41 +586,61 @@ export default function StrainDetailPage() {
                 one glance before dropping into the batches / pharmacies /
                 reviews content further down the page. */}
 
-            {/* What people are saying */}
-            {stats && stats.review_count > 0 && (
-              <div
-                className="space-y-3 rounded-2xl p-5"
-                style={{ backgroundColor: C.bgCard, border: `1px solid ${C.textMuted}15` }}
-              >
-                <p className="text-sm" style={{ color: C.textMuted }}>
-                  What people are saying...
-                </p>
-                <StatRow label="Helps With" color={C.success} entries={stats.top_conditions} />
-                <StatRow label="Effects" color={C.secondary} entries={stats.top_effects} />
-                <StatRow label="Flavours" color={C.tertiary} entries={stats.top_flavours} />
-              </div>
-            )}
+            {/* What people are saying + Terpene profile — side-by-side on
+                desktop so the reader gets a lightweight "vibe" (effects /
+                conditions / flavours) alongside the objective chemistry
+                (terpene bar chart, same visual language as the card back). */}
+            {((stats && stats.review_count > 0) || (card && card.top_terpenes.length > 0)) && (
+              <div className="grid gap-4 md:grid-cols-2">
+                {stats && stats.review_count > 0 && (
+                  <div
+                    className="space-y-3 rounded-2xl p-5"
+                    style={{ backgroundColor: C.bgCard, border: `1px solid ${C.textMuted}15` }}
+                  >
+                    <p className="text-sm" style={{ color: C.textMuted }}>
+                      What people are saying...
+                    </p>
+                    <StatRow label="Helps With" color={C.success} entries={stats.top_conditions} />
+                    <StatRow label="Effects" color={C.secondary} entries={stats.top_effects} />
+                    <StatRow label="Flavours" color={C.tertiary} entries={stats.top_flavours} />
+                  </div>
+                )}
 
-            {/* Terpenes — hover a name to see what it does / how it smells */}
-            {stats && stats.top_terpenes.length > 0 && (
-              <div
-                className="flex flex-wrap items-center gap-3 rounded-xl p-4"
-                style={{ backgroundColor: C.bgCard, border: `1px solid ${C.textMuted}15` }}
-              >
-                <span className="shrink-0 rounded-md px-3 py-1 text-xs font-semibold text-white" style={{ backgroundColor: "#3b82f6" }}>
-                  Terpenes
-                </span>
-                <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                  {stats.top_terpenes.map((name) => (
-                    <span
-                      key={name}
-                      title={terpeneSummary(name)}
-                      className="cursor-help text-sm text-white underline decoration-dotted decoration-1 underline-offset-2"
-                    >
-                      {name}
-                    </span>
-                  ))}
-                </div>
+                {card && card.top_terpenes.length > 0 && (
+                  <div
+                    className="rounded-2xl p-5"
+                    style={{ backgroundColor: C.bgCard, border: `1px solid ${C.textMuted}15` }}
+                  >
+                    <p className="mb-3 text-xs font-bold uppercase tracking-widest" style={{ color: C.textMuted }}>
+                      Terpene Profile
+                    </p>
+                    {card.top_terpenes.map((t) => (
+                      <div key={t.terpene_name} className="mb-1.5 flex items-center gap-2">
+                        <span
+                          className="w-20 shrink-0 cursor-help text-xs text-white underline decoration-dotted decoration-1 underline-offset-2"
+                          title={terpeneSummary(t.terpene_name)}
+                        >
+                          {t.terpene_name}
+                        </span>
+                        <div
+                          className="h-1.5 flex-1 rounded-full"
+                          style={{ backgroundColor: `${C.textMuted}22` }}
+                        >
+                          <div
+                            className="h-1.5 rounded-full"
+                            style={{
+                              width: `${Math.min(t.percentage * 50, 100)}%`,
+                              background: `linear-gradient(90deg, ${C.secondary}, ${C.primary})`,
+                            }}
+                          />
+                        </div>
+                        <span className="w-10 shrink-0 text-right text-xs text-white">
+                          {t.percentage}%
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 
