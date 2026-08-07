@@ -64,8 +64,6 @@ const filterPills: { label: string; color: string; href: string; type?: string; 
   { label: "Sativa", color: "#f59e0b", href: "/strains?type=sativa", type: "sativa" },
   { label: "Indica", color: brand.tertiary, href: "/strains?type=indica", type: "indica" },
   { label: "Hybrid", color: "#ec4899", href: "/strains?type=hybrid", type: "hybrid" },
-  { label: "Irradiated", color: "#f59e0b", href: "/strains?irradiated=true", emoji: "☢" },
-  { label: "Non-irradiated", color: brand.primary, href: "/strains?irradiated=false", emoji: "\u{1F33F}" },
 ];
 
 const browseTypes = [
@@ -186,10 +184,7 @@ export default function Home() {
             <SearchBar size="lg" />
           </div>
 
-          <div className="mx-auto mt-8">
-            <p className="mb-3 text-center text-xs font-semibold uppercase tracking-widest" style={{ color: brand.textMuted }}>
-              Quick Browse
-            </p>
+          <div className="mx-auto mt-6">
             <div className="mx-auto flex max-w-2xl flex-wrap items-center justify-center gap-4 md:max-w-none md:flex-nowrap md:gap-3">
             {filterPills.map((pill) => (
               <Link
