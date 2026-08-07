@@ -44,6 +44,10 @@ interface ReviewCardProps {
   conditions: string[];
   helpfulVotes: number;
   createdAt: string;
+  /** True when an admin has verified the review. Unverified reviews still
+   *  render but pick up a badge and are excluded from aggregate stats
+   *  server-side. */
+  verified?: boolean;
 }
 
 /** Reviewer avatar — small circular image (36px) next to the username in the
@@ -219,6 +223,7 @@ export default function ReviewCard({
   conditions,
   helpfulVotes,
   createdAt,
+  verified = true,
 }: ReviewCardProps) {
   const { user: authUser } = useAuth();
   const [moreInfoOpen, setMoreInfoOpen] = useState(false);
@@ -324,8 +329,28 @@ export default function ReviewCard({
     <>
       <div
         className="flex flex-col rounded-2xl p-5"
-        style={{ backgroundColor: brand.bgCard }}
+        style={{
+          backgroundColor: brand.bgCard,
+          border: verified ? "none" : `1px solid ${brand.secondary}44`,
+        }}
       >
+        {/* Unverified banner — post-moderation model: reviews go live
+            immediately but wear this badge until an admin approves them.
+            Aggregate stats server-side already exclude unverified reviews,
+            so the batch's rating can't be skewed. */}
+        {!verified && (
+          <div
+            className="mb-3 flex items-center gap-2 rounded-lg px-3 py-1.5 text-[11px] font-semibold"
+            style={{
+              backgroundColor: `${brand.secondary}18`,
+              color: brand.secondary,
+              border: `1px solid ${brand.secondary}44`,
+            }}
+          >
+            <span aria-hidden>{"\u{23F3}"}</span>
+            Unverified — awaiting admin review. Won&apos;t count toward this batch&apos;s rating until approved.
+          </div>
+        )}
         {/* ── Overall rating box + username/date ───────────────────────── */}
         <div className="mb-4 flex items-start justify-between">
           {/* Prominent rating — hexagon coloured by score (red→yellow→green) */}

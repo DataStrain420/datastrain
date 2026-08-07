@@ -96,6 +96,7 @@ def _review_to_response(review: Review) -> ReviewResponse:
         effect_duration_hours=review.effect_duration_hours,
         effect_duration_mins=review.effect_duration_mins,
         status=review.status,
+        is_verified=review.status == ReviewStatus.APPROVED.value,
         rejection_reason=review.rejection_reason,
         helpful_votes=review.helpful_votes,
         condition_ratings=[
@@ -154,18 +155,14 @@ async def submit_review(
     )
     prior = existing.scalar_one_or_none()
     if prior:
-        if prior.status == ReviewStatus.PENDING.value:
-            raise HTTPException(
-                status_code=409,
-                detail="Your review of this batch is still awaiting moderation — check your dashboard.",
-            )
         if prior.status == ReviewStatus.REJECTED.value:
             raise HTTPException(
                 status_code=409,
-                detail="Your previous review of this batch was rejected. Delete it from your dashboard before submitting a new one.",
+                detail="Your previous review of this batch was removed. Delete it from your dashboard before submitting a new one.",
             )
         raise HTTPException(
-            status_code=409, detail="You have already reviewed this batch."
+            status_code=409,
+            detail="You have already reviewed this batch — visit your dashboard to edit it.",
         )
 
     # Save photos
@@ -353,8 +350,10 @@ async def list_reviews(
     if status:
         query = query.where(Review.status == status)
     else:
-        # By default only show approved reviews publicly
-        query = query.where(Review.status == ReviewStatus.APPROVED.value)
+        # Post-moderation model: reviews are live the moment they're
+        # submitted. Show everything except rejected — pending items get an
+        # "Unverified" badge on the frontend but are otherwise visible.
+        query = query.where(Review.status != ReviewStatus.REJECTED.value)
     query = query.offset(skip).limit(limit).order_by(Review.created_at.desc())
     result = await db.execute(query)
     return [_review_to_response(r) for r in result.scalars().unique().all()]

@@ -53,6 +53,7 @@ interface ReviewData {
   flavours: string[] | null;
   condition_ratings: { condition_name: string; efficacy_rating: number }[];
   helpful_votes: number;
+  is_verified?: boolean;
   created_at: string;
 }
 
@@ -398,6 +399,7 @@ export default function Home() {
               conditions={(r.condition_ratings || []).map((c) => c.condition_name)}
               helpfulVotes={r.helpful_votes}
               createdAt={r.created_at}
+              verified={r.is_verified ?? true}
             />
           ))}
         </div>
@@ -517,6 +519,7 @@ export default function Home() {
               conditions={(r.condition_ratings || []).map((c) => c.condition_name)}
               helpfulVotes={r.helpful_votes}
               createdAt={r.created_at}
+              verified={r.is_verified ?? true}
             />
           ))}
         </div>

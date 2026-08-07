@@ -71,6 +71,7 @@ interface ReviewData {
   condition_ratings: { condition_name: string; efficacy_rating: number }[];
   helpful_votes: number;
   status: string;
+  is_verified?: boolean;
   created_at: string;
 }
 
@@ -258,8 +259,11 @@ export default function PortalDashboard() {
   const fireList = library.filter((e) => e.list_type === "favourite");
   const wishlist = library.filter((e) => e.list_type === "wishlist");
   const triedList = library.filter((e) => e.list_type === "tried");
-  const approvedReviews = reviews.filter((r) => r.status === "approved");
-  const pendingReviews = reviews.filter((r) => r.status === "pending");
+  // Post-moderation: pending reviews are already live on the site, so they
+  // belong in the main My Reviews grid alongside approved ones (each carries
+  // its own "Unverified" badge). Only rejected reviews get pulled out into a
+  // separate strip so the author can delete and retry.
+  const liveReviews = reviews.filter((r) => r.status !== "rejected");
   const rejectedReviews = reviews.filter((r) => r.status === "rejected");
 
   async function deleteReview(id: number) {
@@ -603,46 +607,14 @@ export default function PortalDashboard() {
 
       {/* ── My Reviews ──────────────────────────────────────────────── */}
       <SectionBox
-        title={`My Reviews (${approvedReviews.length})`}
+        title={`My Reviews (${liveReviews.length})`}
         icon={"\u{1F4DD}"}
         privacyKey="show_reviews"
         isPublic={profile.show_reviews}
         onToggle={() => togglePrivacy("show_reviews")}
       >
-        {(pendingReviews.length > 0 || rejectedReviews.length > 0) && (
+        {rejectedReviews.length > 0 && (
           <div className="mb-4 space-y-2">
-            {pendingReviews.map((r) => (
-              <div
-                key={r.id}
-                className="flex flex-wrap items-center justify-between gap-3 rounded-xl p-3"
-                style={{
-                  backgroundColor: `${C.secondary}12`,
-                  border: `1px solid ${C.secondary}44`,
-                }}
-              >
-                <div className="min-w-0 flex-1 text-sm">
-                  <span
-                    className="mr-2 inline-block rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider"
-                    style={{ backgroundColor: C.secondary, color: C.bgDeep }}
-                  >
-                    Awaiting moderation
-                  </span>
-                  <span className="text-white">{r.strain_name || "Unknown strain"}</span>
-                  {r.batch_number && (
-                    <span className="ml-1" style={{ color: C.textMuted }}>
-                      · {r.batch_number}
-                    </span>
-                  )}
-                </div>
-                <button
-                  onClick={() => deleteReview(r.id)}
-                  className="shrink-0 text-xs underline"
-                  style={{ color: C.textMuted }}
-                >
-                  Delete
-                </button>
-              </div>
-            ))}
             {rejectedReviews.map((r) => (
               <div
                 key={r.id}
@@ -657,7 +629,7 @@ export default function PortalDashboard() {
                     className="mr-2 inline-block rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider"
                     style={{ backgroundColor: "#f87171", color: C.bgDeep }}
                   >
-                    Rejected
+                    Removed
                   </span>
                   <span className="text-white">{r.strain_name || "Unknown strain"}</span>
                   {r.batch_number && (
@@ -677,7 +649,7 @@ export default function PortalDashboard() {
             ))}
           </div>
         )}
-        {approvedReviews.length === 0 ? (
+        {liveReviews.length === 0 ? (
           <div className="rounded-xl p-6 text-center" style={{ backgroundColor: C.bgCard }}>
             <p className="text-sm" style={{ color: C.textMuted }}>No reviews yet.</p>
             <Link
@@ -690,7 +662,7 @@ export default function PortalDashboard() {
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {approvedReviews.map((r) => (
+            {liveReviews.map((r) => (
               <ReviewCard
                 key={r.id}
                 id={r.id}
@@ -717,6 +689,7 @@ export default function PortalDashboard() {
                 conditions={r.condition_ratings.map((c) => c.condition_name)}
                 helpfulVotes={r.helpful_votes}
                 createdAt={r.created_at}
+                verified={r.is_verified ?? r.status === "approved"}
               />
             ))}
           </div>

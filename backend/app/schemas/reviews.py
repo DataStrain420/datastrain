@@ -54,6 +54,9 @@ class ReviewResponse(BaseModel):
     effect_duration_mins: int | None = None
 
     status: str
+    # True when the review has been admin-verified. Unverified reviews are
+    # still visible but wear a badge and don't contribute to aggregate stats.
+    is_verified: bool = False
     rejection_reason: str | None
     helpful_votes: int
     condition_ratings: list[ConditionRatingResponse] = []

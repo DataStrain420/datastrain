@@ -109,10 +109,10 @@ export default function ReviewStepTwo({ reviewId, strainName, onDone }: ReviewSt
 
       <div>
         <h1 className="text-3xl font-extrabold text-white">
-          Thanks for your<br />review!
+          Your review is<br />live!
         </h1>
         <p className="mt-2 text-sm" style={{ color: C.textMuted }}>
-          Please let us know some extra info if you can...
+          It&apos;s already visible on {strainName}&apos;s page with an &ldquo;Unverified&rdquo; badge — the moment an admin approves it, the badge disappears and it starts contributing to the batch&apos;s rating. Anything else you can add?
         </p>
       </div>
 
