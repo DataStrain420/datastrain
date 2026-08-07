@@ -336,6 +336,7 @@ async def list_my_reviews(
 @router.get("/", response_model=list[ReviewResponse])
 async def list_reviews(
     batch_id: int | None = None,
+    strain_id: int | None = None,
     user_id: int | None = None,
     status: str | None = None,
     skip: int = Query(0, ge=0),
@@ -345,6 +346,13 @@ async def list_reviews(
     query = _load_review_query()
     if batch_id:
         query = query.where(Review.batch_id == batch_id)
+    if strain_id:
+        # Cover every batch of this strain in one call — the per-batch
+        # fetch pattern would miss reviews on unapproved (patient-
+        # submitted) batches, or on any batch outside a hard-coded slice.
+        query = query.where(
+            Review.batch_id.in_(select(Batch.id).where(Batch.strain_id == strain_id))
+        )
     if user_id:
         query = query.where(Review.user_id == user_id)
     if status:

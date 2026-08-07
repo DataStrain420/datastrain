@@ -372,19 +372,13 @@ export default function StrainDetailPage() {
         setLoading(false);
 
         // Phase 2 — similar strains + reviews load in the background.
-        const [similar, batchReviews, strainPharmacies] = await Promise.all([
+        const [similar, strainReviews, strainPharmacies] = await Promise.all([
           apiFetch<SimilarStrain[]>(`/strains/${id}/similar?limit=12`).catch(() => []),
-          batches.length > 0
-            ? Promise.all(
-                batches.slice(0, 5).map((b) =>
-                  apiFetch<ReviewData[]>(`/reviews/?batch_id=${b.id}&limit=10`).catch(() => []),
-                ),
-              )
-            : Promise.resolve([] as ReviewData[][]),
+          apiFetch<ReviewData[]>(`/reviews/?strain_id=${id}&limit=100`).catch(() => []),
           apiFetch<StrainPharmacy[]>(`/strains/${id}/pharmacies`).catch(() => []),
         ]);
         setSimilarStrains(similar);
-        setReviews(batchReviews.flat());
+        setReviews(strainReviews);
         setPharmacies(strainPharmacies);
 
         const simCardResults = await Promise.all(
