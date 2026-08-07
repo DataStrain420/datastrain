@@ -328,7 +328,11 @@ export default function ReviewCard({
   return (
     <>
       <div
-        className="flex flex-col rounded-2xl p-5"
+        // mb-4 + break-inside-avoid so review cards can flow through a CSS
+        // masonry column layout (used on the strain / dashboard / home /
+        // user grids) without cards being sliced across columns or stretched
+        // to a shared row height.
+        className="mb-4 flex flex-col break-inside-avoid rounded-2xl p-5"
         style={{
           backgroundColor: brand.bgCard,
           border: verified ? "none" : `1px solid ${brand.secondary}44`,

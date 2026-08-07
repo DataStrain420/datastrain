@@ -371,7 +371,7 @@ export default function Home() {
       {/* ── 3. Most Recent Reviews ──────────────────────────────────────── */}
       <section className="mx-auto max-w-7xl px-4 pb-16">
         <SectionHeading>Most Recent Reviews</SectionHeading>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="columns-1 gap-4 sm:columns-2 lg:columns-3">
           {recentReviews.map((r) => (
             <ReviewCard
               key={r.id}
@@ -491,7 +491,7 @@ export default function Home() {
       {/* ── 6. Latest Reviews ───────────────────────────────────────────── */}
       <section className="mx-auto max-w-7xl px-4 pb-16">
         <SectionHeading>Latest Reviews</SectionHeading>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="columns-1 gap-4 sm:columns-2 lg:columns-3">
           {latestReviews.map((r) => (
             <ReviewCard
               key={r.id}
