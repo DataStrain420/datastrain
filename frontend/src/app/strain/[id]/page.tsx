@@ -364,13 +364,29 @@ export default function StrainDetailPage() {
       <Navbar rightSlot={<PublicNavActions />} showSearch />
 
       <main className="mx-auto max-w-7xl px-4 py-8">
-        {/* ── Strain header — wrapped in a card, name + grower + rank hex */}
-        <header
-          className="mb-6 flex flex-wrap items-start justify-between gap-4 rounded-2xl px-6 py-5"
-          style={{ backgroundColor: C.bgCard, border: `1px solid ${C.textMuted}15` }}
-        >
-          <div className="min-w-0 flex-1">
-            <h1 className="text-3xl font-extrabold text-white">{strain.name}</h1>
+        {/* ── Hero: strain card (left) + name/grower/chips/share (right) on
+              desktop. Mobile stacks with the card on top so the visual
+              anchor still leads. */}
+        <div className="mb-8 flex flex-col gap-6 lg:flex-row lg:items-start">
+          <div className="mx-auto w-full shrink-0 lg:mx-0" style={{ maxWidth: LEFT_COLUMN_MAX }}>
+            {card ? (
+              <StrainCard card={stats ? { ...card, rank: stats.overall_rank } : card} />
+            ) : (
+              <div
+                className="flex h-[468px] w-full items-center justify-center rounded-2xl"
+                style={{ backgroundColor: C.bgCard }}
+              >
+                <p style={{ color: C.textMuted }}>No batch data yet</p>
+              </div>
+            )}
+          </div>
+
+          <header
+            className="flex flex-1 flex-wrap items-start justify-between gap-4 rounded-2xl px-6 py-5"
+            style={{ backgroundColor: C.bgCard, border: `1px solid ${C.textMuted}15` }}
+          >
+            <div className="min-w-0 flex-1">
+              <h1 className="text-3xl font-extrabold text-white">{strain.name}</h1>
             {strain.aliases && (
               <p className="mt-1 text-sm" style={{ color: C.textMuted }}>
                 Also known as: {strain.aliases}
@@ -438,32 +454,17 @@ export default function StrainDetailPage() {
                 Kept as icon-only pill row so it doesn't dominate the header. */}
             <StrainShareRow name={strain.name} />
           </div>
-          {stats && (
-            <PageRankHex rank={stats.overall_rank} totalStrains={stats.total_strains} />
-          )}
-        </header>
+            {stats && (
+              <PageRankHex rank={stats.overall_rank} totalStrains={stats.total_strains} />
+            )}
+          </header>
+        </div>
 
-        {/* ── Hero: narrower LEFT column with stacked supporting blocks;
-              RIGHT column is a tall reviews list that paginates after 10. */}
+        {/* ── Supporting content grid: left column stacks the aggregate stats,
+              terpenes, genetics, description, batches, pharmacies. Right
+              column is the paginated reviews list. */}
         <div className="mb-8 grid items-start gap-8 lg:grid-cols-2">
-          {/* LEFT — card + stats + terpenes/genetics + bio + batches, all
-              capped at the card's own width so the column reads as a tidy
-              vertical "card sheet" rather than spreading across the page. */}
           <div className="space-y-6">
-            {/* Strain card — stays at its natural width, centred horizontally
-                so it doesn't stretch when the column is wider than the card. */}
-            <div className="mx-auto w-full" style={{ maxWidth: LEFT_COLUMN_MAX }}>
-              {card ? (
-                <StrainCard card={stats ? { ...card, rank: stats.overall_rank } : card} />
-              ) : (
-                <div
-                  className="flex h-[540px] items-center justify-center rounded-2xl"
-                  style={{ backgroundColor: C.bgCard }}
-                >
-                  <p style={{ color: C.textMuted }}>No batch data yet</p>
-                </div>
-              )}
-            </div>
 
               {/* What people are saying */}
               {stats && stats.review_count > 0 && (
