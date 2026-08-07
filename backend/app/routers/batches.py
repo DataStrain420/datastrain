@@ -1,7 +1,7 @@
 from datetime import date, datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import func, select
+from sqlalchemy import case, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -612,20 +612,33 @@ async def _build_cards(batch_ids: list[int], db: AsyncSession) -> list[BatchCard
     )
     batches = {b.id: b for b in batch_result.scalars().unique().all()}
 
-    # Review stats per batch (one grouped query)
+    # Review stats per batch (one grouped query). Averages stay
+    # approved-only so unverified reviews can't skew scores, but the
+    # count includes every live (non-rejected) review so it matches what
+    # visitors actually see listed on the strain page.
     stats_result = await db.execute(
         select(
             Review.batch_id,
-            func.avg(Review.appearance_rating),
-            func.avg(Review.aroma_rating),
-            func.avg(Review.moisture_rating),
-            func.avg(Review.flavour_rating),
-            func.avg(Review.effect_rating),
+            func.avg(
+                case((Review.status == ReviewStatus.APPROVED.value, Review.appearance_rating), else_=None)
+            ),
+            func.avg(
+                case((Review.status == ReviewStatus.APPROVED.value, Review.aroma_rating), else_=None)
+            ),
+            func.avg(
+                case((Review.status == ReviewStatus.APPROVED.value, Review.moisture_rating), else_=None)
+            ),
+            func.avg(
+                case((Review.status == ReviewStatus.APPROVED.value, Review.flavour_rating), else_=None)
+            ),
+            func.avg(
+                case((Review.status == ReviewStatus.APPROVED.value, Review.effect_rating), else_=None)
+            ),
             func.count(Review.id),
         )
         .where(
             Review.batch_id.in_(batch_ids),
-            Review.status == ReviewStatus.APPROVED.value,
+            Review.status != ReviewStatus.REJECTED.value,
         )
         .group_by(Review.batch_id)
     )
@@ -679,7 +692,7 @@ async def _build_cards(batch_ids: list[int], db: AsyncSession) -> list[BatchCard
             .join(Review, Review.batch_id == Batch.id)
             .where(
                 Batch.strain_id.in_(strain_ids),
-                Review.status == ReviewStatus.APPROVED.value,
+                Review.status != ReviewStatus.REJECTED.value,
             )
             .group_by(Batch.strain_id)
         )
