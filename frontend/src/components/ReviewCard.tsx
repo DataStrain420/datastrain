@@ -515,7 +515,11 @@ export default function ReviewCard({
           </div>
         )}
 
-        {/* ── More Info toggle ─────────────────────────────────────────── */}
+        {/* ── More Info toggle — only render when there's actually more
+              info to disclose (effects / conditions / flavours). An empty
+              accordion is worse than no accordion. */}
+        {(effects.length > 0 || conditions.length > 0 || flavours.length > 0) && (
+          <>
         <button
           onClick={() => setMoreInfoOpen(!moreInfoOpen)}
           className="mb-4 flex w-full items-center justify-between border-t border-b py-2.5 text-sm font-medium text-white"
@@ -594,6 +598,8 @@ export default function ReviewCard({
               </div>
             )}
           </div>
+        )}
+          </>
         )}
 
         {/* ── Bottom bar: date + report + comments + like ─────────────── */}
