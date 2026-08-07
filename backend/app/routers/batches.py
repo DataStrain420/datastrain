@@ -473,8 +473,23 @@ async def top_rated_batches(
     if days is not None:
         review_filter.append(Review.created_at >= datetime.utcnow() - timedelta(days=days))
 
+    # Dedupe to the latest approved batch per strain — one card per grower's
+    # take on a strain, ranked by the current batch's rating. Without this,
+    # a strain with two batches showed up twice in the feed and the older
+    # batch confusingly displayed without a rank.
+    latest_batch = (
+        select(
+            Batch.strain_id,
+            func.max(Batch.id).label("batch_id"),
+        )
+        .where(Batch.approved.is_(True))
+        .group_by(Batch.strain_id)
+        .subquery()
+    )
+
     stmt = (
         select(Batch.id)
+        .join(latest_batch, Batch.id == latest_batch.c.batch_id)
         .join(Review, Review.batch_id == Batch.id)
         .where(Batch.approved.is_(True), *review_filter)
         .group_by(Batch.id)
