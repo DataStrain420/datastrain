@@ -131,8 +131,9 @@ function SectionHeading({ children }: { children: React.ReactNode }) {
 
 export default function Home() {
   const [growers, setGrowers] = useState<RankedGrower[]>([]);
-  const [topStrains, setTopStrains] = useState<CardData[]>([]);
+  const [topBatches, setTopBatches] = useState<CardData[]>([]);
   const [topLoading, setTopLoading] = useState(true);
+  const [monthBatches, setMonthBatches] = useState<CardData[]>([]);
   const [recentReviews, setRecentReviews] = useState<ReviewData[]>([]);
   const [latestReviews, setLatestReviews] = useState<ReviewData[]>([]);
   const [publicStats, setPublicStats] = useState<{ total_strains: number; total_reviews: number } | null>(null);
@@ -146,11 +147,17 @@ export default function Home() {
       .then(setGrowers)
       .catch((err) => console.error("Growers:", err));
 
-    // Top rated strains (card data)
+    // Top rated batches (all-time)
     apiFetch<CardData[]>("/batches/top-rated?limit=8")
-      .then(setTopStrains)
-      .catch((err) => console.error("Top strains:", err))
+      .then(setTopBatches)
+      .catch((err) => console.error("Top batches:", err))
       .finally(() => setTopLoading(false));
+
+    // Top rated batches (last 30 days) — surfaces batches with fresh
+    // momentum instead of long-standing favourites.
+    apiFetch<CardData[]>("/batches/top-rated?limit=8&days=30")
+      .then(setMonthBatches)
+      .catch((err) => console.error("Monthly batches:", err));
 
     // Recent reviews (first 3)
     apiFetch<ReviewData[]>("/reviews/?limit=3")
@@ -255,18 +262,18 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── 2. Top Rated Strains ────────────────────────────────────────── */}
+      {/* ── 2. Top Rated Batches ────────────────────────────────────────── */}
       <section className="mx-auto max-w-7xl px-4 pb-16">
-        <SectionHeading>Top Rated Strains</SectionHeading>
-        {/* 3D coverflow — same component the user dashboard uses for their
-            Fire/Wishlist/Tried carousels, so the click-through feels the
-            same everywhere. */}
+        <SectionHeading>Top Rated Batches</SectionHeading>
+        {/* Batch-first — the section was previously mislabelled as "Top
+            Rated Strains" but its data source (/batches/top-rated) has
+            always been batch-ranked. Truth-in-labelling. */}
         <CoverFlowCarousel>
           {topLoading
             ? Array.from({ length: 8 }).map((_, i) => <StrainCardSkeleton key={i} />)
-            : topStrains.map((card) => <StrainCard key={card.id} card={card} />)}
+            : topBatches.map((card) => <StrainCard key={card.id} card={card} />)}
         </CoverFlowCarousel>
-        {topStrains.length > 0 && (
+        {topBatches.length > 0 && (
           <div className="mt-8 text-center">
             <Link
               href="/strains"
@@ -278,6 +285,19 @@ export default function Home() {
           </div>
         )}
       </section>
+
+      {/* ── 2a. Top Batches This Month ─────────────────────────────────── */}
+      {/* Ranks by average rating restricted to reviews from the last 30
+          days. Surfaces batches with current momentum instead of long-
+          standing favourites that no longer benefit from fresh evidence. */}
+      {monthBatches.length > 0 && (
+        <section className="mx-auto max-w-7xl px-4 pb-16">
+          <SectionHeading>Top Batches This Month</SectionHeading>
+          <CoverFlowCarousel>
+            {monthBatches.map((card) => <StrainCard key={card.id} card={card} />)}
+          </CoverFlowCarousel>
+        </section>
+      )}
 
       {/* ── 2b. Browse By (Conditions / Effects / Flavours / Terpenes) ── */}
       {/* Surface the four discovery taxonomies directly on the home so

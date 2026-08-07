@@ -460,15 +460,25 @@ class _RankContext:
 @router.get("/top-rated", response_model=list[BatchCardResponse])
 async def top_rated_batches(
     limit: int = Query(6, ge=1, le=20),
+    days: int | None = Query(None, ge=1, le=365),
     db: AsyncSession = Depends(get_db),
 ):
-    """Return batches ranked by average review rating, with full card data."""
+    """Return batches ranked by average review rating.
+
+    Pass `days=30` to restrict the ranking to reviews from the last 30
+    days — powers the "top batches this month" home-page section without
+    letting old, stale reviews dominate the list.
+    """
+    review_filter = [Review.status == ReviewStatus.APPROVED.value]
+    if days is not None:
+        review_filter.append(Review.created_at >= datetime.utcnow() - timedelta(days=days))
+
     stmt = (
         select(Batch.id)
         .join(Review, Review.batch_id == Batch.id)
-        .where(Batch.approved.is_(True), Review.status == ReviewStatus.APPROVED.value)
+        .where(Batch.approved.is_(True), *review_filter)
         .group_by(Batch.id)
-        .order_by(_avg_rating_expr().desc())
+        .order_by(_avg_rating_expr().desc(), Batch.id.desc())
         .limit(limit)
     )
     result = await db.execute(stmt)
