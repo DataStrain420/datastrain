@@ -2,6 +2,9 @@
 
 import { adminFetch } from "@/lib/admin-api";
 import { useEffect, useState } from "react";
+import { brand } from "@/lib/brand";
+
+const C = brand;
 
 interface Pharmacy {
   id: number;
@@ -9,6 +12,11 @@ interface Pharmacy {
   location: string;
   is_active: boolean;
 }
+
+const inputStyle = {
+  backgroundColor: C.bgDeep,
+  border: `1px solid ${C.textMuted}33`,
+} as const;
 
 export default function AdminPharmaciesPage() {
   const [pharmacies, setPharmacies] = useState<Pharmacy[]>([]);
@@ -36,40 +44,53 @@ export default function AdminPharmaciesPage() {
   }
 
   return (
-    <div>
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Pharmacies</h1>
+    <div className="space-y-6">
+      <header className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 className="text-xl font-bold text-white">Pharmacies</h2>
+          <p className="mt-1 text-sm" style={{ color: C.textMuted }}>
+            UK pharmacies that dispense medical cannabis under private prescription.
+          </p>
+        </div>
         <button
           onClick={() => setShowForm(!showForm)}
-          className="rounded-lg bg-green-600 px-4 py-2 text-sm hover:bg-green-700"
+          className="rounded-lg px-4 py-2 text-sm font-bold transition hover:opacity-90"
+          style={{ backgroundColor: C.primary, color: C.bgDeep }}
         >
           + Pharmacy
         </button>
-      </div>
+      </header>
 
       {showForm && (
         <form
           onSubmit={handleCreate}
-          className="mb-4 rounded-lg border border-gray-800 bg-gray-900 p-4"
+          className="rounded-2xl p-5"
+          style={{ backgroundColor: C.bgCard, border: `1px solid ${C.textMuted}22` }}
         >
-          <div className="flex gap-3">
+          <h3 className="mb-3 text-sm font-bold uppercase tracking-wider" style={{ color: C.textMuted }}>
+            New pharmacy
+          </h3>
+          <div className="flex flex-wrap gap-3">
             <input
               placeholder="Pharmacy name"
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
               required
-              className="flex-1 rounded border border-gray-700 bg-gray-800 px-3 py-2 text-sm"
+              className="min-w-0 flex-1 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-2"
+              style={{ ...inputStyle, outlineColor: C.primary }}
             />
             <input
               placeholder="Location"
               value={form.location}
               onChange={(e) => setForm({ ...form, location: e.target.value })}
               required
-              className="flex-1 rounded border border-gray-700 bg-gray-800 px-3 py-2 text-sm"
+              className="min-w-0 flex-1 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-2"
+              style={{ ...inputStyle, outlineColor: C.primary }}
             />
             <button
               type="submit"
-              className="rounded bg-green-600 px-4 py-2 text-sm hover:bg-green-700"
+              className="rounded-lg px-4 py-2 text-sm font-bold transition hover:opacity-90"
+              style={{ backgroundColor: C.primary, color: C.bgDeep }}
             >
               Create
             </button>
@@ -77,30 +98,44 @@ export default function AdminPharmaciesPage() {
         </form>
       )}
 
-      <table className="w-full text-left text-sm">
-        <thead className="border-b border-gray-800 text-gray-400">
-          <tr>
-            <th className="px-3 py-2">Name</th>
-            <th className="px-3 py-2">Location</th>
-            <th className="px-3 py-2">Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          {pharmacies.map((p) => (
-            <tr key={p.id} className="border-b border-gray-800/50">
-              <td className="px-3 py-2">{p.name}</td>
-              <td className="px-3 py-2">{p.location}</td>
-              <td className="px-3 py-2">
-                {p.is_active ? (
-                  <span className="text-green-400">Active</span>
-                ) : (
-                  <span className="text-gray-500">Inactive</span>
-                )}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <div className="overflow-hidden rounded-2xl" style={{ backgroundColor: C.bgCard, border: `1px solid ${C.textMuted}15` }}>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm">
+            <thead>
+              <tr>
+                {["Name", "Location", "Status"].map((h) => (
+                  <th
+                    key={h}
+                    className="px-4 py-3 text-xs font-bold uppercase tracking-wider"
+                    style={{ color: C.textMuted, backgroundColor: `${C.bgDeep}88` }}
+                  >
+                    {h}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {pharmacies.map((p) => (
+                <tr key={p.id} style={{ borderTop: `1px solid ${C.textMuted}15` }}>
+                  <td className="px-4 py-3 font-semibold text-white">{p.name}</td>
+                  <td className="px-4 py-3" style={{ color: C.textMuted }}>{p.location}</td>
+                  <td className="px-4 py-3">
+                    <span
+                      className="rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider"
+                      style={{
+                        backgroundColor: p.is_active ? `${C.primary}22` : `${C.textMuted}22`,
+                        color: p.is_active ? C.primary : C.textMuted,
+                      }}
+                    >
+                      {p.is_active ? "Active" : "Inactive"}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 }

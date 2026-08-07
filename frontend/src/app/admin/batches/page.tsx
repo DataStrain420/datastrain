@@ -2,6 +2,9 @@
 
 import { adminFetch } from "@/lib/admin-api";
 import { useEffect, useState } from "react";
+import { brand } from "@/lib/brand";
+
+const C = brand;
 
 interface Terpene {
   id: number;
@@ -36,6 +39,11 @@ interface Batch {
   approved: boolean;
   terpene_profiles: BatchTerpene[];
 }
+
+const inputStyle = {
+  backgroundColor: C.bgDeep,
+  border: `1px solid ${C.textMuted}33`,
+} as const;
 
 export default function AdminBatchesPage() {
   const [batches, setBatches] = useState<Batch[]>([]);
@@ -126,52 +134,65 @@ export default function AdminBatchesPage() {
   }
 
   return (
-    <div>
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Batches</h1>
+    <div className="space-y-6">
+      <header className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 className="text-xl font-bold text-white">Batches</h2>
+          <p className="mt-1 text-sm" style={{ color: C.textMuted }}>
+            Every tested batch on file, with grower, cannabinoid split and terpene profile.
+          </p>
+        </div>
         <div className="flex gap-2">
           <button
             onClick={() => setShowTerpeneForm(!showTerpeneForm)}
-            className="rounded-lg bg-gray-700 px-4 py-2 text-sm hover:bg-gray-600"
+            className="rounded-lg border px-4 py-2 text-sm font-semibold transition hover:brightness-110"
+            style={{
+              borderColor: `${C.textMuted}33`,
+              color: C.textMuted,
+              backgroundColor: C.bgCard,
+            }}
           >
             + Terpene
           </button>
           <button
             onClick={() => setShowForm(!showForm)}
-            className="rounded-lg bg-green-600 px-4 py-2 text-sm hover:bg-green-700"
+            className="rounded-lg px-4 py-2 text-sm font-bold transition hover:opacity-90"
+            style={{ backgroundColor: C.primary, color: C.bgDeep }}
           >
             + Batch
           </button>
         </div>
-      </div>
+      </header>
 
       {showTerpeneForm && (
         <form
           onSubmit={handleCreateTerpene}
-          className="mb-4 rounded-lg border border-gray-800 bg-gray-900 p-4"
+          className="rounded-2xl p-5"
+          style={{ backgroundColor: C.bgCard, border: `1px solid ${C.textMuted}22` }}
         >
-          <h3 className="mb-3 font-semibold">New Terpene</h3>
-          <div className="flex gap-3">
+          <h3 className="mb-3 text-sm font-bold uppercase tracking-wider" style={{ color: C.textMuted }}>
+            New terpene
+          </h3>
+          <div className="flex flex-wrap gap-3">
             <input
               placeholder="Name (e.g. Myrcene)"
               value={newTerpene.name}
-              onChange={(e) =>
-                setNewTerpene({ ...newTerpene, name: e.target.value })
-              }
+              onChange={(e) => setNewTerpene({ ...newTerpene, name: e.target.value })}
               required
-              className="flex-1 rounded border border-gray-700 bg-gray-800 px-3 py-2 text-sm"
+              className="min-w-0 flex-1 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-2"
+              style={{ ...inputStyle, outlineColor: C.primary }}
             />
             <input
               placeholder="Aroma notes"
               value={newTerpene.aroma_notes}
-              onChange={(e) =>
-                setNewTerpene({ ...newTerpene, aroma_notes: e.target.value })
-              }
-              className="flex-1 rounded border border-gray-700 bg-gray-800 px-3 py-2 text-sm"
+              onChange={(e) => setNewTerpene({ ...newTerpene, aroma_notes: e.target.value })}
+              className="min-w-0 flex-1 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-2"
+              style={{ ...inputStyle, outlineColor: C.primary }}
             />
             <button
               type="submit"
-              className="rounded bg-green-600 px-4 py-2 text-sm hover:bg-green-700"
+              className="rounded-lg px-4 py-2 text-sm font-bold transition hover:opacity-90"
+              style={{ backgroundColor: C.primary, color: C.bgDeep }}
             >
               Create
             </button>
@@ -182,17 +203,19 @@ export default function AdminBatchesPage() {
       {showForm && (
         <form
           onSubmit={handleCreate}
-          className="mb-4 rounded-lg border border-gray-800 bg-gray-900 p-4"
+          className="space-y-4 rounded-2xl p-5"
+          style={{ backgroundColor: C.bgCard, border: `1px solid ${C.textMuted}22` }}
         >
-          <h3 className="mb-3 font-semibold">New Batch</h3>
-          <div className="grid grid-cols-2 gap-3">
+          <h3 className="text-sm font-bold uppercase tracking-wider" style={{ color: C.textMuted }}>
+            New batch
+          </h3>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <select
               value={form.strain_id}
-              onChange={(e) =>
-                setForm({ ...form, strain_id: e.target.value })
-              }
+              onChange={(e) => setForm({ ...form, strain_id: e.target.value })}
               required
-              className="rounded border border-gray-700 bg-gray-800 px-3 py-2 text-sm"
+              className="rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-2"
+              style={{ ...inputStyle, outlineColor: C.primary }}
             >
               <option value="">Select strain</option>
               {strains.map((s) => (
@@ -203,11 +226,10 @@ export default function AdminBatchesPage() {
             </select>
             <select
               value={form.grower_id}
-              onChange={(e) =>
-                setForm({ ...form, grower_id: e.target.value })
-              }
+              onChange={(e) => setForm({ ...form, grower_id: e.target.value })}
               required
-              className="rounded border border-gray-700 bg-gray-800 px-3 py-2 text-sm"
+              className="rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-2"
+              style={{ ...inputStyle, outlineColor: C.primary }}
             >
               <option value="">Select grower</option>
               {growers.map((g) => (
@@ -219,97 +241,96 @@ export default function AdminBatchesPage() {
             <input
               placeholder="Batch number (e.g. BLK-2026-003)"
               value={form.batch_number}
-              onChange={(e) =>
-                setForm({ ...form, batch_number: e.target.value })
-              }
+              onChange={(e) => setForm({ ...form, batch_number: e.target.value })}
               required
-              className="rounded border border-gray-700 bg-gray-800 px-3 py-2 text-sm"
+              className="rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-2"
+              style={{ ...inputStyle, outlineColor: C.primary }}
             />
             <input
               type="date"
               value={form.tested_date}
-              onChange={(e) =>
-                setForm({ ...form, tested_date: e.target.value })
-              }
+              onChange={(e) => setForm({ ...form, tested_date: e.target.value })}
               required
-              className="rounded border border-gray-700 bg-gray-800 px-3 py-2 text-sm"
+              className="rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-2"
+              style={{ ...inputStyle, outlineColor: C.primary, colorScheme: "dark" }}
             />
             <input
               type="number"
               placeholder="THC %"
               step="0.1"
               value={form.thc_percentage}
-              onChange={(e) =>
-                setForm({ ...form, thc_percentage: e.target.value })
-              }
+              onChange={(e) => setForm({ ...form, thc_percentage: e.target.value })}
               required
-              className="rounded border border-gray-700 bg-gray-800 px-3 py-2 text-sm"
+              className="rounded-lg px-3 py-2 text-sm text-white placeholder:text-white/30 focus:outline-none focus:ring-2"
+              style={{ ...inputStyle, outlineColor: C.primary }}
             />
             <input
               type="number"
               placeholder="CBD %"
               step="0.1"
               value={form.cbd_percentage}
-              onChange={(e) =>
-                setForm({ ...form, cbd_percentage: e.target.value })
-              }
+              onChange={(e) => setForm({ ...form, cbd_percentage: e.target.value })}
               required
-              className="rounded border border-gray-700 bg-gray-800 px-3 py-2 text-sm"
+              className="rounded-lg px-3 py-2 text-sm text-white placeholder:text-white/30 focus:outline-none focus:ring-2"
+              style={{ ...inputStyle, outlineColor: C.primary }}
             />
           </div>
 
-          <div className="mt-3">
-            <p className="mb-2 text-sm text-gray-400">Terpene Profile</p>
-            {terpeneProfiles.map((tp, i) => (
-              <div key={i} className="mb-2 flex gap-2">
-                <select
-                  value={tp.terpene_id}
-                  onChange={(e) => {
-                    const updated = [...terpeneProfiles];
-                    updated[i].terpene_id = e.target.value;
-                    setTerpeneProfiles(updated);
-                  }}
-                  className="flex-1 rounded border border-gray-700 bg-gray-800 px-3 py-1 text-sm"
-                >
-                  <option value="">Select terpene</option>
-                  {terpenes.map((t) => (
-                    <option key={t.id} value={t.id}>
-                      {t.name}
-                    </option>
-                  ))}
-                </select>
-                <input
-                  type="number"
-                  placeholder="%"
-                  step="0.01"
-                  value={tp.percentage}
-                  onChange={(e) => {
-                    const updated = [...terpeneProfiles];
-                    updated[i].percentage = e.target.value;
-                    setTerpeneProfiles(updated);
-                  }}
-                  className="w-24 rounded border border-gray-700 bg-gray-800 px-3 py-1 text-sm"
-                />
-                <button
-                  type="button"
-                  onClick={() =>
-                    setTerpeneProfiles(terpeneProfiles.filter((_, j) => j !== i))
-                  }
-                  className="text-red-400 hover:text-red-300"
-                >
-                  x
-                </button>
-              </div>
-            ))}
+          <div>
+            <p className="mb-2 text-xs font-bold uppercase tracking-wider" style={{ color: C.textMuted }}>
+              Terpene profile
+            </p>
+            <div className="space-y-2">
+              {terpeneProfiles.map((tp, i) => (
+                <div key={i} className="flex flex-wrap gap-2">
+                  <select
+                    value={tp.terpene_id}
+                    onChange={(e) => {
+                      const updated = [...terpeneProfiles];
+                      updated[i].terpene_id = e.target.value;
+                      setTerpeneProfiles(updated);
+                    }}
+                    className="min-w-0 flex-1 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:ring-2"
+                    style={{ ...inputStyle, outlineColor: C.primary }}
+                  >
+                    <option value="">Select terpene</option>
+                    {terpenes.map((t) => (
+                      <option key={t.id} value={t.id}>
+                        {t.name}
+                      </option>
+                    ))}
+                  </select>
+                  <input
+                    type="number"
+                    placeholder="%"
+                    step="0.01"
+                    value={tp.percentage}
+                    onChange={(e) => {
+                      const updated = [...terpeneProfiles];
+                      updated[i].percentage = e.target.value;
+                      setTerpeneProfiles(updated);
+                    }}
+                    className="w-24 rounded-lg px-3 py-1.5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:ring-2"
+                    style={{ ...inputStyle, outlineColor: C.primary }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setTerpeneProfiles(terpeneProfiles.filter((_, j) => j !== i))}
+                    className="rounded-lg px-3 py-1.5 text-sm font-semibold transition hover:brightness-110"
+                    style={{ color: "#f87171", backgroundColor: "#f8717118" }}
+                  >
+                    Remove
+                  </button>
+                </div>
+              ))}
+            </div>
             <button
               type="button"
               onClick={() =>
-                setTerpeneProfiles([
-                  ...terpeneProfiles,
-                  { terpene_id: "", percentage: "" },
-                ])
+                setTerpeneProfiles([...terpeneProfiles, { terpene_id: "", percentage: "" }])
               }
-              className="text-sm text-green-400 hover:underline"
+              className="mt-2 text-xs font-semibold underline"
+              style={{ color: C.secondary }}
             >
               + Add terpene
             </button>
@@ -317,60 +338,80 @@ export default function AdminBatchesPage() {
 
           <button
             type="submit"
-            className="mt-3 rounded bg-green-600 px-4 py-2 text-sm hover:bg-green-700"
+            className="rounded-lg px-4 py-2 text-sm font-bold transition hover:opacity-90"
+            style={{ backgroundColor: C.primary, color: C.bgDeep }}
           >
-            Create Batch
+            Create batch
           </button>
         </form>
       )}
 
-      <table className="w-full text-left text-sm">
-        <thead className="border-b border-gray-800 text-gray-400">
-          <tr>
-            <th className="px-3 py-2">Batch #</th>
-            <th className="px-3 py-2">Strain</th>
-            <th className="px-3 py-2">Grower</th>
-            <th className="px-3 py-2">THC%</th>
-            <th className="px-3 py-2">CBD%</th>
-            <th className="px-3 py-2">Terpenes</th>
-            <th className="px-3 py-2">Status</th>
-            <th className="px-3 py-2">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {batches.map((b) => (
-            <tr key={b.id} className="border-b border-gray-800/50">
-              <td className="px-3 py-2 font-mono text-xs">{b.batch_number}</td>
-              <td className="px-3 py-2">{b.strain_name}</td>
-              <td className="px-3 py-2">{b.grower_name}</td>
-              <td className="px-3 py-2">{b.thc_percentage}%</td>
-              <td className="px-3 py-2">{b.cbd_percentage}%</td>
-              <td className="px-3 py-2 text-xs text-gray-400">
-                {b.terpene_profiles
-                  .map((t) => `${t.terpene_name} ${t.percentage}%`)
-                  .join(", ") || "-"}
-              </td>
-              <td className="px-3 py-2">
-                {b.approved ? (
-                  <span className="text-green-400">Approved</span>
-                ) : (
-                  <span className="text-yellow-400">Pending</span>
-                )}
-              </td>
-              <td className="px-3 py-2">
-                {!b.approved && (
-                  <button
-                    onClick={() => handleApprove(b.id)}
-                    className="rounded bg-green-700 px-3 py-1 text-xs hover:bg-green-600"
+      <div className="overflow-hidden rounded-2xl" style={{ backgroundColor: C.bgCard, border: `1px solid ${C.textMuted}15` }}>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm">
+            <thead>
+              <tr>
+                {["Batch #", "Strain", "Grower", "THC%", "CBD%", "Terpenes", "Status", ""].map((h) => (
+                  <th
+                    key={h}
+                    className="px-4 py-3 text-xs font-bold uppercase tracking-wider"
+                    style={{ color: C.textMuted, backgroundColor: `${C.bgDeep}88` }}
                   >
-                    Approve
-                  </button>
-                )}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+                    {h}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {batches.map((b) => (
+                <tr key={b.id} style={{ borderTop: `1px solid ${C.textMuted}15` }}>
+                  <td className="px-4 py-3">
+                    <span
+                      className="rounded-full px-2 py-0.5 font-mono text-xs"
+                      style={{
+                        backgroundColor: C.bgDeep,
+                        color: C.textMuted,
+                        border: `1px solid ${C.textMuted}22`,
+                      }}
+                    >
+                      {b.batch_number}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 font-semibold text-white">{b.strain_name || "—"}</td>
+                  <td className="px-4 py-3" style={{ color: C.textMuted }}>{b.grower_name || "—"}</td>
+                  <td className="px-4 py-3 text-white">{b.thc_percentage}%</td>
+                  <td className="px-4 py-3 text-white">{b.cbd_percentage}%</td>
+                  <td className="px-4 py-3 text-xs" style={{ color: C.textMuted }}>
+                    {b.terpene_profiles.map((t) => `${t.terpene_name} ${t.percentage}%`).join(", ") || "—"}
+                  </td>
+                  <td className="px-4 py-3">
+                    <span
+                      className="rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider"
+                      style={{
+                        backgroundColor: b.approved ? `${C.primary}22` : `${C.secondary}22`,
+                        color: b.approved ? C.primary : C.secondary,
+                      }}
+                    >
+                      {b.approved ? "Approved" : "Pending"}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    {!b.approved && (
+                      <button
+                        onClick={() => handleApprove(b.id)}
+                        className="rounded-lg px-3 py-1.5 text-xs font-bold transition hover:opacity-90"
+                        style={{ backgroundColor: C.primary, color: C.bgDeep }}
+                      >
+                        Approve
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 }

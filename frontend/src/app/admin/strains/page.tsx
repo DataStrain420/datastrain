@@ -2,6 +2,9 @@
 
 import { adminFetch } from "@/lib/admin-api";
 import { useEffect, useState } from "react";
+import { brand } from "@/lib/brand";
+
+const C = brand;
 
 interface Grower {
   id: number;
@@ -19,6 +22,11 @@ interface Strain {
   approved: boolean;
   created_at: string;
 }
+
+const inputStyle = {
+  backgroundColor: C.bgDeep,
+  border: `1px solid ${C.textMuted}33`,
+} as const;
 
 export default function AdminStrainsPage() {
   const [strains, setStrains] = useState<Strain[]>([]);
@@ -80,56 +88,66 @@ export default function AdminStrainsPage() {
   }
 
   return (
-    <div>
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Strains</h1>
+    <div className="space-y-6">
+      <header className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 className="text-xl font-bold text-white">Strains</h2>
+          <p className="mt-1 text-sm" style={{ color: C.textMuted }}>
+            Full strain catalogue. Toggle the buttons on the right to add a new grower or strain.
+          </p>
+        </div>
         <div className="flex gap-2">
           <button
             onClick={() => setShowGrowerForm(!showGrowerForm)}
-            className="rounded-lg bg-gray-700 px-4 py-2 text-sm hover:bg-gray-600"
+            className="rounded-lg border px-4 py-2 text-sm font-semibold transition hover:brightness-110"
+            style={{
+              borderColor: `${C.textMuted}33`,
+              color: C.textMuted,
+              backgroundColor: C.bgCard,
+            }}
           >
             + Grower
           </button>
           <button
             onClick={() => setShowForm(!showForm)}
-            className="rounded-lg bg-green-600 px-4 py-2 text-sm hover:bg-green-700"
+            className="rounded-lg px-4 py-2 text-sm font-bold transition hover:opacity-90"
+            style={{ backgroundColor: C.primary, color: C.bgDeep }}
           >
             + Strain
           </button>
         </div>
-      </div>
+      </header>
 
       {showGrowerForm && (
         <form
           onSubmit={handleCreateGrower}
-          className="mb-4 rounded-lg border border-gray-800 bg-gray-900 p-4"
+          className="rounded-2xl p-5"
+          style={{ backgroundColor: C.bgCard, border: `1px solid ${C.textMuted}22` }}
         >
-          <h3 className="mb-3 font-semibold">New Grower</h3>
-          <div className="flex gap-3">
+          <h3 className="mb-3 text-sm font-bold uppercase tracking-wider" style={{ color: C.textMuted }}>
+            New grower
+          </h3>
+          <div className="flex flex-wrap gap-3">
             <input
               placeholder="Grower name"
               value={growerForm.name}
-              onChange={(e) =>
-                setGrowerForm({ ...growerForm, name: e.target.value })
-              }
+              onChange={(e) => setGrowerForm({ ...growerForm, name: e.target.value })}
               required
-              className="flex-1 rounded border border-gray-700 bg-gray-800 px-3 py-2 text-sm"
+              className="min-w-0 flex-1 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-2"
+              style={{ ...inputStyle, outlineColor: C.primary }}
             />
             <input
               placeholder="Country"
               value={growerForm.country_of_origin}
-              onChange={(e) =>
-                setGrowerForm({
-                  ...growerForm,
-                  country_of_origin: e.target.value,
-                })
-              }
+              onChange={(e) => setGrowerForm({ ...growerForm, country_of_origin: e.target.value })}
               required
-              className="flex-1 rounded border border-gray-700 bg-gray-800 px-3 py-2 text-sm"
+              className="min-w-0 flex-1 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-2"
+              style={{ ...inputStyle, outlineColor: C.primary }}
             />
             <button
               type="submit"
-              className="rounded bg-green-600 px-4 py-2 text-sm hover:bg-green-700"
+              className="rounded-lg px-4 py-2 text-sm font-bold transition hover:opacity-90"
+              style={{ backgroundColor: C.primary, color: C.bgDeep }}
             >
               Create
             </button>
@@ -140,23 +158,26 @@ export default function AdminStrainsPage() {
       {showForm && (
         <form
           onSubmit={handleCreateStrain}
-          className="mb-4 rounded-lg border border-gray-800 bg-gray-900 p-4"
+          className="rounded-2xl p-5"
+          style={{ backgroundColor: C.bgCard, border: `1px solid ${C.textMuted}22` }}
         >
-          <h3 className="mb-3 font-semibold">New Strain</h3>
-          <div className="grid grid-cols-2 gap-3">
+          <h3 className="mb-3 text-sm font-bold uppercase tracking-wider" style={{ color: C.textMuted }}>
+            New strain
+          </h3>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <input
               placeholder="Strain name"
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
               required
-              className="rounded border border-gray-700 bg-gray-800 px-3 py-2 text-sm"
+              className="rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-2"
+              style={{ ...inputStyle, outlineColor: C.primary }}
             />
             <select
               value={form.strain_type}
-              onChange={(e) =>
-                setForm({ ...form, strain_type: e.target.value })
-              }
-              className="rounded border border-gray-700 bg-gray-800 px-3 py-2 text-sm"
+              onChange={(e) => setForm({ ...form, strain_type: e.target.value })}
+              className="rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-2"
+              style={{ ...inputStyle, outlineColor: C.primary }}
             >
               <option value="indica">Indica</option>
               <option value="sativa">Sativa</option>
@@ -164,10 +185,9 @@ export default function AdminStrainsPage() {
             </select>
             <select
               value={form.grower_id}
-              onChange={(e) =>
-                setForm({ ...form, grower_id: e.target.value })
-              }
-              className="rounded border border-gray-700 bg-gray-800 px-3 py-2 text-sm"
+              onChange={(e) => setForm({ ...form, grower_id: e.target.value })}
+              className="rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-2"
+              style={{ ...inputStyle, outlineColor: C.primary }}
             >
               <option value="">No grower</option>
               {growers.map((g) => (
@@ -179,58 +199,71 @@ export default function AdminStrainsPage() {
             <input
               placeholder="Description"
               value={form.description}
-              onChange={(e) =>
-                setForm({ ...form, description: e.target.value })
-              }
-              className="rounded border border-gray-700 bg-gray-800 px-3 py-2 text-sm"
+              onChange={(e) => setForm({ ...form, description: e.target.value })}
+              className="rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-2"
+              style={{ ...inputStyle, outlineColor: C.primary }}
             />
           </div>
           <button
             type="submit"
-            className="mt-3 rounded bg-green-600 px-4 py-2 text-sm hover:bg-green-700"
+            className="mt-4 rounded-lg px-4 py-2 text-sm font-bold transition hover:opacity-90"
+            style={{ backgroundColor: C.primary, color: C.bgDeep }}
           >
-            Create Strain
+            Create strain
           </button>
         </form>
       )}
 
-      <table className="w-full text-left text-sm">
-        <thead className="border-b border-gray-800 text-gray-400">
-          <tr>
-            <th className="px-3 py-2">Name</th>
-            <th className="px-3 py-2">Type</th>
-            <th className="px-3 py-2">Grower</th>
-            <th className="px-3 py-2">Status</th>
-            <th className="px-3 py-2">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {strains.map((s) => (
-            <tr key={s.id} className="border-b border-gray-800/50">
-              <td className="px-3 py-2 font-medium">{s.name}</td>
-              <td className="px-3 py-2 capitalize">{s.strain_type}</td>
-              <td className="px-3 py-2">{s.grower_name || "-"}</td>
-              <td className="px-3 py-2">
-                {s.approved ? (
-                  <span className="text-green-400">Approved</span>
-                ) : (
-                  <span className="text-yellow-400">Pending</span>
-                )}
-              </td>
-              <td className="px-3 py-2">
-                {!s.approved && (
-                  <button
-                    onClick={() => handleApprove(s.id)}
-                    className="rounded bg-green-700 px-3 py-1 text-xs hover:bg-green-600"
+      <div className="overflow-hidden rounded-2xl" style={{ backgroundColor: C.bgCard, border: `1px solid ${C.textMuted}15` }}>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm">
+            <thead>
+              <tr>
+                {["Name", "Type", "Grower", "Status", ""].map((h) => (
+                  <th
+                    key={h}
+                    className="px-4 py-3 text-xs font-bold uppercase tracking-wider"
+                    style={{ color: C.textMuted, backgroundColor: `${C.bgDeep}88` }}
                   >
-                    Approve
-                  </button>
-                )}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+                    {h}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {strains.map((s) => (
+                <tr key={s.id} style={{ borderTop: `1px solid ${C.textMuted}15` }}>
+                  <td className="px-4 py-3 font-semibold text-white">{s.name}</td>
+                  <td className="px-4 py-3 capitalize" style={{ color: C.textMuted }}>{s.strain_type}</td>
+                  <td className="px-4 py-3" style={{ color: C.textMuted }}>{s.grower_name || "—"}</td>
+                  <td className="px-4 py-3">
+                    <span
+                      className="rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider"
+                      style={{
+                        backgroundColor: s.approved ? `${C.primary}22` : `${C.secondary}22`,
+                        color: s.approved ? C.primary : C.secondary,
+                      }}
+                    >
+                      {s.approved ? "Approved" : "Pending"}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    {!s.approved && (
+                      <button
+                        onClick={() => handleApprove(s.id)}
+                        className="rounded-lg px-3 py-1.5 text-xs font-bold transition hover:opacity-90"
+                        style={{ backgroundColor: C.primary, color: C.bgDeep }}
+                      >
+                        Approve
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 }

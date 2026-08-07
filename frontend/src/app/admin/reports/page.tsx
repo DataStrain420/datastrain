@@ -100,10 +100,15 @@ export default function AdminReportsPage() {
   }
 
   return (
-    <div>
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-bold">Reports</h1>
-        <div className="flex gap-2">
+    <div className="space-y-6">
+      <header className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h2 className="text-xl font-bold text-white">Reports</h2>
+          <p className="mt-1 text-sm" style={{ color: brand.textMuted }}>
+            Community bug reports, feedback and feature requests.
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
           {STATUS_FILTERS.map((f) => (
             <button
               key={f.value || "all"}
@@ -122,21 +127,21 @@ export default function AdminReportsPage() {
             </button>
           ))}
         </div>
-      </div>
+      </header>
 
       {loading ? (
         <p style={{ color: brand.textMuted }}>Loading reports...</p>
       ) : reports.length === 0 ? (
         <div
-          className="rounded-xl p-8 text-center"
-          style={{ backgroundColor: brand.bgCard, border: `1px solid ${brand.textMuted}22` }}
+          className="rounded-2xl p-8 text-center"
+          style={{ backgroundColor: brand.bgCard, border: `1px solid ${brand.textMuted}15` }}
         >
           <p className="text-sm" style={{ color: brand.textMuted }}>
             No reports {statusFilter ? `with status "${statusFilter}"` : "yet"}.
           </p>
         </div>
       ) : (
-        <div className="overflow-hidden rounded-xl" style={{ border: `1px solid ${brand.textMuted}22` }}>
+        <div className="overflow-hidden rounded-2xl" style={{ backgroundColor: brand.bgCard, border: `1px solid ${brand.textMuted}15` }}>
           <table className="w-full text-sm">
             <thead style={{ backgroundColor: brand.bgCard }}>
               <tr className="text-left">
