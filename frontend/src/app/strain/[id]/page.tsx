@@ -381,8 +381,9 @@ export default function StrainDetailPage() {
             )}
           </div>
 
+          <div className="min-w-0 flex-1 space-y-4">
           <header
-            className="flex flex-1 flex-wrap items-start justify-between gap-4 rounded-2xl px-6 py-5"
+            className="flex flex-wrap items-start justify-between gap-4 rounded-2xl px-6 py-5"
             style={{ backgroundColor: C.bgCard, border: `1px solid ${C.textMuted}15` }}
           >
             <div className="min-w-0 flex-1">
@@ -458,82 +459,89 @@ export default function StrainDetailPage() {
               <PageRankHex rank={stats.overall_rank} totalStrains={stats.total_strains} />
             )}
           </header>
+
+            {/* Info blocks that sit next to the card on desktop —
+                aggregated stats, terpenes, genetics and description all
+                live here so the reader can absorb the strain's identity in
+                one glance before dropping into the batches / pharmacies /
+                reviews content further down the page. */}
+
+            {/* What people are saying */}
+            {stats && stats.review_count > 0 && (
+              <div
+                className="space-y-3 rounded-2xl p-5"
+                style={{ backgroundColor: C.bgCard, border: `1px solid ${C.textMuted}15` }}
+              >
+                <p className="text-sm" style={{ color: C.textMuted }}>
+                  What people are saying...
+                </p>
+                <StatRow label="Helps With" color={C.success} entries={stats.top_conditions} />
+                <StatRow label="Effects" color={C.secondary} entries={stats.top_effects} />
+                <StatRow label="Flavours" color={C.tertiary} entries={stats.top_flavours} />
+              </div>
+            )}
+
+            {/* Terpenes — hover a name to see what it does / how it smells */}
+            {stats && stats.top_terpenes.length > 0 && (
+              <div
+                className="flex flex-wrap items-center gap-3 rounded-xl p-4"
+                style={{ backgroundColor: C.bgCard, border: `1px solid ${C.textMuted}15` }}
+              >
+                <span className="shrink-0 rounded-md px-3 py-1 text-xs font-semibold text-white" style={{ backgroundColor: "#3b82f6" }}>
+                  Terpenes
+                </span>
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                  {stats.top_terpenes.map((name) => (
+                    <span
+                      key={name}
+                      title={terpeneSummary(name)}
+                      className="cursor-help text-sm text-white underline decoration-dotted decoration-1 underline-offset-2"
+                    >
+                      {name}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Genetics */}
+            {strain.genetics && (
+              <div
+                className="flex flex-wrap items-center gap-3 rounded-xl p-4"
+                style={{ backgroundColor: C.bgCard, border: `1px solid ${C.textMuted}15` }}
+              >
+                <span className="shrink-0 rounded-md px-3 py-1 text-xs font-semibold text-white" style={{ backgroundColor: "#6b7280" }}>
+                  Genetics
+                </span>
+                <span className="text-sm text-white">{strain.genetics}</span>
+              </div>
+            )}
+
+            {/* Description */}
+            {strain.description && (
+              <div
+                className="rounded-2xl p-5"
+                style={{ backgroundColor: C.bgCard, borderTop: `3px solid ${C.secondary}44` }}
+              >
+                <p className="text-sm leading-relaxed" style={{ color: C.textMuted }}>
+                  {strain.description}
+                </p>
+                <button
+                  className="mt-3 flex items-center gap-1.5 text-xs transition hover:text-white"
+                  style={{ color: C.textMuted }}
+                >
+                  <span>{"✎"}</span> Suggest a page edit
+                </button>
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* ── Supporting content grid: left column stacks the aggregate stats,
-              terpenes, genetics, description, batches, pharmacies. Right
-              column is the paginated reviews list. */}
+        {/* ── Supporting content grid: left column stacks batches +
+              pharmacies + prescription CTA; right column is the paginated
+              reviews list. */}
         <div className="mb-8 grid items-start gap-8 lg:grid-cols-2">
           <div className="space-y-6">
-
-              {/* What people are saying */}
-              {stats && stats.review_count > 0 && (
-                <div
-                  className="space-y-3 rounded-2xl p-5"
-                  style={{ backgroundColor: C.bgCard, border: `1px solid ${C.textMuted}15` }}
-                >
-                  <p className="text-sm" style={{ color: C.textMuted }}>
-                    What people are saying...
-                  </p>
-                  <StatRow label="Helps With" color={C.success} entries={stats.top_conditions} />
-                  <StatRow label="Effects" color={C.secondary} entries={stats.top_effects} />
-                  <StatRow label="Flavours" color={C.tertiary} entries={stats.top_flavours} />
-                </div>
-              )}
-
-              {/* Terpenes — hover a name to see what it does / how it smells */}
-              {stats && stats.top_terpenes.length > 0 && (
-                <div
-                  className="flex flex-wrap items-center gap-3 rounded-xl p-4"
-                  style={{ backgroundColor: C.bgCard, border: `1px solid ${C.textMuted}15` }}
-                >
-                  <span className="shrink-0 rounded-md px-3 py-1 text-xs font-semibold text-white" style={{ backgroundColor: "#3b82f6" }}>
-                    Terpenes
-                  </span>
-                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                    {stats.top_terpenes.map((name) => (
-                      <span
-                        key={name}
-                        title={terpeneSummary(name)}
-                        className="cursor-help text-sm text-white underline decoration-dotted decoration-1 underline-offset-2"
-                      >
-                        {name}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Genetics */}
-              {strain.genetics && (
-                <div
-                  className="flex flex-wrap items-center gap-3 rounded-xl p-4"
-                  style={{ backgroundColor: C.bgCard, border: `1px solid ${C.textMuted}15` }}
-                >
-                  <span className="shrink-0 rounded-md px-3 py-1 text-xs font-semibold text-white" style={{ backgroundColor: "#6b7280" }}>
-                    Genetics
-                  </span>
-                  <span className="text-sm text-white">{strain.genetics}</span>
-                </div>
-              )}
-
-              {/* Description */}
-              {strain.description && (
-                <div
-                  className="rounded-2xl p-5"
-                  style={{ backgroundColor: C.bgCard, borderTop: `3px solid ${C.secondary}44` }}
-                >
-                  <p className="text-sm leading-relaxed" style={{ color: C.textMuted }}>
-                    {strain.description}
-                  </p>
-                  <button
-                    className="mt-3 flex items-center gap-1.5 text-xs transition hover:text-white"
-                    style={{ color: C.textMuted }}
-                  >
-                    <span>{"✎"}</span> Suggest a page edit
-                  </button>
-                </div>
-              )}
 
               {/* Most Recent Batches */}
               {batchCards.length > 0 && (
