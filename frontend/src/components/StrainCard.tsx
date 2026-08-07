@@ -94,7 +94,19 @@ function tierStyles(tier: RankTier) {
 /** Hexagon with rank number — gold gradient for #1, default cyan otherwise.
  *  When strainId is provided, the review-count line becomes a link that
  *  jumps to the strain page's Reviews section (#reviews). */
-function RankHex({ rank, tier, reviewCount, strainId }: { rank: number; tier: RankTier; reviewCount: number; strainId?: number | null }) {
+function RankHex({
+  rank,
+  tier,
+  reviewCount,
+  strainId,
+  trend,
+}: {
+  rank: number;
+  tier: RankTier;
+  reviewCount: number;
+  strainId?: number | null;
+  trend?: { icon: string; delta: number; color: string } | null;
+}) {
   const isGold = tier === "legendary";
   const isSilver = tier === "rare";
   const isHolo = isGold || isSilver;
@@ -164,6 +176,19 @@ function RankHex({ rank, tier, reviewCount, strainId }: { rank: number; tier: Ra
           style={{ color: labelColor }}
         >
           {reviewCount.toLocaleString()} rating{reviewCount !== 1 ? "s" : ""}
+        </span>
+      )}
+      {trend && (
+        <span
+          className="mt-1 rounded-full px-1.5 py-0.5 text-[10px] font-bold leading-none"
+          style={{
+            color: trend.color,
+            backgroundColor: `${trend.color}18`,
+            border: `1px solid ${trend.color}55`,
+          }}
+          title={`${trend.delta >= 0 ? "+" : ""}${trend.delta.toFixed(1)} vs previous batch`}
+        >
+          {trend.icon} {Math.abs(trend.delta).toFixed(1)}
         </span>
       )}
     </div>
@@ -359,8 +384,52 @@ export default function StrainCard({ card }: { card: CardData }) {
                   <span style={{ color: C.primary }}>{card.grower_name}</span>
                 )}
               </p>
+              {/* Batch number — batch-first UX. Small, mono, immediately
+                  under the byline so patients read "Aurora by Farm Gas,
+                  batch E123456" as one continuous identity. */}
+              <p
+                className={clsx(
+                  "mt-1 truncate font-mono text-[10px] uppercase tracking-wider",
+                  isHolo ? "font-bold" : "font-semibold",
+                )}
+                style={{ color: isHolo ? "rgba(0,0,0,0.65)" : C.textMuted }}
+                title={`Current batch · tap to view details`}
+              >
+                Batch {card.batch_number}
+              </p>
             </div>
-            <RankHex rank={displayRank} tier={tier} reviewCount={card.review_count} strainId={card.strain_id} />
+            {(() => {
+              // Compute the trend once so the RankHex chip and the back-face
+              // line stay in lockstep. Uses the same ±0.3 dead-band.
+              const ratings = [
+                card.avg_appearance_rating,
+                card.avg_aroma_rating,
+                card.avg_moisture_rating,
+                card.avg_flavour_rating,
+                card.avg_effect_rating,
+              ].filter((v): v is number => typeof v === "number");
+              const currentAvg = ratings.length === 5 ? ratings.reduce((a, b) => a + b, 0) / 5 : null;
+              const prev = card.previous_avg_rating ?? null;
+              let trend: { icon: string; delta: number; color: string } | null = null;
+              if (currentAvg !== null && prev !== null) {
+                const delta = currentAvg - prev;
+                trend =
+                  delta > 0.3
+                    ? { icon: "↑", delta, color: C.primary }
+                    : delta < -0.3
+                      ? { icon: "↓", delta, color: "#f87171" }
+                      : { icon: "→", delta, color: C.textMuted };
+              }
+              return (
+                <RankHex
+                  rank={displayRank}
+                  tier={tier}
+                  reviewCount={card.review_count}
+                  strainId={card.strain_id}
+                  trend={trend}
+                />
+              );
+            })()}
           </div>
 
           {/* ── Photo area ────────────────────────────────────────────── */}
