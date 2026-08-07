@@ -626,6 +626,7 @@ export default function StrainCard({ card }: { card: CardData }) {
                 icon={"\u21bb"}
                 label="Flip"
                 onClick={(e) => { e.stopPropagation(); setFlipped(!flipped); }}
+                hoverOnly
               />
             </div>
           </div>
@@ -869,6 +870,7 @@ export default function StrainCard({ card }: { card: CardData }) {
                 icon={"↻"}
                 label="Flip"
                 onClick={(e) => { e.stopPropagation(); setFlipped(!flipped); }}
+                hoverOnly
               />
             </div>
           </div>
@@ -952,13 +954,23 @@ function LibraryButton({
   icon,
   label,
   onClick,
+  hoverOnly = false,
 }: {
   active: boolean;
   isHolo: boolean;
   icon: string;
   label: string;
   onClick: (e: React.MouseEvent) => void;
+  /** When true, the button never renders the persistent "active" green —
+   *  it only picks up the green treatment while the pointer is over it.
+   *  Used for the Flip button, whose active-state doesn't represent a
+   *  persistent choice worth showing (the card face itself already
+   *  communicates whether it's flipped). */
+  hoverOnly?: boolean;
 }) {
+  const [hovered, setHovered] = useState(false);
+  const effectiveActive = hoverOnly ? hovered : active;
+
   // Match the RatingBar label colour so the icons + labels share the
   // same muted grey as Appearance/Aroma/etc.
   const inactiveText = isHolo ? "rgba(0,0,0,0.75)" : C.textMuted;
@@ -968,24 +980,26 @@ function LibraryButton({
   return (
     <button
       onClick={onClick}
-      className="flex items-center gap-1 transition-opacity hover:opacity-80"
+      onMouseEnter={hoverOnly ? () => setHovered(true) : undefined}
+      onMouseLeave={hoverOnly ? () => setHovered(false) : undefined}
+      className={clsx("flex items-center gap-1 transition-opacity", !hoverOnly && "hover:opacity-80")}
     >
       <span
         className="flex h-6 w-6 items-center justify-center rounded-full text-sm transition-all"
         style={{
-          border: active
+          border: effectiveActive
             ? `2px solid ${C.primary}`
             : `${inactiveBorderWidth}px solid ${inactiveBorder}`,
-          backgroundColor: active ? C.primary : "transparent",
-          color: active ? C.bgDeep : inactiveText,
-          fontWeight: isHolo && !active ? 900 : undefined,
+          backgroundColor: effectiveActive ? C.primary : "transparent",
+          color: effectiveActive ? C.bgDeep : inactiveText,
+          fontWeight: isHolo && !effectiveActive ? 900 : undefined,
         }}
       >
         {icon}
       </span>
       <span
-        className={clsx("text-[10px]", isHolo && !active ? "font-extrabold" : "font-semibold")}
-        style={{ color: active ? C.primary : inactiveText }}
+        className={clsx("text-[10px]", isHolo && !effectiveActive ? "font-extrabold" : "font-semibold")}
+        style={{ color: effectiveActive ? C.primary : inactiveText }}
       >
         {label}
       </span>
