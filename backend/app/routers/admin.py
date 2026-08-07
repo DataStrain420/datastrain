@@ -35,11 +35,16 @@ async def pending_reviews(
     db: AsyncSession = Depends(get_db),
     _admin: dict = Depends(get_current_admin),
 ):
+    # _review_to_response reads review.batch.grower.name — with async
+    # SQLAlchemy, any relationship not eager-loaded here would trigger an
+    # implicit lazy load and raise, which historically 500'd the endpoint
+    # and made the moderation queue appear empty.
     result = await db.execute(
         select(Review)
         .options(
             selectinload(Review.user),
             selectinload(Review.batch).selectinload(Batch.strain),
+            selectinload(Review.batch).selectinload(Batch.grower),
             selectinload(Review.condition_ratings),
         )
         .where(Review.status == ReviewStatus.PENDING.value)
