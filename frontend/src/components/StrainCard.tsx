@@ -209,8 +209,13 @@ export default function StrainCard({ card }: { card: CardData }) {
   const [imgError, setImgError] = useState(false);
   const typeLbl = typeLabel(card.strain_type);
   const handleImgError = useCallback(() => setImgError(true), []);
-  const displayRank = card.rank ?? 0;
-  const tier = getRankTier(displayRank);
+  // Rank can legitimately be null for older sibling batches — the
+  // catalogue rank query only positions the latest batch per strain. Fall
+  // through to a "no rank hex" render in that case instead of showing a
+  // misleading "Rank 0".
+  const isRanked = typeof card.rank === "number" && card.rank > 0;
+  const displayRank = isRanked ? (card.rank as number) : 0;
+  const tier = isRanked ? getRankTier(displayRank) : "common";
   // isHolo used to gate dark-on-light text/pill styling for legibility
   // against the metallic body. Body is now standard dark on all tiers, so
   // force this false — the RankHex still receives `tier` directly, so
@@ -422,12 +427,42 @@ export default function StrainCard({ card }: { card: CardData }) {
                 );
               })()}
             </div>
-            <RankHex
-              rank={displayRank}
-              tier={tier}
-              reviewCount={card.review_count}
-              strainId={card.strain_id}
-            />
+            {isRanked ? (
+              <RankHex
+                rank={displayRank}
+                tier={tier}
+                reviewCount={card.review_count}
+                strainId={card.strain_id}
+              />
+            ) : (
+              // Older batches share their strain's rank slot with the newest
+              // batch — no independent rank of their own. Show a compact
+              // "Older" chip so the header slot doesn't collapse but the
+              // reader isn't told a lie about position.
+              <div className="flex flex-col items-center gap-1 shrink-0">
+                <span
+                  className="rounded-full px-2 py-1 text-[10px] font-bold uppercase tracking-wider"
+                  style={{
+                    backgroundColor: `${C.textMuted}22`,
+                    color: C.textMuted,
+                    border: `1px solid ${C.textMuted}33`,
+                  }}
+                  title="Older batch of this strain — the newer batch holds the strain's rank"
+                >
+                  Older batch
+                </span>
+                {card.review_count > 0 && card.strain_id && (
+                  <Link
+                    href={`/strain/${card.strain_id}#reviews`}
+                    onClick={(e) => e.stopPropagation()}
+                    className="text-[10px] font-semibold leading-none transition hover:underline"
+                    style={{ color: C.textMuted }}
+                  >
+                    {card.review_count.toLocaleString()} rating{card.review_count !== 1 ? "s" : ""}
+                  </Link>
+                )}
+              </div>
+            )}
           </div>
 
           {/* ── Photo area ────────────────────────────────────────────── */}
