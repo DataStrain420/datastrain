@@ -466,9 +466,15 @@ export default function StrainCard({ card }: { card: CardData }) {
             )}
           </div>
 
-          {/* ── Photo area ────────────────────────────────────────────── */}
-          <div
-            className="relative mx-4 flex h-52 items-center justify-center overflow-hidden rounded-xl"
+          {/* ── Photo area — tap the image to open the strain page.
+                stopPropagation prevents the parent card's flip handler
+                from firing. Falls back to /batch/{id} when the batch
+                isn't attached to a strain. */}
+          <Link
+            href={card.strain_id ? `/strain/${card.strain_id}` : `/batch/${card.id}`}
+            onClick={(e) => e.stopPropagation()}
+            aria-label={`Open ${card.strain_name}`}
+            className="relative mx-4 flex h-52 items-center justify-center overflow-hidden rounded-xl transition hover:brightness-110"
             style={{ backgroundColor: C.bgDeep }}
           >
             <img
@@ -485,7 +491,7 @@ export default function StrainCard({ card }: { card: CardData }) {
               className="h-full w-full rounded-xl object-cover"
               onError={handleImgError}
             />
-          </div>
+          </Link>
 
           {/* ── Attribute row: type + irradiation | THC + CBD ──────────── */}
           {/* Two-group layout: type/irradiation chips on the left, THC/CBD
