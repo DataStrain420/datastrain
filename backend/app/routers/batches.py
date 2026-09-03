@@ -336,10 +336,18 @@ async def list_batch_cards(
         stmt = stmt.order_by(Strain.name)
 
     # Total matching rows (before pagination) — surfaced via X-Total-Count
-    # so the frontend can render "Page N of M" controls.
-    count_stmt = select(func.count()).select_from(stmt.subquery())
-    total = (await db.scalar(count_stmt)) or 0
-    response.headers["X-Total-Count"] = str(total)
+    # so the frontend can render "Page N of M" controls. Strip the ORDER BY
+    # before wrapping in a subquery: Postgres rejects ORDER BY inside an
+    # unadorned subquery used for COUNT, which was 500ing the endpoint.
+    try:
+        count_stmt = select(func.count()).select_from(stmt.order_by(None).subquery())
+        total = (await db.scalar(count_stmt)) or 0
+        response.headers["X-Total-Count"] = str(total)
+    except Exception:
+        # Count is a nice-to-have for pagination — never let it take the
+        # whole listing down. Skip the header on failure and let the
+        # frontend fall back to "no total known".
+        pass
 
     stmt = stmt.offset(skip).limit(limit)
     result = await db.execute(stmt)
