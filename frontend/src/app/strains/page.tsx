@@ -474,7 +474,7 @@ function StrainsContent() {
       {/* ── Banner — spans the full content width above the filter sidebar ─ */}
       <StrainsBanner config={bannerConfig} count={total ?? cards.length} />
 
-      <div className="flex gap-8">
+      <div className="flex gap-8 overflow-hidden">
       {/* ── Sidebar filters ────────────────────────────────────────── */}
       <aside className="hidden w-56 shrink-0 lg:block">
         <div
@@ -605,7 +605,7 @@ function StrainsContent() {
       </aside>
 
       {/* ── Main content ───────────────────────────────────────────── */}
-      <div className="flex-1">
+      <div className="min-w-0 flex-1">
 
         {loading ? (
           <div className="flex flex-wrap justify-start gap-6">

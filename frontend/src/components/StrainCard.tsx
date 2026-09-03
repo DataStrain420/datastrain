@@ -309,7 +309,7 @@ export default function StrainCard({ card }: { card: CardData }) {
 
   return (
     <div
-      className="aspect-[300/468] w-[300px] max-w-[calc(100vw-2rem)] cursor-pointer"
+      className="aspect-[300/468] w-[300px] min-w-0 max-w-[calc(100vw-2rem)] cursor-pointer"
       style={{ perspective: "1000px" }}
       onClick={() => setFlipped(!flipped)}
     >
